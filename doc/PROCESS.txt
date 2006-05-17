@@ -1,0 +1,66 @@
+==========================================
+Title: Tokyo Project - Process Definition
+Last modified: 2005-08-01
+By: Eric Bréchemier
+Encoding: UTF-8
+==========================================
+
+                        *******************************   
+                        **       Tokyo Project       **
+                        **     Process Definition    **
+                        *******************************
+
+
+* OBJECTIVES
+- provide an XML view of non-XML data
+- let applications view and create non-XML documents as easily as XML ones
+- transformation of non-XML documents to XML and back again
+
+* VISION
+- we start with:
+    - on the one hand, lots of existing applications working on xml data,
+      lots of developers with experience in xml processing,
+    - on the other hand, many remaining non-xml formats
+      (e.g. for pure binary or pure text data)
+
+- we need two transformations:
+    - from non-xml to xml, for applications input,
+    corresponding to XML parsing
+    - from xml to non-xml, for applications output,
+    corresponding to XML serializing
+
+- an XML parser works on standard XML files/data and implements some XML Parser API (DOM, SAX,...)
+  Applications do not access XML data directly, but through the provided API
+  
+- an XML serializer implements some XML Serializer API (DOM,...).
+  Applications often do not create XML data directly, but through the provided API.
+  Some applications create XML data directly - this data will have to be converted in a second step.
+    
+- the structure of an XML document is explicit, it uses the same syntax for all XML documents,
+  no matter which grammar/vocabulary they use. Parsers can process this data without any knowledge
+  of the document semantics.
+  Structure in non-XML data is often implicit or uses a very specific syntax.
+  Applications often need to know some grammar to be able to parse the data.
+
+- the first step of the process is formalizing the grammar of your data.
+  This definition may be done with different notations (EBNF, tables, encoding algorithm,...).
+  It should contain:
+    - some structure, which will be mapped to the XML tree structure
+    - some codecs, defining the format of leaf nodes
+    - some comments, explaining the semantics of different fields
+    - there may also be some additional relations between different elements,
+    that must be understood for proper decoding (choice, repeat, based on values read before)
+  This project may end up defining a general format good enough for 80% of grammar definitions,
+  or using different grammar types for different formats.
+  
+* IN A NUTSHELL
+- define the grammar of your data
+- define the vocabulary for your data viewed as XML
+- use it to create 
+    - one tool reading your data and implementing an XML parsing API
+    - one tool providing an XML serializing API and writing your data
+    - maybe another tool to validate input data / generated data
+- plug your tool on applications processing XML
+    - you may need some adapters for the expected API or extra conversion steps
+    - the application has to know the vocabulary of your data viewed as XML 
+      to understand its semantic

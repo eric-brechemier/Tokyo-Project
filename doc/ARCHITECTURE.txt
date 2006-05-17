@@ -1,0 +1,58 @@
+===============================================
+Title: Tokyo Project - Architecture Definition
+Last modified: 2005-08-01
+By: Eric Bréchemier
+Encoding: UTF-8
+===============================================
+
+                        *******************************   
+                        **       Tokyo Project       **
+                        **  Architecture Definition  **
+                        *******************************
+
+* OBJECTIVES
+- provide an XML view of non-XML data
+- let applications view and create non-XML documents as easily as XML ones
+- transformation of non-XML documents to XML and back again
+
+* VISION
+- different architecture can be defined to implement the proposed process:
+    - using the formalized grammar as a basis for the development of data-to-xml
+    and xml-to-data processors
+    - generating the code of those processors from grammar files
+    - using generic tools using the grammar file as a configuration 
+    that enables them to read and write data in corresponding format
+
+- we have to choose an XML parser API and an XML serializer API to be implemented
+  by our non-XML data processors.
+  I chose the APIs defined by xmlpull.org. The main advantages of Pull API are:
+    * it is both very usable and efficient
+    * adapters can be implemented simply for both SAX and DOM APIs
+  I still have to study the serializing API (to be done during prototyping
+  to fully validate this choice).
+
+- the basic architecture is:
+
+For Parsing
+non-XML data -> [non-XML Parser] -> [XML Pull API] -> [XML API Adaptor] -> [XML Application]
+e.g.
+CSV -> CSV parser -> XML Pull API -> SAX API Adaptor -> XSLT Processor
+
+For Serializing
+[XML Application] -> [XML Serializer Adaptor] -> [XML Serializer API] -> [non-XML Serializer] 
+                                                                                -> non-XML data
+e.g.
+XSLT Processor -> DOM API -> XML Pull Serializer API -> CSV Serialize -> CSV
+                                                                                
+We still have to determine how to configure applications 
+  - to use correct parser and correct serializer for non-XML data instead of XML versions
+  - to use sometimes XML parser / sometimes non-XML paser according to the type of data
+  (we may have to process XML data as well as different types of non-XML data in the same
+  application).
+
+* IN A NUTSHELL
+- implement XML Pull Parser/Serializer API for your non-XML data, 
+taking advantage of existing tools and the formal grammar definition of your data
+
+- implement adapters of XML Pull APIs to XML APIs needed by your application
+(this is independent of your data format)

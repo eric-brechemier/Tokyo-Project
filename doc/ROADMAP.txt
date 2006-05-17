@@ -1,0 +1,133 @@
+=================================
+Title: Roadmap for Tokyo Project
+Last modified: 2006-05-17
+By: Eric Bréchemier
+Encoding: UTF-8
+=================================
+
+                           
+                        *******************************   
+                        ** ROADMAP for Tokyo Project **
+                        *******************************
+
+Objectives:
+  * design a process
+  * design an architecture
+  * design tools
+  * design a data manipulation API
+  * a very simple document to present previous points
+  
+Sample Applications:
+  * prototype application (read|write)
+      order custom CSV data on countries
+  
+  * view mails in mbox file (read)
+      sort mail by date and thread (sender/receiver)
+      generate html pages showing highlighted mail content
+      
+  * PDF, Word, Excel output (write)
+      output documents that can be printed nicely
+      from source xml data
+  
+  * source code analysis (read)
+      process source code and output simple analysis (number of lines/method, comments...)
+
+Additional projects to be based on designed API:
+  * XSLT Chess Game reading/writing standard chess notation files
+  * Interpreter Engine for Simple Games
+
+****************************** 
+ Project Status / Milestones
+******************************
+
+  * 1-Planning [July 28th-August 15th 2005]
+      Roadmap complete with code names for expected releases
+      Informal (text file) process definition
+      Informal (text file) architecture definition
+      Informal (text file) tools definition
+  => RELEASED: 2005-08-01
+     First release "Chiyoda-ku" 0.1 
+     
+  Before Pre-alpha
+    Prototype:
+      -implement xmlpull.org pull api with parser on simple line reader in text file
+      (add fixed elements file for root and line for each line, 
+       put text value either as attribute or simple content)
+      -find or write wrapper for API expected by Saxon (SAX1/SAX2)
+      test xslt transformation on text file viewed as XML file
+  => RELEASED: 2005-08-15
+     release "Akihabara" 0.2
+  
+  
+  * 2-Pre-Alpha [August 16th 2005-May 31st 2006]
+    Research by reading reference books in compiling and linguistics:
+      - Compilers, Principles, Techniques and Tools, Alfred V. Aho, Ravi Sethi, Jeffrey D. Ullman, 2003
+        [ISBN: 0201101947]
+      - Compilateurs, Dick Grune, Henri E. Bal, Ceriel J.H. Jacobs, Koen G. Langendoen, 2002
+        [ISBN: 2100058878]
+      - Introduction à la linguistique contemporaine, Antoine Auchlin, Jacques Moeschler, 2005
+        [ISBN: 2200268831]
+      - Relevance, communication & cognition (second edition), Dan Sperber, Deirdre Wilson, 1995
+        [ISBN : 0631198784]
+    Updated Prototype:
+      -based on custom API (Nautilus API) designed for simplicity,
+       from both user and implementer perspective
+      -actual processing (parsing/writing) based on a set of rules describing format
+  => release "Chuo-ku" 0.3                                            - target: 2006-05-18
+    
+    Second Prototype:
+      -browse PDF file structure using Nautilus API
+      (with simplest of either mapping external tool or using own format description rules)
+  => release "Asakusa" 0.4                                            - target: 2006-05-31
+  
+  
+  * 3-Alpha [June 1st 2006-September 31st 2006]
+    Project structure (compiling, unit tests, distribution)            - target: 2006-06-07
+    The simplest architecture that may possibly work for first sample  - target: 2006-06-14
+    First sample: reading mbox mail files and output xhtml for viewing - target: 2006-06-14
+    One page describing project (indicative contents)
+      Introduction
+        §The Lego(tm) brick metaphor§
+          See people sharing "Lego(tm) literacy" at "http://www.lugnet.com/~330/FAQ"
+        §Tokyo-Project in a nutshell§
+      Process
+        §Playing with Lego(tm) bricks§
+        §Tokyo-Project Process§
+      Api
+        §The Lego(tm) brick's study§
+        §Tokyo-Project Nautilus API§
+      Tools
+        §The Lego(tm) brick's mold§
+        §Tokyo-Project Tools based on Grammar Rules§    
+  => release "Ikebukuro" 0.5                                           - target: 2006-06-28
+    
+    Second sample (output PDF, Word, Excel), simple implementation
+    Help file for project configuration (Tools/Libraries needed)
+  => release "Roppongi" 0.6                                            - target: 2006-08-16
+    
+    -Third sample, simple implementation of source code analysis.
+    -Extend grammar as required to deal with more file formats,
+    check existing grammar formats for ideas/replacement
+  => release "Ebisu" 0.7                                               - target: 2006-09-20
+    
+  * 4-Beta [October 1st-November 11th 2006]
+    XHTML+CSS+SVG+PNG slides document including... 
+      project presentation (vision document)
+      process definition
+      architecture/api definition
+      tools presentation (existing/guidelines for new ones)
+      file format grammar definition as rules
+  => release "Shibuya" 0.8                                             - target: 2006-11-11
+  
+  * Release Candidate [November 2006-March 2007]
+    Ask for comments, find real life use in third party application
+    More robust implementations for three samples
+    More samples including grammar definitions and use of tools to solve different scenarios
+    Different iterations based on comments                            - target: Q4 2006-Q1 2007
+  => release "Shinjuku-XX" 0.9.*
+  
+  
+  * 5-Production/Stable 
+    Substantial feedback received, 
+    no severe bug open, less than 3 minor bugs open, few new bugs every week.
+  => release "Ginza" 1.0                                              - target Q2 2007

@@ -1,0 +1,163 @@
+=========================================
+Title: Tokyo Project - Data handling API 
+Last modified: 2006-05-18
+By: Eric Bréchemier
+Encoding: UTF-8
+=========================================
+
+                        *******************************   
+                        **       Tokyo Project       **
+                        **     Data Handling API     **
+                        *******************************
+
+
+This documents defines a data handling API designed as part of Tokyo Project: the "Nautilus API".
+This API is the required basis for data access in all other tools part of this project.
+
+The Nautilus API is a simple pull API for both XML and "non-XML" data browsing.
+It is composed of a single interface, IMobilisInMobile:
+
+IMobilisInMobile interface:
+  IMobilisInMobile go(Object path) /*jump to first item on given path (starting from here excluded) 
+                                     and return updated self.
+                                     Sets current location to "nowhere" (here() returns null)
+                                     when no item is available on given path
+                                   */
+  Object here() /*return current location - 
+                  on go( here() ), IMobilisInMobile shall jump to the same location
+                  return null if current location is "nowhere" cf above.
+                  "nowhere" is also the inital state of IMobilisInMobile before any call to go method.
+                  */
+  
+  Object get(Object path) /*return value of first item on given path.
+                            Return null when no item is found or 
+                            when this operation is unavailable in current context with given argument*/ 
+  Object put(Object item, Object path) /*Put given item to the first position on given path: 
+                                           replace previously existing item if any.
+                                           return the result of applying put operation,
+                                           equivalent to a following call to get(path).
+                                           return null if this operation is unavailable 
+                                           in current context with given arguments*/
+  int map(Object path, int position, int length, Object[] buffer, int offset) 
+                             /*store length items found on given path,
+                               starting at given position (1-based, included),
+                               in given buffer, starting at given offset (0-based)
+                               return actual number of items set (0<=return<=length) */
+
+A trivial Null implementation of IMobilisInMobile would be:
+
+NullMobilisInMobile : IMobilisInMobile
+  IMobilisInMobile go(Object path) {return this}
+  Object here() {return null;}
+  Object get(Object path) {return null}
+  Object put(Object item, Object path) {return null};
+  int map(Object path, int position, int length, Object[] buffer, int offset) {return 0;}
+ 
+********
+Use Case
+********
+
+e.g. navigation in some SQL query results on a database
+ IMobilisInMobile navigator = new SQLNavigator(database_properties);
+ navigator.go("SELECT * FROM client WHERE nom='Dupont'");
+ while( navigator.here()!=null )
+ {
+   // How to access attributes / fields?
+   Object name = navigator.get("@name");
+   Object age = navigator.get("@age");
+   Object address = navigator.get("@address");
+   (...)
+   navigator.go("following::sibling:client");
+ }
+
+e.g. navigation in some SQL query results on a database (second solution using map)
+ int BUFFER_LENGTH = 30;
+ Object[] resultset = new Object[BUFFER_LENGTH];
+ 
+ IMobilisInMobile navigator = new SQLNavigator(database_properties);
+ 
+ int found = BUFFER_LENGTH;
+ int position = 1;
+ while (found==BUFFER_LENGTH) // buffer is full
+ {
+   // Note: might need to get back to start position (root) to have correct context, e.g. for XPath queries
+   // navigator.go("/");
+   
+   int found = navigator.map("SELECT * FROM client WHERE nom='Dupont'",position,BUFFER_LENGTH,resultset,0);
+   position += found;
+   for(int i=0; i<found; i++)
+   {
+     navigator.go(resultset[i]);
+     
+     Object name = navigator.get("@name");
+     Object age = navigator.get("@age");
+     Object address = navigator.get("@address");
+     (...)
+   }
+ }
+ 
+e.g. navigation in some XPath query results on an XML file
+ IMobilisInMobile navigator = new XPathNavigator(xml_file);
+ navigator.go("/root/a/b/client");
+ while( navigator.here()!=null )
+ {
+   // How to access attributes / fields?
+   Object name = navigator.get("@name");
+   Object age = navigator.get("@age");
+   Object address = navigator.get("@address");
+   
+   navigator.go("following::sibling:client");
+ }
+ 
+e.g. navigation in some XPath query results on an XML file (here using XQuery);
+this sample illustrates prefix binding:
+ IMobilisInMobile navigator = new XQueryNavigator(xml_file);
+ String xquery = 
+"
+declare namespace p='http://example.com/ns/p';
+declare namespace q='http://example.com/ns/q';
+declare namespace f='http://example.com/ns/f';
+
+<p:a q:b='{f:func(2)}' xmlns:r='http://example.com/ns/r'/>
+";
+ navigator.go(xquery);
+ (...)
+
+********************************************************************
+HOW To Create Tools Generating Navigation Behavior From Config Files
+********************************************************************
+
+Config file = map describing where you can go from different locations (states).
+Each state contains transitions (possible paths from here) with the action(s) 
+to be executed on transition:
+
+e.g.
+<map>
+  <state from="/">
+    <transition to="root">
+      <action-1 params="(...)" />
+    </transition>
+  </state>
+  
+  <state from="root">
+    <transition to="child::*">
+      <action-2 params="(...)" />
+    </transition>
+    <transition to="@id">
+      <action-3 params="(...)" />
+    </transition>
+    <transition to="@name">
+      <action-3 params="(...)" />
+    </transition>
+    <transition to="@description">
+      <action-3 params="(...)" />
+    </transition>
+    (...)
+  </state>
+  
+  <state from="@id">
+    <transition to="parent::*">
+      <action-4 params="(...)" />
+    </transition>
+  </state>
+</map>
