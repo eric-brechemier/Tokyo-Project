@@ -1,0 +1,50 @@
+========================================
+Title: Tokyo Project - Tools Definition
+Last modified: 2005-08-01
+By: Eric Bréchemier
+Encoding: UTF-8
+========================================
+
+                        *******************************   
+                        **       Tokyo Project       **
+                        **      Tools Definition     **
+                        *******************************
+
+
+This documents defines the different tools to be implemented to demonstrate our process and 
+architecture with the sample use cases. Tools will be developped in Java J2SE.
+
+This list is not exhaustive, additional tools may be added later according to needs.
+Unnecessary tools won't be developped (e.g. already existing ones).
+
+
+For prototype
+**************
+- a specific implementation of XML Pull Parser and Serializer APIs on some non-XML data
+- adapters needed from this API to APIs expected by Saxon XSLT processor
+- some XSLT stylesheets to process the non-XML data viewed as XML
+- some (other) XSLT stylesheets to process XML data and output it (in XML mode) as non-XML
+
+For other samples
+*****************
+- based on grammar definition files,
+  * validation / inspection tools (for unit test / debugging)
+      NOTA: a reference application should be chosen (when available) for data viewing
+  * parser / serializer implemented using the simplest of solutions below
+    - specific implementation (hand-coded)
+    - specific implementation (code generated from grammar definition)
+    - generic tool using grammar file as a configuration to process non-XML data
+
+Samples themselves (quoted from ROADMAP)
+****************************************
+
+  * view mails in mbox file (read)
+      sort mail by date and thread (sender/receiver)
+      generate html pages showing highlighted mail content
+      
+  * PDF, Word, Excel output (write)
+      output documents that can be printed nicely
+      from source xml data
+  
+  * source code analysis (read)
+      process source code and output simple analysis (number of lines/method, comments...)

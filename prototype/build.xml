@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="tokyo.prototype" default="run" basedir=".">
+ 
+  <property name="out.dir" location="out" />
+  <property name="classes.dir" location="${out.dir}/class" />
+  <property name="in.file.dir" location="in/data"/>
+  <property name="in.file.path" location="in/data/capitals.txt"/>
+  <!-- property name="xslt.stylesheet.name" value="orderCountries.toxml.header.xsl"/ -->
+  <property name="xslt.stylesheet.name" value="orderCountries.tocsv.header.xsl"/>
+  <property name="xslt.stylesheet.path" location="src/xslt/name/brechemier/eric/tokyo/prototype/${xslt.stylesheet.name}"/>
+  <property name="out.file.dir" location="out/data"/>
+  
+  <path id="compile.classpath">
+    <fileset dir="lib">
+      <include name="**/*.jar"/>
+    </fileset>
+  </path>
+  
+  <path id="run.classpath">
+    <path refid="compile.classpath"/>
+    <pathelement location="${classes.dir}"/>
+  </path>
+  
+  <target name="clean" description="Clean up output directories.">
+    <delete dir="${out.dir}" />
+  </target>
+  
+  <target name="compile" description="Compile all sources and copy resources.">
+    <mkdir dir="${classes.dir}" />
+    <javac classpathref="compile.classpath" srcdir="src/java" destdir="${classes.dir}" />
+    <copy todir="${classes.dir}">
+      <fileset dir="res/java" />
+    </copy>
+  </target>
+  
+  <target name="run" depends="compile"
+         description="Launch XSLT transformation on custom text file">
+    
+    <mkdir dir="${out.file.dir}"/>
+    <java classpathref="run.classpath" classname="com.icl.saxon.StyleSheet">
+      <arg line="-x name.brechemier.eric.tokyo.prototype.CustomDataParser"/>
+      <arg line="-x org.xmlpull.v1.sax2.Driver"/>
+      <arg line="-o ${out.file.dir}"/>
+      <arg line="${in.file.dir}"/>
+      <arg line="${xslt.stylesheet.path}"/>
+    </java>
+    
+  </target>
+</project>
