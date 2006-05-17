@@ -1,0 +1,107 @@
+=================================
+Title: Roadmap for Tokyo Project
+Last modified: 2005-08-01
+By: Eric Bréchemier
+Encoding: UTF-8
+=================================
+
+                           
+                        *******************************   
+                        ** ROADMAP for Tokyo Project **
+                        *******************************
+
+Objectives:
+  * design a process
+  * design an architecture
+  * design tools
+  
+Sample Applications:
+  * view mails in mbox file (read)
+      sort mail by date and thread (sender/receiver)
+      generate html pages showing highlighted mail content
+      
+  * PDF, Word, Excel output (write)
+      output documents that can be printed nicely
+      from source xml data
+  
+  * source code analysis (read)
+      process source code and output simple analysis (number of lines/method, comments...)
+ 
+****************************** 
+ Project Status / Milestones
+******************************
+
+  * 1-Planning [July 28th-August 15th 2005]
+      Roadmap complete with code names for expected releases           - target: 2005-08-01
+      Informal (text file) process definition                          - target: 2005-08-01
+      Informal (text file) architecture definition                     - target: 2005-08-01
+      Informal (text file) tools definition                            - target: 2005-08-01
+  
+  => First release "Chiyoda-ku" 0.1    - target: 2005-08-01
+  
+  Before Pre-alpha
+    Prototype:                                                         - target: 2005-08-15
+      implement xmlpull.org pull api with parser on simple line reader in text file
+      (add fixed elements file for root and line for each line, 
+       put text value either as attribute or simple content)
+    
+      find or write wrapper for API expected by Saxon (sTrax?)
+      test xslt transformation on text file viewed as XML file
+  
+  => release "Akihabara" 0.2   - target: 2005-08-15
+  
+
+  
+  * 2-Pre-Alpha [August 16th-31st 2005]
+      
+    Project structure (compiling, unit tests, distribution)          - target: 2005-08-31
+    Help file for project configuration (Tools/Libraries needed)     - target: 2005-08-31
+    HTML+PNG document for project presentation (vision document)     - target: 2005-08-31
+    HTML+PNG document for roadmap                                    - target: 2005-08-31
+    HTML+PNG document for process definition                         - target: 2005-08-31
+    HTML+PNG document for architecture definition                    - target: 2005-08-31
+    HTML+PNG document for tools definition                           - target: 2005-08-31
+    
+    First sample: reading mbox mail files and output xhtml for viewing - target: 2005-08-31
+    The simplest architecture that may possibly work for first example - target: 2005-08-31
+  
+  => release "Chuo-ku" 0.3   - target: 2005-08-31
+  
+
+  
+  * 3-Alpha [September 1st-November 15th 2005]
+    
+    Second sample (output PDF, Word, Excel), simple implementation
+    Extend grammar as required to deal with more file formats
+    Formal document describing grammar definition
+    
+  => release "Asakusa" 0.4   - target: 2005-09-30
+  
+    Third sample, simple implementation of source code analysis.
+    
+  => release "Ikebukuro" 0.5   - target: 2005-11-15
+  
+  
+  
+  * 4-Beta [November 15th-February 13th 2005]
+  
+    More robust implementations for three samples
+    More grammar definitions
+    Ask for comments, find real life use in third party application
+  
+  Different iterations based on comments - target: 2005-12 to Q1 2006
+  => release "Roppongi" 0.6
+  => release "Ebisu" 0.7
+  => release "Shibuya" 0.8
+  => release "Shinjuku" 0.9
+  
+  Substantial feedback received, 
+  no severe bug open, less than 3 minor bugs open, few new bugs a week.
+  
+  * 5-Production/Stable 
+  
+  => release "Ginza" 1.0 -target Q2 2006
+
+  
+  
+  
