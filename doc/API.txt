@@ -47,10 +47,10 @@ IMobilisInMobile interface:
 A trivial Null implementation of IMobilisInMobile would be:
 
 NullMobilisInMobile : IMobilisInMobile
-  IMobilisInMobile go(Object path) {return this}
+  IMobilisInMobile go(Object path) {return this;}
   Object here() {return null;}
-  Object get(Object path) {return null}
-  Object put(Object item, Object path) {return null};
+  Object get(Object path) {return null;}
+  Object put(Object item, Object path) {return null;}
   int map(Object path, int position, int length, Object[] buffer, int offset) {return 0;}
  
 ********
