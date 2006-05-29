@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="tokyo.project.third.party" default="get-all" basedir=".">
+  
+  <!--
+  Tokyo Project Third Party - Build file to download third party libraries from mirrors
+  Author: Eric Bréchemier
+  Version: 1.0
+  
+  History:
+    1.0 - File Creation
+  -->
+  
+  <property file="build.properties" />
+    <!-- default values for properties missing in property file -->
+    <property name="saxon.mirror.name" value="heanet" />
+    <property name="saxon.zip.name" value="saxonb8-7-1j.zip" />
+    <property name="saxon.download.url" value="http://${saxon.mirror.name}.dl.sourceforge.net/sourceforge/saxon/${saxon.zip.name}" />
+    <property name="saxon.license.version" value="MPL-1.0.txt" />
+    <property name="saxon.license.url" value="http://www.mozilla.org/MPL/${saxon.license.version}" />
+  
+  <property name="download.dir" location="download" />
+  <property name="lib.dir" location="lib" />
+  
+  <target name="clean" description="Clean up output directories">
+    <delete dir="${lib.dir}" />
+    <delete dir="${download.dir}" />
+  </target>
+  
+  <target name="get-all" depends="get-saxon" description="Download all third party libraries" />
+    
+  <target name="init">  
+    <mkdir dir="${lib.dir}" />
+    <mkdir dir="${download.dir}" />
+  </target>
+  
+  <target name="get-saxon" depends="init" description="Get Saxon-B XSLT Processor">
+    <property name="saxon.zip.location" location="${download.dir}/${saxon.zip.name}" />
+    <get src="${saxon.download.url}" dest="${saxon.zip.location}"
+      verbose="true" usetimestamp="true"
+    />
+    <unzip src="${saxon.zip.location}" dest="${lib.dir}" overwrite="false">
+      <patternset>
+        <include name="*.jar"/>
+      </patternset>
+    </unzip>
+    <get src="${saxon.license.url}" dest="${lib.dir}/saxon.license.${saxon.license.version}"
+      verbose="true" usetimestamp="true"
+    />
+  </target>
+</project>
