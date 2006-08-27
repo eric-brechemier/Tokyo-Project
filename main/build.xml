@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ The Tokyo Project is hosted on Sourceforge:
+ http://sourceforge.net/projects/tokyo/
+ 
+ Copyright (c) 2005-2006 Eric Bréchemier
+ http://eric.brechemier.name
+ 
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2.1 of the License, or (at your option) any later version.
+ 
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
+ 
+ You should have received a copy of the GNU Lesser General Public
+ License along with this library; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+-->
+<project name="tokyo.main" default="test" basedir=".">
+  <!--
+  Tokyo Project Main - Build file to build TokyoNautilus Library and test it
+  Author: Eric Bréchemier
+  Version: 1.0
+  
+  History:
+    1.0 - File Creation
+  
+  See ../third-party for Third Party Dependencies.
+  -->
+  
+  <property name="lib.name" value="TokyoProject-VersionOne" />
+  
+  <property name="out.dir" location="out" />
+  <property name="out.classes.dir" location="${out.dir}/class" />
+  <property name="out.test.dir" location="${out.dir}/test" />
+  <property name="out.lib.dir" location="lib" />
+  
+  <property name="src.java" location="src/java" />
+  <property name="src.test.java" location="test/java" />
+  
+  <property name="thid.party.dir" location="../third-party" />
+  <property name="thid.party.lib.dir" location="${thid.party.dir}/lib" />
+  
+  <path id="compile.classpath">
+    <fileset dir="${thid.party.lib.dir}">
+      <include name="**/*.jar"/>
+    </fileset>
+  </path>
+  
+  <path id="test.classpath">
+    <path refid="compile.classpath"/>
+    <fileset dir="${out.lib.dir}">
+      <include name="**/*.jar"/>
+    </fileset>
+  </path>
+  
+  <path id="test.run.classpath">
+    <path refid="compile.classpath"/>
+    <path refid="test.classpath"/>
+    <pathelement location="${out.test.dir}"/>
+  </path>
+  
+  <target name="clean" description="Clean up output directories.">
+    <delete dir="${out.lib.dir}" />
+    <delete dir="${out.dir}" />
+  </target>
+  
+  <target name="build-third-party" description="Build Third Party Libs Dependencies">
+    <ant dir="${thid.party.dir}" inheritAll="false" />
+  </target>
+  
+  <target name="compile" depends="build-third-party" description="Compile all sources">
+    <mkdir dir="${out.classes.dir}" />
+    <javac classpathref="compile.classpath" srcdir="${src.java}" destdir="${out.classes.dir}" />
+  </target>
+  
+  <target name="build" depends="compile" description="Build library Java Archive.">
+    <mkdir dir="${out.lib.dir}" />
+    <jar destfile="${out.lib.dir}/${lib.name}.jar" basedir="${out.classes.dir}"/>
+  </target>
+  
+  <target name="test" depends="build" description="Compile (and run) all test.">
+    <mkdir dir="${out.test.dir}" />
+    <javac classpathref="test.classpath" srcdir="${src.test.java}" destdir="${out.test.dir}" />
+    
+    <java classpathref="test.run.classpath" classname="net.sf.tokyo.test.NullNautilusTest" />
+  </target>
+  
+</project>
