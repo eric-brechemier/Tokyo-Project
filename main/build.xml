@@ -20,7 +20,7 @@
  License along with this library; if not, write to the Free Software
  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 -->
-<project name="tokyo.main" default="test" basedir=".">
+<project name="tokyo.main" default="all" basedir=".">
   <!--
   Tokyo Project Main - Build file to build TokyoNautilus Library and test it
   Author: Eric Bréchemier
@@ -38,6 +38,15 @@
   <property name="out.classes.dir" location="${out.dir}/class" />
   <property name="out.test.dir" location="${out.dir}/test" />
   <property name="out.lib.dir" location="lib" />
+  <property name="out.doc.dir" location="${out.dir}/doc" />
+  
+  <property name="javadoc.packages" value="net.sf.tokyo" />
+  <property name="javadoc.title" value="TokyoNautilus API by Tokyo Project" />
+  <property name="javadoc.copyright" 
+    value="The Tokyo Project is hosted on Sourceforge: http://sourceforge.net/projects/tokyo/ -§- Copyright © 2005-2006 Eric Bréchemier: http://eric.brechemier.name" 
+  />
+  <property name="javadoc.src.encoding" value="UTF-8" />
+  <property name="javadoc.out.docencoding" value="UTF-8" />
   
   <property name="src.java" location="src/java" />
   <property name="src.test.java" location="test/java" />
@@ -83,11 +92,24 @@
     <jar destfile="${out.lib.dir}/${lib.name}.jar" basedir="${out.classes.dir}"/>
   </target>
   
+  <target name="doc" description="Generate Javadoc documentation.">
+    <mkdir dir="${out.doc.dir}" />
+    <javadoc packagenames="${javadoc.packages}" 
+      sourcepath="${src.java}" destdir="${out.doc.dir}"
+      author="true" version="true"
+      windowtitle="${javadoc.title}" doctitle="${javadoc.title}"
+      bottom="${javadoc.copyright}"
+      encoding="${javadoc.src.encoding}" docencoding="${javadoc.out.docencoding}"
+    />
+  </target>
+  
   <target name="test" depends="build" description="Compile (and run) all test.">
     <mkdir dir="${out.test.dir}" />
     <javac classpathref="test.classpath" srcdir="${src.test.java}" destdir="${out.test.dir}" />
     
     <java classpathref="test.run.classpath" classname="net.sf.tokyo.test.NullNautilusTest" />
   </target>
+  
+  <target name="all" depends="build, test, doc" description="Default target (All Tasks)." />
   
 </project>
