@@ -107,13 +107,13 @@ from the NullNautilus provided below, and adding required functionalities in an 
 
 class NullNautilus implements ITokyoNaut
 {
-  ITokyoNaut plug(INautilus collaborator, Object role)
+  ITokyoNaut plug(ITokyoNaut collaborator, Object role)
     {return collaborator;}
-  ITokyoNaut unplug(INautilus collaborator, Object role)
+  ITokyoNaut unplug(ITokyoNaut collaborator, Object role)
     {return this;}
   int map(Object path, int from, Object[] buffer, int offset, int length)
     {return 0;}
-  INautilus go(Object path)
+  ITokyoNaut go(Object path)
     {return this;}
   Object here()
     {return null;}
