@@ -28,7 +28,7 @@ package net.sf.tokyo;
  * reference to Captain Nemo's submarine in "Twenty Thousand Leagues Under the Sea" by Jules Verne.
  * Captain Nemo's motto, "Mobilis in Mobili", fits well with this flexible data navigation API. 
  * 
- * @author Eric Bréchemier
+ * @author Eric Br&eacute;chemier
  * @version Version One
  */
 public interface ITokyoNaut
