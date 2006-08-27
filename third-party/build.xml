@@ -4,20 +4,36 @@
   <!--
   Tokyo Project Third Party - Build file to download third party libraries from mirrors
   Author: Eric Bréchemier
-  Version: 1.0
+  Version: 1.2
   
   History:
     1.0 - File Creation
+    1.1 - Replaced MPL 1.0 with Saxon Conditions of Use on saxonica.com
+    1.2 - Added JUnit download
+    
+  List of Third Party Modules:
+    * "The Saxon XSLT and XQuery Processor from Saxonica Limited"
+      http://www.saxonica.com/
+    * "JUnit 4.1 Brought to you by Kent Beck, Erich Gamma, and David Saff."
+      http://www.junit.org/
   -->
   
   <property file="build.properties" />
     <!-- default values for properties missing in property file -->
+      <!-- Saxon Processor -->
     <property name="saxon.mirror.name" value="heanet" />
     <property name="saxon.zip.name" value="saxonb8-7-1j.zip" />
     <property name="saxon.download.url" value="http://${saxon.mirror.name}.dl.sourceforge.net/sourceforge/saxon/${saxon.zip.name}" />
-    <property name="saxon.license.version" value="MPL-1.0.txt" />
-    <property name="saxon.license.url" value="http://www.mozilla.org/MPL/${saxon.license.version}" />
-  
+    <property name="saxon.license.url" value="http://www.saxonica.com/documentation/conditions/intro.html" />
+    <property name="saxon.license.other.url" value="http://www.saxonica.com/documentation/conditions/other.html" />
+      <!-- JUnit -->
+    <property name="junit.mirror.name" value="heanet" />
+    <property name="junit.version" value="4.1" />
+    <property name="junit.zip.name" value="junit${junit.version}.zip" />
+    <property name="junit.zip.prefix" value="junit${junit.version}" />
+    <property name="junit.download.url" value="http://${junit.mirror.name}.dl.sourceforge.net/sourceforge/junit/${junit.zip.name}" />
+    <property name="junit.license.name" value="cpl-v10.html" />
+    
   <property name="download.dir" location="download" />
   <property name="lib.dir" location="lib" />
   
@@ -26,7 +42,7 @@
     <delete dir="${download.dir}" />
   </target>
   
-  <target name="get-all" depends="get-saxon" description="Download all third party libraries" />
+  <target name="get-all" depends="get-saxon, get-junit" description="Download all third party libraries" />
     
   <target name="init">  
     <mkdir dir="${lib.dir}" />
@@ -36,15 +52,38 @@
   <target name="get-saxon" depends="init" description="Get Saxon-B XSLT Processor">
     <property name="saxon.zip.location" location="${download.dir}/${saxon.zip.name}" />
     <get src="${saxon.download.url}" dest="${saxon.zip.location}"
-      verbose="true" usetimestamp="true"
+      verbose="true" usetimestamp="true" ignoreerrors="true"
     />
     <unzip src="${saxon.zip.location}" dest="${lib.dir}" overwrite="false">
       <patternset>
         <include name="*.jar"/>
       </patternset>
     </unzip>
-    <get src="${saxon.license.url}" dest="${lib.dir}/saxon.license.${saxon.license.version}"
-      verbose="true" usetimestamp="true"
+    <get src="${saxon.license.url}" dest="${lib.dir}/saxon.license.html"
+      verbose="true" usetimestamp="true" ignoreerrors="true"
     />
+    <get src="${saxon.license.other.url}" dest="${lib.dir}/saxon.license.other.html"
+      verbose="true" usetimestamp="true" ignoreerrors="true"
+    />
+  </target>
+  
+  <target name="get-junit" depends="init" description="Get JUnit">
+    <property name="junit.zip.location" location="${download.dir}/${junit.zip.name}" />
+    <get src="${junit.download.url}" dest="${junit.zip.location}"
+      verbose="true" usetimestamp="true" ignoreerrors="true"
+    />
+    <unzip src="${junit.zip.location}" dest="${download.dir}" overwrite="false">
+      <patternset>
+        <include name="${junit.zip.prefix}/${junit.license.name}"/>
+        <include name="${junit.zip.prefix}/*.jar"/>
+        <exclude name="*-src.jar"/>
+      </patternset>
+    </unzip>
+    <copy todir="${lib.dir}" verbose="true">
+      <fileset dir="${download.dir}/${junit.zip.prefix}">
+        <include name="*.jar"/>
+      </fileset>
+    </copy>
+    <copy file="${download.dir}/${junit.zip.prefix}/${junit.license.name}" tofile="${lib.dir}/junit.license.html" verbose="true" />
   </target>
 </project>
