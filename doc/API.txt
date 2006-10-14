@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
 =========================================
 Title: Tokyo Project - Data handling API 
-Last modified: 2006-08-27
+Last modified: 2006-10-14
 By: Eric Bréchemier
 Encoding: UTF-8
 =========================================
@@ -40,86 +40,288 @@ The TokyoNautilus API enables both XML and non-XML data browsing through a conci
 reference to Captain Nemo's submarine in "Twenty Thousand Leagues Under the Sea" by Jules Verne.
 Captain Nemo's motto, "Mobilis in Mobili", fits well with this flexible data navigation API. 
 
-TokyoNautilus API is composed of a single interface, ITokyoNaut, with the seven following methods:
+TokyoNautilus API is composed of a single interface, ITokyoNaut, with the five following methods:
   
-  Two Configuration Methods
-  -------------------------
-  * plug(ITokyoNaut collaborator, Object role) : ITokyoNaut
-      Delegate some parts of the data handling with a "collaborator", as specified by "role".
-      Return "collaborator" to allow further combinations on the same line of code.
-  * unplug(ITokyoNaut collaborator, Object role) : ITokyoNaut
-      Make "collaborator" redundant to free resources... ;(
-      Return current TokyoNaut to allow new combinations on the same line of code.
+  Two Methods Framing the Transaction 
+  -----------------------------------
+  * meet(ITokyoNaut stranger, Object[] context, int language) : void
+      Every data processing starts with such a meeting between two TokyoNaut instances.
+      The stranger instance is to propose a language stored in context[language]. 
+      The hearer TokyoNaut may either say something using the language, or keep silent 
+      and quit, using the same context and language in arguments.
   
-  Three Data Navigation Methods
-  -----------------------------
-  * map(Object path, int from, Object[] buffer, int offset, int length) : int
-      Scouts for data items on selection "path", and stores their locations in "buffer".
-      To allow repeated calls of this method, the first items are ignored 
-      until the "from" position is reached, counting from 1 like XPath position().
-      Including "from", at most "length" items are then stored in "buffer".
-      The "buffer" can be filled in several steps, by setting the "offset" to
-      the starting position for the storage of new items. It corresponds to 
-      the sum of values returned in previous calls, since this method 
-      returns the actual number of items stored at each step.
-      ITokyoNaut implementations should at least support "/","*","@*" for "path", 
-      similarly to their XPath meaning in XML Documents.
-  * go(Object path) : ITokyoNaut
-      Jump to a well-suited position for reading the first item on given "path",
-      starting from here() excluded.
-      Return this TokyoNaut to allow further moves on the same line of code.
-      Sets current location to "nowhere" (here() returns null)
-      when this move is not supported or no data item is found.
-      ITokyoNaut implementations should at least support "/","*","@*" for "path", 
-      similarly to their XPath meaning in XML Documents.
-  * here() : Object  
-      Return current location.
-      Can be used for bookmarking, by storing the returned location and later 
-      calling go(location); however, in mutable data structures, there is
-      no warranty that the corresponding data item will be exactly the same, 
-      or even still exist.
-      Return null if previous call to go() led to "nowhere", as well as initially 
-      before any call to go().
-      In ITokyoNaut implementations, when here() is not null, calling here().toString() 
-      should return an absolute path, either in XPath in the context of a single document,
-      or in XPointer to also include current document's URI.
+  * quit(ITokyoNaut friend, Object[] context, int language) : void
+      At the end of all discussions, TokyoNauts part company; this is the occasion
+      to free contextual ressources related to the task. Any TokyoNaut may end the discussion,
+      not necessarily the one having started it by calling the meet method.
+      context[language] will be the same language as the one initially proposed in
+      the meet method.
   
-  Two Data Access Methods
-  -----------------------
-  * get(Object path) : Object  
-      Return the value of the first item found on given "path".
-      Return null when this move is not supported or no data item is found.
-      ITokyoNaut implementations should at least support "." for "path",
-      in the context of simple data items with text values,
-      similarly to its XPath meaning in XML Documents.
-  * put(Object path, Object item) : Object
-      Put given "item" at the first position on given "path", 
-      replacing any previous data item found there.
-      Returns null if this "path" is not supported or the data structure is immutable.
-      Can be used to delete data items by setting "item" to null.
-      Insertion before, between, or after existing data items may be supported by 
-      refining on the "path", e.g. inserting "+" or "-" after positions as in
-      "/Root/Element[3+]" or "/Root/Element[1-]".
-      ITokyoNaut implementations should only support the put() method when found relevant.
-
+  Three Methods For Ostensive Communication
+  ------------------------------------------
+  * say(ITokyoNaut speaker, Object[] context, int sentence) : void
+      TokyoNauts will communicate by calling the say method alternatively. 
+      The speaker TokyoNaut says context[sentence], assuming it is relevant in the context. 
+      Each TokyoNaut is free to update the context to keep only the most relevant items. 
+      In processing hierarchical data, the context may for example contain the stack of all
+      ancestors from the root to the current node.
+  
+  * play(ITokyoNaut player, Object[] context, int play) : void
+      When tired of speaking, TokyoNauts can enjoy a little distraction by playing
+      a quick game, a piece of music or even theater, proposed as context[more]. 
+      Serious TokyoNauts can freely skip the implementation of this method.
+    
+  * show(ITokyoNaut shower, Object towel) : void
+      Gestures provide alternative communication, which proves to be a useful 
+      for logs, assertions and errors. Don't Panic! The towel is the key.
+  
 The design of TokyoNautilus implementations can be successfully achieved by starting 
-from the NullNautilus provided below, and adding required functionalities in an iterative way:
+from the NullNautilus provided below, adding required functionalities as needed:
 
-class NullNautilus implements ITokyoNaut
+public class NullNautilus implements ITokyoNaut
 {
-  ITokyoNaut plug(ITokyoNaut collaborator, Object role)
-    {return collaborator;}
-  ITokyoNaut unplug(ITokyoNaut collaborator, Object role)
-    {return this;}
-  int map(Object path, int from, Object[] buffer, int offset, int length)
-    {return 0;}
-  ITokyoNaut go(Object path)
-    {return this;}
-  Object here()
-    {return null;}
-  Object get(Object path)
-    {return null;}
-  Object put(Object path, Object item)
-    {return null;}
+  public void meet(ITokyoNaut stranger, Object[] context, int language) { return; }
+  public void quit(ITokyoNaut friend, Object[] context, int language)   { return; }
+  
+  public void say(ITokoyNaut speaker, Object[] context, int sentence)   { return; }
+  public void play(ITokyoNaut player, Object[] context, int play)       { return; }
+  public void show(ITokyoNaut shower, Object towel);                    { return; }
 }
+
+
+The Joshua class below exemplifies a fictionnal (but mostly harmless) TokyoNaut:
+
+public class Joshua implements ITokyoNaut
+{
+  public void meet(ITokyoNaut stranger, Object[] context, int language)
+  {
+    stranger.quit(this,context,language);
+    return;
+  }
+  
+  public void quit(ITokyoNaut friend, Object[] context, int language)
+  {
+    if ( isSafe(friend,context,language) ) {
+      int play = language+1;
+      context[play] = "How about a nice game of chess?";
+      friend.play(this,context,play);
+    }
+    return;
+  }
+  
+  public void say(ITokyoNaut speaker, Object[] context, int sentence)
+  {
+    if ( isSafe(friend,context,sentence) ) {
+      int play = sentence+1;
+      context[play] = "Is it a game, or is it real?";
+      friend.play(this,context,play);
+    }
+    return;
+  }
+  
+  public void play(ITokyoNaut player, Object[] context, int play)
+  {
+    if ( isSafe(friend,context,sentence) ) {
+      int reply = sentence+1;
+      context[reply] = "Shall we play a game?";
+      friend.say(this,context,reply);
+    }
+    return;
+  }
+    
+  public void show(ITokyoNaut shower, Object towel)
+  {
+    System.err.println("Don't Panic! "+shower+" knows where his "+towel+" is.");
+    return;
+  }
+  
+  private boolean isSafe(ITokyoNaut friend, Object[] context, int position)
+  {
+    if
+      (
+        (friend != null)
+        &&
+        (context != null)
+        &&
+        (context.length >0)
+        &&
+        (0 <= position && position < context.length-1)
+      )
+    {
+      return true;
+    }
+    else
+    {
+      friend.show(this,"Error: Invalid parameters or context buffer too small");
+      return false;
+    }
+  }
+  
+}
+
+In order to conclude this introduction to TokyoNaut API, we will present below a 
+step by step description of the prototype 1 conception. This prototype consists in 
+handling the sorting of countries in a CSV file using XSLT, by mapping CSV data to SAX 
+events to process it as if it was vanilla XML:
+
+1°) First, Know Your Enemy. We start with an exploration of the custom input format possibilities
+and complexities; in this case, we will read and print the input CSV file to System.out.
+
+The CSV file looks like this, with each line terminated by '\r\n':
+Federated States of Micronesia,Palikir,Oceania
+Fiji,Suva,Oceania
+Finland,Helsinki,Europe
+France,Paris,Europe
+
+And here is some Java code loading the file and printing all lines and fields to System.out:
+
+public void parseAll(String fileName)
+{
+  try
+  {
+    BufferedReader br = new BufferedReader( new FileReader(fileName) );
+    char ch;
+    int lineCount = 0;
+    int fieldCount = 0;
+    boolean isStartLine = true;
+    boolean isStartField = true;
+    do
+    {
+      if (isStartLine)
+      {
+        lineCount++;
+        fieldCount==0;
+        System.out.println("Line "+lineCount+":");
+        isStartLine = false;
+      }
+      
+      if (isStartField)
+      {
+        fieldCount++;
+        System.out.println("\tField "+fieldCount+": ");
+        isStartField = false;
+      }
+      
+      ch = br.read();
+      
+      switch(ch)
+      {
+        case ',':
+          fieldCount++;
+          break;
+        
+        case '\r':
+        case '\n':
+          isStartLine = true;
+          break;
+      
+        default:
+          System.out.print(ch);
+      
+      }
+      
+    } while (ch != -1);
+  }
+  catch(Exception e)
+  {
+    System.err.println("ERROR: + e");
+    e.printStackTrace();
+  }
+  finally
+  {
+    System.out.flush();
+  }
+}
+
+2°) Estimate Your Strengths. Let's now play with XML file, to help us design the processing taking place after
+the conversion to SAX events:
+
+Based on CSV data, we work with an equivalent XML structure, designed as follows:
+<csv xmlns="http://sf.tokyo.net/prototype1/csv">
+  <line>
+    <field>France</field>
+    <field>Paris</field>
+    <field>Europe</field>
+  </line>
+  <line>
+    <field>Canada</field>
+    <field>Toronto</field>
+    <field>America</field>
+  </line>
+  <line>
+    <field>Japan</field>
+    <field>Tokyo</field>
+    <field>Asia</field>
+  </line>
+</csv>
+
+This allows us to write the XSLT transformation to reorder the data by continent, country, capital:
+<?xml version="1.0" encoding="UTF-8"?>
+<xsl:transform
+ xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+ version="1.0"
+ 
+ xmlns:data="http://tokyo.sf.net/prototype1/csv"
+>
+  <!--
+  Implementation part of XSL Transformation:
+  Reorder {"countries","http://tokyo.sf.net/prototype1/countries"}
+  -->
+  
+  <xsl:template match="data:world">
+    <xsl:copy>
+      <xsl:apply-templates select="data:country">
+        <xsl:sort select="data:continent" />
+        <xsl:sort select="data:name" />
+      </xsl:apply-templates>
+    </xsl:copy>
+  </xsl:template>
+  
+  <xsl:template match="data:country">
+    <xsl:copy-of select="." />
+  </xsl:template>
+
+</xsl:transform>
+
+The resulting file is:
+<csv xmlns="http://sf.tokyo.net/prototype1/csv">
+  <line>
+    <field>Japan</field>
+    <field>Tokyo</field>
+    <field>Asia</field>
+  </line>
+  <line>
+    <field>Canada</field>
+    <field>Toronto</field>
+    <field>America</field>
+  </line>
+  <line>
+    <field>France</field>
+    <field>Paris</field>
+    <field>Europe</field>
+  </line>
+</csv>
+
+
+3°) Know Who Your Allies Are. When executing the XSLT transformation, the XML file is parsed and SAX events corresponding
+to the different nodes found during the parsing are provided to the XSLT processor. Before replacing
+events coming from the XML source by events coming from a non-XML source, we will first filter these
+events to know them better and record them in order to be able to replay the flow of events without 
+the source, which results in a simulated parsing.
+
+
+4°) Know Yourself. We can now replay the recorded events and check that the results are unchanged.
+
+
+5°) Friends Will Be Friends. Finally, we can now adapt the CSV processing code for SAX Events generation, and replace the
+previous simulation. At this step, CSV is processed transparently as if it was XML, and an XML file
+is generated at the end of the transformation. The first prototype will then be finalized... 
+- by cutting the TokyoNaut instance in three different parts for better reusability
+  * File loading from disk and reading chunks of data
+  * CSV interpretation (lines and fields)
+  * SAX2 XMLReader implementation
+- following a similar process on the output to replace the XML generation with the creation of a 
+CSV file in the same format as the input.
+
+
 =============== END OF DOCUMENT: Tokyo Project - Data handling API ===============
