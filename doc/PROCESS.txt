@@ -1,6 +1,28 @@
+==================================================================================
+The Tokyo Project is hosted on Sourceforge:
+http://sourceforge.net/projects/tokyo/
+
+Copyright (c) 2005-2006 Eric Bréchemier
+http://eric.brechemier.name
+
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+==================================================================================
+
 ==========================================
 Title: Tokyo Project - Process Definition
-Last modified: 2005-08-01
+Last modified: 2006-07-06
 By: Eric Bréchemier
 Encoding: UTF-8
 ==========================================
@@ -23,7 +45,7 @@ Encoding: UTF-8
     - on the other hand, many remaining non-xml formats
       (e.g. for pure binary or pure text data)
 
-- we need two transformations:
+- handling non-XML data as XML requires two transformations:
     - from non-xml to xml, for applications input,
     corresponding to XML parsing
     - from xml to non-xml, for applications output,
@@ -56,11 +78,27 @@ Encoding: UTF-8
 * IN A NUTSHELL
 - define the grammar of your data
 - define the vocabulary for your data viewed as XML
-- use it to create 
-    - one tool reading your data and implementing an XML parsing API
-    - one tool providing an XML serializing API and writing your data
-    - maybe another tool to validate input data / generated data
+- define the syntax of your queries, e.g. the required XPath subset
+- use them to create 
+    - one tool reading your data and implementing an XML parsing API,
+      with the following possible components:
+      * Query parsing and analysis
+      * State Machine for Data Grammar
+      * State Machine/Factory for Data Extraction
+      
+    - one tool providing an XML serializing API and writing your data,
+      with the following possible components:
+      * Query parsing and analysis
+      * State Machine for Data Grammar
+      * State Machine/Factory for Data Serialization
+    
+    - and maybe additional tools to validate input data / generated data
+    
 - plug your tool on applications processing XML
+
+NOTE:
     - you may need some adapters for the expected API or extra conversion steps
     - the application has to know the vocabulary of your data viewed as XML 
       to understand its semantic
+      
+=============== END OF DOCUMENT: Tokyo Project - Process ===============
