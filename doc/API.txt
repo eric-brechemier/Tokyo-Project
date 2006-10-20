@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
 =========================================
 Title: Tokyo Project - Data handling API 
-Last modified: 2006-10-14
+Last modified: 2006-10-20
 By: Eric Bréchemier
 Encoding: UTF-8
 =========================================
@@ -44,48 +44,58 @@ TokyoNautilus API is composed of a single interface, ITokyoNaut, with the five f
   
   Two Methods Framing the Transaction 
   -----------------------------------
-  * meet(ITokyoNaut stranger, Object[] context, int language) : void
+  * meet(ITokyoNaut stranger, Object[] context, int[] type, int language) : void
       Every data processing starts with such a meeting between two TokyoNaut instances.
-      The stranger instance is to propose a language stored in context[language]. 
+      The stranger instance is to propose a language stored in context[language], with
+      type[language] characterizing the language Object using a shared convention. 
       The hearer TokyoNaut may either say something using the language, or keep silent 
-      and quit, using the same context and language in arguments.
-  
-  * quit(ITokyoNaut friend, Object[] context, int language) : void
+      and quit, using the same context, type and language as arguments.
+      
+      Note: TokyoNaut API makes extensive use of the three parameters
+        Object[] context + int[] type + int someObjectPosition.
+        The combination of context and type can be seen as a stack of named arguments,
+        while the last integer parameter points to the top of the stack. 
+        The rule is rather to keep the same arrays for the duration of the conversation,
+        even if bigger arrays may be introduced as required if shared conventions associated 
+        with the current language allow it. Besides, the two arrays should have the same size.
+      
+  * quit(ITokyoNaut friend, Object[] context, int[] type, int language) : void
       At the end of all discussions, TokyoNauts part company; this is the occasion
       to free contextual ressources related to the task. Any TokyoNaut may end the discussion,
       not necessarily the one having started it by calling the meet method.
-      context[language] will be the same language as the one initially proposed in
-      the meet method.
+      context[language] and type[language] will usually be identical to the values
+      provided in the initial meet method.
   
   Three Methods For Ostensive Communication
   ------------------------------------------
-  * say(ITokyoNaut speaker, Object[] context, int sentence) : void
-      TokyoNauts will communicate by calling the say method alternatively. 
-      The speaker TokyoNaut says context[sentence], assuming it is relevant in the context. 
-      Each TokyoNaut is free to update the context to keep only the most relevant items. 
-      In processing hierarchical data, the context may for example contain the stack of all
-      ancestors from the root to the current node.
+  * say(ITokyoNaut speaker, Object[] context, int[] type, int sentence) : void
+      TokyoNauts instances communicate by calling alternatively this "say" method. 
+      The speaker TokyoNaut says context[sentence], characterized by type[sentence], 
+      assuming it is relevant in the context. 
+      Each TokyoNaut is free to update the context stack to keep only the most relevant items. 
+      For hierarchical data processing, the context may for example contain the stack of
+      ancestors on the path from the root to the current node.
   
-  * play(ITokyoNaut player, Object[] context, int play) : void
+  * play(ITokyoNaut player, Object[] context, int[] type, int play) : void
       When tired of speaking, TokyoNauts can enjoy a little distraction by playing
-      a quick game, a piece of music or even theater, proposed as context[more]. 
+      a quick game, a piece of music or even theater, proposed as context[play]. 
       Serious TokyoNauts can freely skip the implementation of this method.
     
   * show(ITokyoNaut shower, Object towel) : void
-      Gestures provide alternative communication, which proves to be a useful 
-      for logs, assertions and errors. Don't Panic! The towel is the key.
+      Gestures provide alternative communication, especially useful for logs, 
+      assertions and errors. No need to panic, says Japan coach.
   
 The design of TokyoNautilus implementations can be successfully achieved by starting 
 from the NullNautilus provided below, adding required functionalities as needed:
 
 public class NullNautilus implements ITokyoNaut
 {
-  public void meet(ITokyoNaut stranger, Object[] context, int language) { return; }
-  public void quit(ITokyoNaut friend, Object[] context, int language)   { return; }
+  public void meet(ITokyoNaut stranger, Object[] context, int[] type, int language) { return; }
+  public void quit(ITokyoNaut friend, Object[] context, int[] type, int language)   { return; }
   
-  public void say(ITokoyNaut speaker, Object[] context, int sentence)   { return; }
-  public void play(ITokyoNaut player, Object[] context, int play)       { return; }
-  public void show(ITokyoNaut shower, Object towel);                    { return; }
+  public void say(ITokoyNaut speaker, Object[] context, int[] type, int sentence)   { return; }
+  public void play(ITokyoNaut player, Object[] context, int[] type, int play)       { return; }
+  public void show(ITokyoNaut shower, Object towel);                                { return; }
 }
 
 
@@ -93,38 +103,45 @@ The Joshua class below exemplifies a fictionnal (but mostly harmless) TokyoNaut:
 
 public class Joshua implements ITokyoNaut
 {
-  public void meet(ITokyoNaut stranger, Object[] context, int language)
+  public static final int TYPE_PROPOSE_GAME_CHESS = 100;
+  public static final int TYPE_REPLY_PROPOSE_GAME = 110;
+  public static final int TYPE_REAL_DOUBT = 900;
+  
+  public void meet(ITokyoNaut stranger, Object[] context, int[] type, int language)
   {
-    stranger.quit(this,context,language);
+    stranger.quit(this,context,type,language);
     return;
   }
   
-  public void quit(ITokyoNaut friend, Object[] context, int language)
+  public void quit(ITokyoNaut friend, Object[] context, int[] type, int language)
   {
-    if ( isSafe(friend,context,language) ) {
+    if ( isSafe(friend,context,type,language) ) {
       int play = language+1;
       context[play] = "How about a nice game of chess?";
-      friend.play(this,context,play);
+      type[play] = TYPE_PROPOSE_GAME_CHESS;
+      friend.play(this,context,type,play);
     }
     return;
   }
   
-  public void say(ITokyoNaut speaker, Object[] context, int sentence)
+  public void say(ITokyoNaut speaker, Object[] context, int[] type, int sentence)
   {
-    if ( isSafe(friend,context,sentence) ) {
+    if ( isSafe(friend,context,type,sentence) ) {
       int play = sentence+1;
       context[play] = "Is it a game, or is it real?";
-      friend.play(this,context,play);
+      type[play] = TYPE_REAL_DOUBT;
+      friend.play(this,context,type,play);
     }
     return;
   }
   
-  public void play(ITokyoNaut player, Object[] context, int play)
+  public void play(ITokyoNaut player, Object[] context, int[] type, int play)
   {
-    if ( isSafe(friend,context,sentence) ) {
+    if ( isSafe(friend,context,type,sentence) ) {
       int reply = sentence+1;
       context[reply] = "Shall we play a game?";
-      friend.say(this,context,reply);
+      type[reply] = TYPE_REPLY_PROPOSE_GAME;
+      friend.say(this,context,type,reply);
     }
     return;
   }
@@ -135,7 +152,7 @@ public class Joshua implements ITokyoNaut
     return;
   }
   
-  private boolean isSafe(ITokyoNaut friend, Object[] context, int position)
+  private boolean isSafe(ITokyoNaut friend, Object[] context, int[] type, int position)
   {
     if
       (
@@ -146,6 +163,10 @@ public class Joshua implements ITokyoNaut
         (context.length >0)
         &&
         (0 <= position && position < context.length-1)
+        &&
+        (type != null)
+        &&
+        (type.length == context.length)
       )
     {
       return true;
