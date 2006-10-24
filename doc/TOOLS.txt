@@ -110,4 +110,7 @@ e.g.
   </state>
 </map>
 
+NOTE: The goal of this project is not to endorse a single syntax for grammars/actions files, but to define
+and demonstrate simple mechanisms that can be customized for specific grammar formats.
+
 =============== END OF DOCUMENT: Tokyo Project - Tools ===============
