@@ -1,6 +1,28 @@
+==================================================================================
+The Tokyo Project is hosted on Sourceforge:
+http://sourceforge.net/projects/tokyo/
+
+Copyright (c) 2005-2006 Eric Bréchemier
+http://eric.brechemier.name
+
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+==================================================================================
+
 ===============================================
 Title: Tokyo Project - Architecture Definition
-Last modified: 2005-08-01
+Last modified: 2006-10-24
 By: Eric Bréchemier
 Encoding: UTF-8
 ===============================================
@@ -20,39 +42,45 @@ Encoding: UTF-8
     - using the formalized grammar as a basis for the development of data-to-xml
     and xml-to-data processors
     - generating the code of those processors from grammar files
-    - using generic tools using the grammar file as a configuration 
+    - using generic tools taking the grammar file as a configuration 
     that enables them to read and write data in corresponding format
 
 - we have to choose an XML parser API and an XML serializer API to be implemented
   by our non-XML data processors.
-  I chose the APIs defined by xmlpull.org. The main advantages of Pull API are:
+  I chose at first the API defined by xmlpull.org. The main advantages of Pull API are:
     * it is both very usable and efficient
     * adapters can be implemented simply for both SAX and DOM APIs
-  I still have to study the serializing API (to be done during prototyping
-  to fully validate this choice).
-
+  However, its main disadvantages are:
+    * there are too many (xml specific) methods to be implemented for custom data parsing
+    * the serializing API is (too) different from the parsing API
+  Therefore, I ended designing a new simple API as part of this project, 
+  and I coined this Tokyo Project API "TokyoNautilus", a strange combination in reference
+  to Jules Verne's "Mobilis in Mobili" and a strong attraction for Japan.
+    
 - the basic architecture is:
 
 For Parsing
-non-XML data -> [non-XML Parser] -> [XML Pull API] -> [XML API Adaptor] -> [XML Application]
+non-XML data -> [non-XML Parser] -> [TokyoNautilus API] -> [XML API Adaptor] -> [XML Application]
 e.g.
-CSV -> CSV parser -> XML Pull API -> SAX API Adaptor -> XSLT Processor
+CSV -> CSV parser -> TokyoNautilus API -> SAX API Adaptor -> XSLT Processor
 
 For Serializing
-[XML Application] -> [XML Serializer Adaptor] -> [XML Serializer API] -> [non-XML Serializer] 
-                                                                                -> non-XML data
+[XML Application] -> [XML Serializer Adaptor] -> [TokyoNautilus API] -> [non-XML Serializer] -> non-XML data
 e.g.
-XSLT Processor -> DOM API -> XML Pull Serializer API -> CSV Serialize -> CSV
-                                                                                
-We still have to determine how to configure applications 
-  - to use correct parser and correct serializer for non-XML data instead of XML versions
-  - to use sometimes XML parser / sometimes non-XML paser according to the type of data
-  (we may have to process XML data as well as different types of non-XML data in the same
-  application).
+XSLT Processor -> DOM API -> TokyoNautilus API -> CSV Serializer -> CSV
+
+The same TokyoNautilus API can be used both for data parsing and serializing; however, different instances
+may implement the parsing and serializing parts.                                                                                
+
 
 * IN A NUTSHELL
-- implement XML Pull Parser/Serializer API for your non-XML data, 
-taking advantage of existing tools and the formal grammar definition of your data
 
-- implement adapters of XML Pull APIs to XML APIs needed by your application
-(this is independent of your data format)
+In order to benefit from TokyoNautilus for a new non-xml data format, the following steps are required:
+
+- implement TokyoNautilus API for your non-XML data parsing/serializing, 
+taking advantage if possible of existing tools and the formal grammar definition of your data
+
+- implement adapters of TokyoNautilus API to XML APIs needed by your application
+(this part is largely independent of your data format)
+
+=============== END OF DOCUMENT: Tokyo Project - Architecture ===============
