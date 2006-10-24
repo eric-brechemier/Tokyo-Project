@@ -1,6 +1,28 @@
+==================================================================================
+The Tokyo Project is hosted on Sourceforge:
+http://sourceforge.net/projects/tokyo/
+
+Copyright (c) 2005-2006 Eric Bréchemier
+http://eric.brechemier.name
+
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+==================================================================================
+
 ========================================
 Title: Tokyo Project - Tools Definition
-Last modified: 2005-08-01
+Last modified: 2006-10-24
 By: Eric Bréchemier
 Encoding: UTF-8
 ========================================
@@ -20,7 +42,7 @@ Unnecessary tools won't be developped (e.g. already existing ones).
 
 For prototype
 **************
-- a specific implementation of XML Pull Parser and Serializer APIs on some non-XML data
+- a specific implementation of TokyoNautilus API for some non-XML data Parsing and Serializing
 - adapters needed from this API to APIs expected by Saxon XSLT processor
 - some XSLT stylesheets to process the non-XML data viewed as XML
 - some (other) XSLT stylesheets to process XML data and output it (in XML mode) as non-XML
@@ -48,3 +70,44 @@ Samples themselves (quoted from ROADMAP)
   
   * source code analysis (read)
       process source code and output simple analysis (number of lines/method, comments...)
+      
+********************************************************************
+HOW To Create Tools Generating Navigation Behavior From Config Files
+********************************************************************
+
+Config file = map describing where you can go from different locations (states).
+Each state contains transitions (possible paths from here) with the action(s) 
+to be executed on transition:
+
+e.g.
+<map>
+  <state from="/">
+    <transition to="root" when="meet CSVNaut" >
+      <action-1 params="(...)" />
+    </transition>
+  </state>
+  
+  <state from="root">
+    <transition to="child::*" when="(...)">
+      <action-2 params="(...)" />
+    </transition>
+    <transition to="@id" when="(...)">
+      <action-3 params="(...)" />
+    </transition>
+    <transition to="@name" when="(...)">
+      <action-3 params="(...)" />
+    </transition>
+    <transition to="@description" when="(...)">
+      <action-3 params="(...)" />
+    </transition>
+    (...)
+  </state>
+  
+  <state from="@id">
+    <transition to="parent::*" when="(...)">
+      <action-4 params="(...)" />
+    </transition>
+  </state>
+</map>
+
+=============== END OF DOCUMENT: Tokyo Project - Tools ===============
