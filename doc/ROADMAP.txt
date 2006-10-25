@@ -1,6 +1,28 @@
+==================================================================================
+The Tokyo Project is hosted on Sourceforge:
+http://sourceforge.net/projects/tokyo/
+
+Copyright (c) 2005-2006 Eric Bréchemier
+http://eric.brechemier.name
+
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+==================================================================================
+
 =================================
 Title: Roadmap for Tokyo Project
-Last modified: 2006-05-17
+Last modified: 2006-10-24
 By: Eric Bréchemier
 Encoding: UTF-8
 =================================
@@ -33,101 +55,104 @@ Sample Applications:
       process source code and output simple analysis (number of lines/method, comments...)
 
 Additional projects to be based on designed API:
-  * XSLT Chess Game reading/writing standard chess notation files
   * Interpreter Engine for Simple Games
 
 ****************************** 
  Project Status / Milestones
 ******************************
 
-  * 1-Planning [July 28th-August 15th 2005]
-      Roadmap complete with code names for expected releases
-      Informal (text file) process definition
-      Informal (text file) architecture definition
-      Informal (text file) tools definition
-  => RELEASED: 2005-08-01
-     First release "Chiyoda-ku" 0.1 
-     
-  Before Pre-alpha
-    Prototype:
-      -implement xmlpull.org pull api with parser on simple line reader in text file
-      (add fixed elements file for root and line for each line, 
-       put text value either as attribute or simple content)
-      -find or write wrapper for API expected by Saxon (SAX1/SAX2)
-      test xslt transformation on text file viewed as XML file
-  => RELEASED: 2005-08-15
-     release "Akihabara" 0.2
-  
-  
-  * 2-Pre-Alpha [August 16th 2005-May 31st 2006]
-    Research by reading reference books in compiling and linguistics:
-      - Compilers, Principles, Techniques and Tools, Alfred V. Aho, Ravi Sethi, Jeffrey D. Ullman, 2003
-        [ISBN: 0201101947]
-      - Compilateurs, Dick Grune, Henri E. Bal, Ceriel J.H. Jacobs, Koen G. Langendoen, 2002
-        [ISBN: 2100058878]
-      - Introduction à la linguistique contemporaine, Antoine Auchlin, Jacques Moeschler, 2005
-        [ISBN: 2200268831]
-      - Relevance, communication & cognition (second edition), Dan Sperber, Deirdre Wilson, 1995
-        [ISBN : 0631198784]
-    Updated Prototype:
-      -based on custom API (Nautilus API) designed for simplicity,
-       from both user and implementer perspective
-      -actual processing (parsing/writing) based on a set of rules describing format
-  => release "Chuo-ku" 0.3                                            - target: 2006-05-18
+Current Tasks:
+  * Research, reading about compiling and linguistics
+  * API Update
+  * Prototype Update
+
+Next Milestone:
+  => Tokyo Project "Shibuya" release (0.2.1)
+  TARGET: 2006-11-01
+  Phase: 2-Pre-Alpha
+  Content:
+    Shibuya is an important step in Tokyo Project, with the release of a new API at its core,
+    the TokyoNautilus API. This release includes updated project documentation and roadmap, 
+    as well as a new prototype demonstrating how the API can help to manipulate CSV data 
+    using XSLT as if it was XML.
     
-    Second Prototype:
-      -browse PDF file structure using Nautilus API
-      (with simplest of either mapping external tool or using own format description rules)
-  => release "Asakusa" 0.4                                            - target: 2006-05-31
+Future Milestones:
+  => Tokyo Project "Harajuku" release (0.2.2)
+  TARGET: Mid-November 2006
+  Phase: 2-Pre-Alpha
+  Content:
+    Extended prototype using external configuration file (XML) instead of hard-coded rules (Java)
+    for CSV translation to and from SAX events.
   
+  => Tokyo Project "Sendagaya" release (0.2.3)
+  TARGET: Early December 2006
+  Phase: 2-Pre-Alpha
+    Browse PDF file structure using TokyoNautilus API;
+    implementation will either use a custom implementation based on a partial grammar definition file 
+    for PDF, or some external tool providing PDF parsing functionalities.
   
-  * 3-Alpha [June 1st 2006-September 31st 2006]
-    Project structure (compiling, unit tests, distribution)            - target: 2006-06-07
-    The simplest architecture that may possibly work for first sample  - target: 2006-06-14
-    First sample: reading mbox mail files and output xhtml for viewing - target: 2006-06-14
-    One page describing project (indicative contents)
-      Introduction
-        §The Lego(tm) brick metaphor§
-          See people sharing "Lego(tm) literacy" at "http://www.lugnet.com/~330/FAQ"
-        §Tokyo-Project in a nutshell§
-      Process
-        §Playing with Lego(tm) bricks§
-        §Tokyo-Project Process§
-      Api
-        §The Lego(tm) brick's study§
-        §Tokyo-Project Nautilus API§
-      Tools
-        §The Lego(tm) brick's mold§
-        §Tokyo-Project Tools based on Grammar Rules§    
-  => release "Ikebukuro" 0.5                                           - target: 2006-06-28
-    
-    Second sample (output PDF, Word, Excel), simple implementation
-    Help file for project configuration (Tools/Libraries needed)
-  => release "Roppongi" 0.6                                            - target: 2006-08-16
-    
-    -Third sample, simple implementation of source code analysis.
-    -Extend grammar as required to deal with more file formats,
-    check existing grammar formats for ideas/replacement
-  => release "Ebisu" 0.7                                               - target: 2006-09-20
-    
-  * 4-Beta [October 1st-November 11th 2006]
-    XHTML+CSS+SVG+PNG slides document including... 
-      project presentation (vision document)
-      process definition
-      architecture/api definition
-      tools presentation (existing/guidelines for new ones)
-      file format grammar definition as rules
-  => release "Shibuya" 0.8                                             - target: 2006-11-11
+  => Tokyo Project "Yoyogi" release (0.2.4)
+  TARGET: Mid-December 2006
+  Phase: 2-Pre-Alpha
+    HTML Documentation for project, to be displayed on Sourceforge Project Home Page.
+    Documentation will include
+      - Project presentation (Context, License, API, Architecture, Process, Tools, and Roadmap)
+      - API Documentation (Javadoc)
+      - Links to project SVN and files download
   
-  * Release Candidate [November 2006-March 2007]
-    Ask for comments, find real life use in third party application
-    More robust implementations for three samples
-    More samples including grammar definitions and use of tools to solve different scenarios
-    Different iterations based on comments                            - target: Q4 2006-Q1 2007
-  => release "Shinjuku-XX" 0.9.*
+  => Tokyo Project "Shinjuku" release (0.3.1)
+  TARGET: Mid-January 2007
+  Phase: 3-Alpha
+  Content:
+    First sample: reading mbox mail files and output xhtml for viewing
   
+  => Tokyo Project "Ikebukuro" release (0.3.2)
+  TARGET: February 2007
+  Phase: 3-Alpha
+  Content:
+    Second sample: output PDF files from XML descriptions 
   
-  * 5-Production/Stable 
+  => Tokyo Project "Roppongi" release (0.3.3)
+  TARGET: March 2007
+  Phase: 3-Alpha
+  Content:
+    Third sample: simple implementation of source code analysis
+  
+  => Tokyo Project "Ueno" release (0.5)
+  TARGET: April-May 2007
+  Phase: 4-Beta
+  Content:
+    More robust implementations for three samples,
+    based on comments/feedback to be collected.
+  
+  => Tokyo Project "Ginza" release (1.0)
+  TARGET: October 2007
+  Phase: 5-Production/Stable
+  Content:  
     Substantial feedback received, 
     no severe bug open, less than 3 minor bugs open, few new bugs every week.
-  => release "Ginza" 1.0                                              - target Q2 2007
+  
+Past Milestones:
+  => Tokyo Project "Chiyoda-ku" release (0.1)
+  RELEASED: 2005-08-01
+  Phase: 1-Planning
+  Content:
+    Chiyoda-ku is the first release of Tokyo Project, corresponding to version 0.1. 
+    It includes a roadmap and informal definitions of process, architecture, and tools 
+    to fulfill the project goal: providing an XML view of non-XML data.
+     
+  => Tokyo Project "Akihabara" release (0.2)
+  RELEASED: 2005-08-15
+  Phase: 2-Pre-Alpha
+  Content:
+    The Akihabara release is the official pre-alpha release of Tokyo Project 
+    (the goal of Tokyo Project is to design a process, an architecture, and tools 
+     to provide an XML view of non-XML data). 
+    This release includes a Java/XSLT prototype transforming custom text data into custom text data 
+    using XSLT to reorder this data, AS IF it was merely XML. 
+    Prototyping phase ended successfully prior to this release, demonstrating that the process defined 
+    as part of Tokyo Project allows Text-to-Text conversion. Besides, no major issue appeared during 
+    this experimentation as for Binary-to-Binary conversion, which will be demonstrated during the next 
+    phase of Tokyo Project.
+    
+=============== END OF DOCUMENT: Tokyo Project - Roadmap ===============
