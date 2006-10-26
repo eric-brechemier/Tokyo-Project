@@ -28,81 +28,10 @@ import net.sf.tokyo.ITokyoNaut;
  */
 public class NullNautilus implements ITokyoNaut
 {
+  public void meet(ITokyoNaut stranger, Object[] context, int[] type, int language) { return; }
+  public void quit(ITokyoNaut friend, Object[] context, int[] type, int language)   { return; }
   
-  /**
-   * Null implementation of plug() method.
-   * @param collaborator ignored
-   * @param role ignored
-   * @return collaborator
-   */
-  public ITokyoNaut plug(ITokyoNaut collaborator, Object role)
-  {
-    return collaborator;
-  }
-  
-  /**
-   * Null implementation of unplug() method.
-   * @param collaborator ignored
-   * @param role ignored
-   * @return this
-   */
-  public ITokyoNaut unplug(ITokyoNaut collaborator, Object role)
-  {
-    return this;
-  }
-  
-  /**
-   * Null implementation of map() method.
-   * @param path ignored
-   * @param from ignored
-   * @param buffer ignored
-   * @param offset ignored
-   * @param length ignored
-   * @return 0
-   */
-  public int map(Object path, int from, Object[] buffer, int offset, int length)
-  {
-    return 0;
-  }
-  
-  /**
-   * Null implementation of go() method.
-   * @param path ignored
-   * @return this
-   */
-  public ITokyoNaut go(Object path)
-  {
-    return this;
-  }
-  
-  /**
-   * Null implementation of here() method.
-   * @return null
-   */
-  public Object here()
-  {
-    return null;
-  }
-  
-  /**
-   * Null implementation of get() method.
-   * @param path ignored
-   * @return null
-   */
-  public Object get(Object path)
-  {
-    return null;
-  }
-  
-  /**
-   * Null implementation of put() method.
-   * @param path ignored
-   * @param item ignored
-   * @return null
-   */
-  public Object put(Object path, Object item)
-  {
-    return null;
-  }
-  
+  public void say(ITokyoNaut speaker, Object[] context, int[] type, int sentence)   { return; }
+  public void play(ITokyoNaut player, Object[] context, int[] type, int play)       { return; }
+  public void show(ITokyoNaut shower, Object towel)                                 { return; }
 }
