@@ -129,7 +129,7 @@
     <mkdir dir="${out.test.dir}" />
     <javac classpathref="test.classpath" srcdir="${src.test.java}" destdir="${out.test.dir}" />
     
-    <java classpathref="test.run.classpath" classname="net.sf.tokyo.test.NullNautilusTest" />
+    <java classpathref="test.run.classpath" classname="net.sf.tokyo.test.Joshua" />
   </target>
   
   <target name="all" depends="build, test, doc" description="Default target (All Tasks)." />
