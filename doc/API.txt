@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
 =========================================
 Title: Tokyo Project - Data handling API 
-Last modified: 2006-10-20
+Last modified: 2006-10-26
 By: Eric Bréchemier
 Encoding: UTF-8
 =========================================
@@ -93,9 +93,9 @@ public class NullNautilus implements ITokyoNaut
   public void meet(ITokyoNaut stranger, Object[] context, int[] type, int language) { return; }
   public void quit(ITokyoNaut friend, Object[] context, int[] type, int language)   { return; }
   
-  public void say(ITokoyNaut speaker, Object[] context, int[] type, int sentence)   { return; }
+  public void say(ITokyoNaut speaker, Object[] context, int[] type, int sentence)   { return; }
   public void play(ITokyoNaut player, Object[] context, int[] type, int play)       { return; }
-  public void show(ITokyoNaut shower, Object towel);                                { return; }
+  public void show(ITokyoNaut shower, Object towel)                                 { return; }
 }
 
 
@@ -126,22 +126,22 @@ public class Joshua implements ITokyoNaut
   
   public void say(ITokyoNaut speaker, Object[] context, int[] type, int sentence)
   {
-    if ( isSafe(friend,context,type,sentence) ) {
+    if ( isSafe(speaker,context,type,sentence) ) {
       int play = sentence+1;
       context[play] = "Is it a game, or is it real?";
       type[play] = TYPE_REAL_DOUBT;
-      friend.play(this,context,type,play);
+      speaker.play(this,context,type,play);
     }
     return;
   }
   
   public void play(ITokyoNaut player, Object[] context, int[] type, int play)
   {
-    if ( isSafe(friend,context,type,sentence) ) {
-      int reply = sentence+1;
+    if ( isSafe(player,context,type,play) ) {
+      int reply = play+1;
       context[reply] = "Shall we play a game?";
       type[reply] = TYPE_REPLY_PROPOSE_GAME;
-      friend.say(this,context,type,reply);
+      player.say(this,context,type,reply);
     }
     return;
   }
