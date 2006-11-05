@@ -22,17 +22,18 @@
 -->
 <project name="tokyo.main" default="all" basedir=".">
   <!--
-  Tokyo Project Main - Build file to build TokyoNautilus Library and test it
+  Tokyo Project Main - Build file to build TokyoNautilus API Library and test it
   Author: Eric Bréchemier
-  Version: 1.0
+  Version: 1.1
   
   History:
     1.0 - File Creation
+    1.1 - Updated for "Shibuya" version of API
   
   See ../third-party for Third Party Dependencies.
   -->
   
-  <property name="lib.name" value="TokyoProject-VersionOne" />
+  <property name="lib.name" value="TokyoNautilus-Shibuya" />
   
   <property name="out.dir" location="out" />
   <property name="out.classes.dir" location="${out.dir}/class" />
