@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
 =========================================
 Title: Tokyo Project - Data handling API 
-Last modified: 2006-10-26
+Last modified: 2006-11-05
 By: Eric Bréchemier
 Encoding: UTF-8
 =========================================
@@ -189,37 +189,39 @@ events to process it as if it was vanilla XML:
 and complexities; in this case, we will read and print the input CSV file to System.out.
 
 The CSV file looks like this, with each line terminated by '\r\n':
-Federated States of Micronesia,Palikir,Oceania
-Fiji,Suva,Oceania
-Finland,Helsinki,Europe
+
 France,Paris,Europe
+Canada,Toronto,America
+Japan,Tokyo,Asia
 
 And here is some Java code loading the file and printing all lines and fields to System.out:
 
-public void parseAll(String fileName)
+public static void parseAll(String fileName)
 {
   try
   {
     BufferedReader br = new BufferedReader( new FileReader(fileName) );
-    char ch;
-    int lineCount = 0;
+    int ch;
+    int lineCount = 1;
     int fieldCount = 0;
     boolean isStartLine = true;
     boolean isStartField = true;
+    boolean isEndOfFile = false;
     do
     {
       if (isStartLine)
       {
+        System.out.print("\nLine "+lineCount+":");
+        fieldCount=0;
+        isStartField = true;
         lineCount++;
-        fieldCount==0;
-        System.out.println("Line "+lineCount+":");
         isStartLine = false;
       }
       
       if (isStartField)
       {
         fieldCount++;
-        System.out.println("\tField "+fieldCount+": ");
+        System.out.print("\n\tField "+fieldCount+": ");
         isStartField = false;
       }
       
@@ -227,21 +229,27 @@ public void parseAll(String fileName)
       
       switch(ch)
       {
-        case ',':
-          fieldCount++;
-          break;
-        
         case '\r':
+          break;
+          
         case '\n':
           isStartLine = true;
           break;
-      
+        
+        case ',':
+          isStartField = true;
+          break;
+        
+        case -1:
+          isEndOfFile = true;
+          break;
+        
         default:
-          System.out.print(ch);
+          System.out.print((char)ch);
       
       }
       
-    } while (ch != -1);
+    } while (!isEndOfFile);
   }
   catch(Exception e)
   {
@@ -254,11 +262,11 @@ public void parseAll(String fileName)
   }
 }
 
-2°) Estimate Your Strengths. Let's now play with XML file, to help us design the processing taking place after
-the conversion to SAX events:
+2°) Estimate Your Strengths. Let's now play with the equivalent XML file, to help us design the 
+processing taking place after the conversion to SAX events; this is one possibility of an 
+XML structure equivalent to our CSV data sample:
 
-Based on CSV data, we work with an equivalent XML structure, designed as follows:
-<csv xmlns="http://sf.tokyo.net/prototype1/csv">
+<csv xmlns="http://tokyo.sf.net/prototype1/csv">
   <line>
     <field>France</field>
     <field>Paris</field>
@@ -276,7 +284,8 @@ Based on CSV data, we work with an equivalent XML structure, designed as follows
   </line>
 </csv>
 
-This allows us to write the XSLT transformation to reorder the data by continent, country, capital:
+Using this XML as input, we can now write one XSLT transformation to reorder the data by continent name, 
+then country name:
 <?xml version="1.0" encoding="UTF-8"?>
 <xsl:transform
  xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
@@ -289,32 +298,32 @@ This allows us to write the XSLT transformation to reorder the data by continent
   Reorder {"countries","http://tokyo.sf.net/prototype1/countries"}
   -->
   
-  <xsl:template match="data:world">
+  <xsl:template match="data:csv">
     <xsl:copy>
-      <xsl:apply-templates select="data:country">
-        <xsl:sort select="data:continent" />
-        <xsl:sort select="data:name" />
+      <xsl:apply-templates select="data:line">
+        <xsl:sort select="data:field[3]" />
+        <xsl:sort select="data:field[1]" />
       </xsl:apply-templates>
     </xsl:copy>
   </xsl:template>
   
-  <xsl:template match="data:country">
+  <xsl:template match="data:line">
     <xsl:copy-of select="." />
   </xsl:template>
 
 </xsl:transform>
 
 The resulting file is:
-<csv xmlns="http://sf.tokyo.net/prototype1/csv">
-  <line>
-    <field>Japan</field>
-    <field>Tokyo</field>
-    <field>Asia</field>
-  </line>
+<csv xmlns="http://tokyo.sf.net/prototype1/csv">
   <line>
     <field>Canada</field>
     <field>Toronto</field>
     <field>America</field>
+  </line>
+  <line>
+    <field>Japan</field>
+    <field>Tokyo</field>
+    <field>Asia</field>
   </line>
   <line>
     <field>France</field>
@@ -324,11 +333,11 @@ The resulting file is:
 </csv>
 
 
-3°) Know Who Your Allies Are. When executing the XSLT transformation, the XML file is parsed and SAX events corresponding
-to the different nodes found during the parsing are provided to the XSLT processor. Before replacing
-events coming from the XML source by events coming from a non-XML source, we will first filter these
-events to know them better and record them in order to be able to replay the flow of events without 
-the source, which results in a simulated parsing.
+3°) Know Who Your Allies Are. When executing the XSLT transformation, the XML file is parsed and 
+SAX events corresponding to the different nodes found during the parsing are provided to the XSLT 
+processor. Before replacing events coming from the XML source by events coming from a non-XML source, 
+we will first filter these events to know them better and record them in order to be able to replay 
+the flow of events without the source, which results in a simulated parsing.
 
 
 4°) Know Yourself. We can now replay the recorded events and check that the results are unchanged.
@@ -336,13 +345,10 @@ the source, which results in a simulated parsing.
 
 5°) Friends Will Be Friends. Finally, we can now adapt the CSV processing code for SAX Events generation, and replace the
 previous simulation. At this step, CSV is processed transparently as if it was XML, and an XML file
-is generated at the end of the transformation. The first prototype will then be finalized... 
-- by cutting the TokyoNaut instance in three different parts for better reusability
-  * File loading from disk and reading chunks of data
-  * CSV interpretation (lines and fields)
-  * SAX2 XMLReader implementation
-- following a similar process on the output to replace the XML generation with the creation of a 
-CSV file in the same format as the input.
+is generated at the end of the transformation. The first prototype will then be finalized by serializing
+the result as CSV, demonstrating two different methods:
+- an XSLT transformation producing CSV text from "CSV XML"
+- a custom Serializer to our CSV format, replacing the standard XML serializer
 
 
 =============== END OF DOCUMENT: Tokyo Project - Data handling API ===============
