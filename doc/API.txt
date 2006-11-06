@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
 =========================================
 Title: Tokyo Project - Data handling API 
-Last modified: 2006-11-05
+Last modified: 2006-11-06
 By: Eric Bréchemier
 Encoding: UTF-8
 =========================================
@@ -343,12 +343,17 @@ the flow of events without the source, which results in a simulated parsing.
 4°) Know Yourself. We can now replay the recorded events and check that the results are unchanged.
 
 
-5°) Friends Will Be Friends. Finally, we can now adapt the CSV processing code for SAX Events generation, and replace the
-previous simulation. At this step, CSV is processed transparently as if it was XML, and an XML file
-is generated at the end of the transformation. The first prototype will then be finalized by serializing
-the result as CSV, demonstrating two different methods:
+5°) Friends Will Be Friends. Finally, we can now adapt the CSV processing code for SAX Events generation, 
+and replace the previous simulation. At this step, CSV is processed transparently as if it was XML, 
+and an XML file is generated at the end of the transformation. 
+
+6°) Complete the picture. The first prototype can then be finalized by serializing the result as CSV, 
+demonstrating two different methods:
 - an XSLT transformation producing CSV text from "CSV XML"
 - a custom Serializer to our CSV format, replacing the standard XML serializer
 
+We can now check that the CSV produced by the two equivalent processing chains is identical:
+- on one hand, CSV resulting from XSLT transformations applied to the XML sample
+- on the other hand, CSV processed by XSLT combined with custom CSV parser and custom CSV serializer.
 
 =============== END OF DOCUMENT: Tokyo Project - Data handling API ===============
