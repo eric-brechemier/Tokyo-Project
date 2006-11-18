@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
 =========================================
 Title: Tokyo Project - Data handling API 
-Last modified: 2006-11-06
+Last modified: 2006-11-17
 By: Eric Bréchemier
 Encoding: UTF-8
 =========================================
@@ -190,167 +190,523 @@ and complexities; in this case, we will read and print the input CSV file to Sys
 
 The CSV file looks like this, with each line terminated by '\r\n':
 
-France,Paris,Europe
-Canada,Toronto,America
-Japan,Tokyo,Asia
+  France,Paris,Europe
+  Canada,Toronto,America
+  Japan,Tokyo,Asia
 
 And here is some Java code loading the file and printing all lines and fields to System.out:
 
-public static void parseAll(String fileName)
-{
-  try
+  public static void parseAll(String fileName)
   {
-    BufferedReader br = new BufferedReader( new FileReader(fileName) );
-    int ch;
-    int lineCount = 1;
-    int fieldCount = 0;
-    boolean isStartLine = true;
-    boolean isStartField = true;
-    boolean isEndOfFile = false;
-    do
+    try
     {
-      if (isStartLine)
+      BufferedReader br = new BufferedReader( new FileReader(fileName) );
+      int ch;
+      int lineCount = 1;
+      int fieldCount = 0;
+      boolean isStartLine = true;
+      boolean isStartField = true;
+      boolean isEndOfFile = false;
+      do
       {
-        System.out.print("\nLine "+lineCount+":");
-        fieldCount=0;
-        isStartField = true;
-        lineCount++;
-        isStartLine = false;
-      }
-      
-      if (isStartField)
-      {
-        fieldCount++;
-        System.out.print("\n\tField "+fieldCount+": ");
-        isStartField = false;
-      }
-      
-      ch = br.read();
-      
-      switch(ch)
-      {
-        case '\r':
-          break;
-          
-        case '\n':
-          isStartLine = true;
-          break;
-        
-        case ',':
+        if (isStartLine)
+        {
+          System.out.print("\nLine "+lineCount+":");
+          fieldCount=0;
           isStartField = true;
-          break;
+          lineCount++;
+          isStartLine = false;
+        }
         
-        case -1:
-          isEndOfFile = true;
-          break;
+        if (isStartField)
+        {
+          fieldCount++;
+          System.out.print("\n\tField "+fieldCount+": ");
+          isStartField = false;
+        }
         
-        default:
-          System.out.print((char)ch);
-      
-      }
-      
-    } while (!isEndOfFile);
+        ch = br.read();
+        
+        switch(ch)
+        {
+          case '\r':
+            break;
+            
+          case '\n':
+            isStartLine = true;
+            break;
+          
+          case ',':
+            isStartField = true;
+            break;
+          
+          case -1:
+            isEndOfFile = true;
+            break;
+          
+          default:
+            System.out.print((char)ch);
+        
+        }
+        
+      } while (!isEndOfFile);
+    }
+    catch(Exception e)
+    {
+      System.err.println("ERROR: "+ e);
+      e.printStackTrace();
+    }
+    finally
+    {
+      System.out.flush();
+    }
   }
-  catch(Exception e)
-  {
-    System.err.println("ERROR: + e");
-    e.printStackTrace();
-  }
-  finally
-  {
-    System.out.flush();
-  }
-}
 
 2°) Estimate Your Strengths. Let's now play with the equivalent XML file, to help us design the 
 processing taking place after the conversion to SAX events; this is one possibility of an 
 XML structure equivalent to our CSV data sample:
 
-<csv xmlns="http://tokyo.sf.net/prototype1/csv">
-  <line>
-    <field>France</field>
-    <field>Paris</field>
-    <field>Europe</field>
-  </line>
-  <line>
-    <field>Canada</field>
-    <field>Toronto</field>
-    <field>America</field>
-  </line>
-  <line>
-    <field>Japan</field>
-    <field>Tokyo</field>
-    <field>Asia</field>
-  </line>
-</csv>
+  <csv xmlns="http://tokyo.sf.net/prototype1/csv">
+    <line>
+      <field>France</field>
+      <field>Paris</field>
+      <field>Europe</field>
+    </line>
+    <line>
+      <field>Canada</field>
+      <field>Toronto</field>
+      <field>America</field>
+    </line>
+    <line>
+      <field>Japan</field>
+      <field>Tokyo</field>
+      <field>Asia</field>
+    </line>
+  </csv>
 
 Using this XML as input, we can now write one XSLT transformation to reorder the data by continent name, 
 then country name:
-<?xml version="1.0" encoding="UTF-8"?>
-<xsl:transform
- xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
- version="1.0"
- 
- xmlns:data="http://tokyo.sf.net/prototype1/csv"
->
-  <!--
-  Implementation part of XSL Transformation:
-  Reorder {"countries","http://tokyo.sf.net/prototype1/countries"}
-  -->
-  
-  <xsl:template match="data:csv">
-    <xsl:copy>
-      <xsl:apply-templates select="data:line">
-        <xsl:sort select="data:field[3]" />
-        <xsl:sort select="data:field[1]" />
-      </xsl:apply-templates>
-    </xsl:copy>
-  </xsl:template>
-  
-  <xsl:template match="data:line">
-    <xsl:copy-of select="." />
-  </xsl:template>
 
-</xsl:transform>
+  <?xml version="1.0" encoding="UTF-8"?>
+  <xsl:transform
+   xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+   version="1.0"
+   
+   xmlns:data="http://tokyo.sf.net/prototype1/csv"
+  >
+    <!--
+    Implementation part of XSL Transformation:
+    Reorder {"countries","http://tokyo.sf.net/prototype1/countries"}
+    -->
+    
+    <xsl:template match="data:csv">
+      <xsl:copy>
+        <xsl:copy-of select="@*" />
+        <xsl:apply-templates select="data:line">
+          <xsl:sort select="data:field[3]" />
+          <xsl:sort select="data:field[1]" />
+        </xsl:apply-templates>
+      </xsl:copy>
+    </xsl:template>
+    
+    <xsl:template match="data:line">
+      <xsl:copy-of select="." />
+    </xsl:template>
+  
+  </xsl:transform>
 
 The resulting file is:
-<csv xmlns="http://tokyo.sf.net/prototype1/csv">
-  <line>
-    <field>Canada</field>
-    <field>Toronto</field>
-    <field>America</field>
-  </line>
-  <line>
-    <field>Japan</field>
-    <field>Tokyo</field>
-    <field>Asia</field>
-  </line>
-  <line>
-    <field>France</field>
-    <field>Paris</field>
-    <field>Europe</field>
-  </line>
-</csv>
+
+  <csv xmlns="http://tokyo.sf.net/prototype1/csv">
+    <line>
+      <field>Canada</field>
+      <field>Toronto</field>
+      <field>America</field>
+    </line>
+    <line>
+      <field>Japan</field>
+      <field>Tokyo</field>
+      <field>Asia</field>
+    </line>
+    <line>
+      <field>France</field>
+      <field>Paris</field>
+      <field>Europe</field>
+    </line>
+  </csv>
 
 
 3°) Know Who Your Allies Are. When executing the XSLT transformation, the XML file is parsed and 
 SAX events corresponding to the different nodes found during the parsing are provided to the XSLT 
 processor. Before replacing events coming from the XML source by events coming from a non-XML source, 
-we will first filter these events to know them better and record them in order to be able to replay 
-the flow of events without the source, which results in a simulated parsing.
+we will first insert a filter between the event source, the XML Parser, and the event listener, the 
+XSLT Processor: 
+
+public class Step3_SaxFilter
+  implements XMLReader, ErrorHandler,ContentHandler,DTDHandler,LexicalHandler
+{
+  (...)
+  
+  public void setContentHandler(ContentHandler handler)
+  {
+    log("setContentHandler("+handler+")",2);
+    _contentHandler = handler;
+    _parser.setContentHandler(this);
+  }
+  
+  public ContentHandler getContentHandler()
+  {
+    log("getContentHandler() : "+_contentHandler,3);
+    return _contentHandler;
+  }
+  
+  public void parse(InputSource input)
+      throws IOException, SAXException
+  {
+    log("parse("+input+")",2);
+    _parser.parse(input);
+  }
+  
+  (...)
+  
+  public void startDocument()
+	  throws SAXException
+  {
+    log("startDocument()",4);
+    _contentHandler.startDocument();
+  }
+  
+  (...)
+}
 
 
-4°) Know Yourself. We can now replay the recorded events and check that the results are unchanged.
+4°) Know Yourself. Finally, we can now adapt the CSV processing code for SAX Events generation, 
+and replace the XML Parser events. This can be easily done in two steps using the Tokyo Nautilus
+Architecture: 
+- starting from previous SAX Filter, we can make it implement the ITokyoNaut interface:
 
+public class Step4_CsvToSaxNaut
+  implements XMLReader,ErrorHandler,ContentHandler,Locator,DTDHandler,LexicalHandler,
+             ITokyoNaut
+{
 
-5°) Friends Will Be Friends. Finally, we can now adapt the CSV processing code for SAX Events generation, 
-and replace the previous simulation. At this step, CSV is processed transparently as if it was XML, 
-and an XML file is generated at the end of the transformation. 
+  (...)
+  
+  public void say(ITokyoNaut speaker, Object[] context, int[] type, int sentence)
+  {
+    try
+    {
+      log("say("+speaker+","+context+"=>"+context[sentence]+","+type+"=>"+type[sentence]+","+sentence+")",3);
+      
+      int[] lineCol = (int[])context[TYPE_SAX_DOCUMENT_LINE_COLUMN];
+      _lineNumber = lineCol[0];
+      _columnNumber = lineCol[1]; 
+      
+      switch(type[sentence])
+      {
+        case TYPE_SAX_CONTENT_START_DOCUMENT:
+          {
+          _contentHandler.startDocument();
+          }
+          break;
+        
+        case TYPE_SAX_CONTENT_START_PREFIX_MAPPING:
+          {
+          // pop arguments from Context Stack
+          String prefix = (String)context[sentence+1];
+          String uri = (String)context[sentence+2];
+          _contentHandler.startPrefixMapping(prefix,uri);
+          }
+          break;
+        
+        case TYPE_SAX_CONTENT_START_ELEMENT:
+          {
+          // pop arguments from Context Stack
+          String uri = (String)context[sentence+1];
+          String localName = (String)context[sentence+2];
+          String qName = (String)context[sentence+3];
+          Attributes atts = (Attributes)context[sentence+4];
+          _contentHandler.startElement(uri,localName,qName,atts);
+          }
+          break;
+        
+        case TYPE_SAX_CONTENT_CHARACTERS:
+          {
+          // pop arguments from Context Stack
+          char[] characters = (char[])context[sentence+1];
+          int[] startLength = (int[])context[sentence+2];
+          int start = startLength[0];
+          int length = startLength[1];
+          _contentHandler.characters(characters,start,length);
+          }
+          break;
+        
+        case TYPE_SAX_CONTENT_END_ELEMENT:
+          {
+          // pop arguments from Context Stack
+          String uri = (String)context[sentence+1];
+          String localName = (String)context[sentence+2];
+          String qName = (String)context[sentence+3];
+          _contentHandler.endElement(uri,localName,qName);
+          }
+          break;
+          
+        case TYPE_SAX_CONTENT_END_PREFIX_MAPPING:
+          {
+          // pop arguments from Context Stack
+          String prefix = (String)context[sentence+1];
+          _contentHandler.endPrefixMapping(prefix);
+          }
+          break;
+        
+        case TYPE_SAX_CONTENT_END_DOCUMENT:
+          {
+          _contentHandler.endDocument();
+          speaker.quit(this,context,type,TYPE_SAX_LANGUAGE);
+          }
+          break;
+        
+        case TYPE_SAX_CONTENT_IGNORABLE_WHITE_SPACE:
+          {
+          // pop arguments from Context Stack
+          char[] characters = (char[])context[sentence+1];
+          int[] startLength = (int[])context[sentence+2];
+          int start = startLength[0];
+          int length = startLength[1];
+          _contentHandler.ignorableWhitespace(characters,start,length);
+          }
+          break;
+        
+        case TYPE_SAX_CONTENT_PROCESSING_INSTRUCTION:
+          {
+          // pop arguments from Context Stack
+          String target = (String)context[sentence+1];
+          String data = (String)context[sentence+2];
+          _contentHandler.processingInstruction(target,data);
+          }
+          break;
+        
+        case TYPE_SAX_CONTENT_SKIPPED_ENTITY:
+          {
+          // pop arguments from Context Stack
+          String entity_name = (String)context[sentence+1];
+          _contentHandler.skippedEntity(entity_name);
+          }
+          break;
+        
+        default:
+          speaker.show(this,"Unknown type: "+type[sentence]);
+      }
+      
+    }
+    catch(SAXException e)
+    {
+      if (speaker!=null)
+        speaker.show(this,"SAX Error: "+e);
+      else
+        log("Invalid speaker="+speaker,5);
+    }
+    catch(Exception e)
+    {
+      if (speaker!=null)
+        speaker.show(this,"Unexpected exception: "+e);
+      else
+        log("Invalid speaker="+speaker,5);
+    }
+  }
 
-6°) Complete the picture. The first prototype can then be finalized by serializing the result as CSV, 
-demonstrating two different methods:
-- an XSLT transformation producing CSV text from "CSV XML"
-- a custom Serializer to our CSV format, replacing the standard XML serializer
+  (...)
+}
+
+- after adaptation to the ITokyoNaut interface, the custom CSV parser can now discuss with the SAX Filter
+and communicate the SAX-like events generated from the CSV data:
+
+  (...)
+  
+  protected void startElement(String elementName, ITokyoNaut destNaut, Object[] context, int[] type)
+  {
+    initContext(context);
+    type[TYPE_SAX_EVENT] = TYPE_SAX_CONTENT_START_ELEMENT;
+    argCount[0] = 4;
+    type[TYPE_SAX_ARG1] = TYPE_SAX_ARG_NAMESPACE_URI;
+    context[TYPE_SAX_ARG1] = NAMESPACE;
+    type[TYPE_SAX_ARG2] = TYPE_SAX_ARG_LOCAL_NAME;
+    context[TYPE_SAX_ARG2] = elementName;
+    type[TYPE_SAX_ARG3] = TYPE_SAX_ARG_QNAME;
+    context[TYPE_SAX_ARG3] = elementName;
+    type[TYPE_SAX_ARG4] = TYPE_SAX_ARG_ATTRIBUTES;
+    context[TYPE_SAX_ARG4] = NO_ATTRIBUTES;
+    destNaut.say(this,context,type,TYPE_SAX_EVENT);
+  }
+  
+  (...)
+  
+  public void meet(ITokyoNaut stranger, Object[] context, int[] type, int language)
+  {
+    try
+    {
+      if ( !SAX_EVENTS_LANG.equals(context[language]) )
+      {
+        stranger.quit(this,context,type,language);
+        return;
+      }
+      
+      InputSource input = (InputSource)context[TYPE_SAX_DOCUMENT_INPUT_SOURCE];
+      String systemId = input.getSystemId();
+      final String FILE_PREFIX = "file:";
+      // Remove starting "file:"
+      String path = systemId.substring(FILE_PREFIX.length());
+      
+      parseAll( path, stranger,context,type,language);
+      
+    }
+    catch(Exception e)
+    {
+      if (stranger!=null)
+        stranger.show(this,"Unexpected exception: "+e);
+      else
+        System.err.println("Invalid stranger: "+stranger);
+    }
+  }
+
+At this step, CSV is processed transparently as if it was XML, and an XML file is generated at the 
+end of the transformation.
+
+6°) Complete the picture. With CSV parsing "à la XML" complete, the first prototype can then be 
+finalized by serializing the result as CSV using two different methods:
+- a simple XSLT transformation producing CSV text from "CSV XML"
+
+  <?xml version="1.0" encoding="UTF-8"?>
+  <xsl:transform
+   xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+   version="1.0"
+   
+   xmlns:data="http://tokyo.sf.net/prototype1/csv"
+  >
+    <xsl:output method="text" />
+    
+    <xsl:template match="data:line">
+      <xsl:value-of select="data:field[1]"/>
+      <xsl:call-template name="Separator"/>
+      <xsl:value-of select="data:field[2]"/>
+      <xsl:call-template name="Separator"/>
+      <xsl:value-of select="data:field[3]"/>
+      <xsl:call-template name="newLine"/>
+    </xsl:template>
+    
+    <xsl:template match="text()" />
+    
+    <xsl:template name="Separator">
+      <xsl:text>,</xsl:text>
+    </xsl:template>
+    
+    <xsl:template name="newLine">
+      <xsl:text>&#xD;&#xA;</xsl:text>
+    </xsl:template>
+    
+  </xsl:transform>
+
+  
+- a custom CSV Serializer (TokyoNautilus-based), replacing the standard XML serializer:
+  
+  public void say(ITokyoNaut speaker, Object[] context, int[] type, int sentence)
+  {
+    try
+    {
+      switch(type[sentence])
+      {
+        case Step5_Sax.CONTENT_START_ELEMENT:
+          {
+            // pop arguments from Context Stack
+            String uri = (String)context[sentence+1];
+            String localName = (String)context[sentence+2];
+            // (unused) String qName = (String)context[sentence+3];
+            // (unused) Attributes atts = (Attributes)context[sentence+4];
+            if ( NAMESPACE.equals(uri) ) 
+            {
+              if ( LINE_ELEMENT.equals(localName) )
+              {
+                _isStartOfLine = true;
+              }
+              else if ( FIELD_ELEMENT.equals(localName) )
+              {
+                if (_isStartOfLine)
+                  _isStartOfLine = false;
+                else
+                  _writer.write(','); 
+              }
+            }
+          }
+          break;
+        
+        case Step5_Sax.CONTENT_CHARACTERS:
+          {
+            // pop arguments from Context Stack
+            char[] characters = (char[])context[sentence+1];
+            int[] startLength = (int[])context[sentence+2];
+            int start = startLength[0];
+            int length = startLength[1];
+            _writer.write(characters,start,length);
+          }
+          break;
+        
+        case Step5_Sax.CONTENT_END_ELEMENT:
+          {
+            // pop arguments from Context Stack
+            String uri = (String)context[sentence+1];
+            String localName = (String)context[sentence+2];
+            String qName = (String)context[sentence+3];
+            if ( NAMESPACE.equals(uri) )
+            {
+              if ( LINE_ELEMENT.equals(localName) )
+              {
+                _writer.write('\r');
+                _writer.write('\n');
+              } 
+            }
+          }
+          break;
+        
+        case Step5_Sax.CONTENT_END_DOCUMENT:
+          _writer.flush();
+          freeWriter();
+          break;
+        
+        case Step5_Sax.CONTENT_START_DOCUMENT:
+        case Step5_Sax.CONTENT_START_PREFIX_MAPPING:
+        case Step5_Sax.CONTENT_END_PREFIX_MAPPING:
+        case Step5_Sax.CONTENT_IGNORABLE_WHITE_SPACE:
+        case Step5_Sax.CONTENT_PROCESSING_INSTRUCTION:
+        case Step5_Sax.CONTENT_SKIPPED_ENTITY:
+          break;
+        
+        default:
+          speaker.show(this,"Unknown type: "+type[sentence]);
+      }
+      
+    }
+    catch(IOException e)
+    {
+      freeWriter();
+      if (speaker!=null)
+        speaker.show(this,"Unexpected exception: "+e);
+      else
+      {
+        System.err.println("Error: "+e);
+        e.printStackTrace();
+      }
+    }
+    catch(Exception e)
+    {
+      if (speaker!=null)
+        speaker.show(this,"Unexpected exception: "+e);
+      else
+      {
+        System.err.println("Error: "+e);
+        e.printStackTrace();
+      }
+    }
+  }
 
 We can now check that the CSV produced by the two equivalent processing chains is identical:
 - on one hand, CSV resulting from XSLT transformations applied to the XML sample
