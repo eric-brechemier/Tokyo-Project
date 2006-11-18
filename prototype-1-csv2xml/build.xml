@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ The Tokyo Project is hosted on Sourceforge:
+ http://sourceforge.net/projects/tokyo/
+ 
+ Copyright (c) 2005-2006 Eric Bréchemier
+ http://eric.brechemier.name
+ 
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2.1 of the License, or (at your option) any later version.
+ 
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
+ 
+ You should have received a copy of the GNU Lesser General Public
+ License along with this library; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+-->
+<project name="tokyo.prototype1" default="all" basedir=".">
+ 
+  <!--
+  Tokyo Project Prototype 1 - Build file to build and run Prototype 1
+  Author: Eric Bréchemier
+  Version: 1.1
+  
+  History:
+    1.0 - File Creation
+    1.1 - Updated for "Shibuya" version of API
+  
+  See ../third-party for Third Party Dependencies.
+  See ../main        for TokyoNautilus API
+  -->
+  <property name="lib.name" value="TokyoProject-PrototypeOne" />
+  
+  <property name="out.dir" location="out" />
+  <property name="out.classes.dir" location="${out.dir}/class" />
+  <property name="out.test.dir" location="${out.dir}/test" />
+  <property name="out.lib.dir" location="lib" />
+  <property name="out.doc.dir" location="${out.dir}/doc" />
+  
+  <property name="in.data.dir" location="data"/>
+  <property name="out.data.dir" location="${out.dir}/data"/>
+  
+  <property name="src.java" location="src/java" />
+  <property name="src.test.java" location="test/java" />
+  <property name="src.xslt" location="src/xslt"/>
+  
+  <property name="tokyo.api.dir" location="../main" />
+  <property name="tokyo.api.lib.dir" location="${tokyo.api.dir}/lib" />
+  <property name="thid.party.dir" location="../third-party" />
+  <property name="thid.party.lib.dir" location="${thid.party.dir}/lib" />
+  
+  <path id="compile.classpath">
+    <fileset dir="${tokyo.api.lib.dir}">
+      <include name="**/*.jar"/>
+    </fileset>
+    <fileset dir="${thid.party.lib.dir}">
+      <include name="**/*.jar"/>
+    </fileset>
+  </path>
+  
+  <path id="run.classpath">
+    <pathelement path="${java.class.path}"/>
+    <path refid="compile.classpath"/>
+    <pathelement location="${out.classes.dir}"/>
+  </path>
+  
+  <path id="test.classpath">
+    <path refid="compile.classpath"/>
+    <pathelement location="${out.classes.dir}"/>
+  </path>
+  
+  <path id="test.run.classpath">
+    <path refid="test.classpath"/>
+    <pathelement location="${out.test.dir}"/>
+  </path>
+  
+  <target name="clean" description="Clean up output directories.">
+    <delete dir="${out.lib.dir}" />
+    <delete dir="${out.dir}" />
+  </target>
+  
+  <target name="build-tokyo-nautilus-api" description="Build TokyoNautilus API">
+    <ant dir="${tokyo.api.dir}" inheritAll="false" />
+  </target>
+  
+  <target name="compile" depends="build-tokyo-nautilus-api" description="Compile all sources">
+    <mkdir dir="${out.classes.dir}" />
+    <javac classpathref="compile.classpath" srcdir="${src.java}" destdir="${out.classes.dir}" />
+  </target>
+  
+  <target name="build" depends="compile" description="Build library Java Archive.">
+    <mkdir dir="${out.lib.dir}" />
+    <jar destfile="${out.lib.dir}/${lib.name}.jar" basedir="${out.classes.dir}"/>
+  </target>
+  
+  <target name="step1-print-csv" depends="build" description="Print CSV Sample">
+    <java classpathref="run.classpath" classname="net.sf.tokyo.prototype1.Step1_PrintCSV">
+      <arg value="${in.data.dir}/sample.csv"/>
+    </java>
+  </target>
+  
+  <target name="step2-reorder-xml" description="Reorder records in XML Sample using XSLT">
+    <java classpathref="run.classpath" classname="net.sf.saxon.Transform">
+      <!-- <arg line="-o ${out.data.dir}/sample.reord.xml"/> print to System.out -->
+      <arg line="${in.data.dir}/sample.xml"/>
+      <arg line="${src.xslt}/net.sf.tokyo.prototype1.orderCountriesByContinent.xsl"/>
+    </java>
+  </target>
+  
+  <target name="step3-filter-sax-events" description="Filter events produced by default SAX parser">
+    <java classpathref="run.classpath" classname="net.sf.saxon.Transform">
+      <arg line="-x net.sf.tokyo.prototype1.Step3_SaxFilter"/>
+      <arg line="${in.data.dir}/sample.xml"/>
+      <arg line="${src.xslt}/net.sf.tokyo.prototype1.orderCountriesByContinent.xsl"/>
+    </java>
+  </target>
+  
+  <target name="step4-csv-to-sax-events" description="Create SAX Events from CSV">
+    <java classpathref="run.classpath" classname="net.sf.saxon.Transform">
+      <arg line="-x net.sf.tokyo.prototype1.Step4_CsvToSaxNaut"/>
+      <arg line="${in.data.dir}/sample.csv"/>
+      <arg line="${src.xslt}/net.sf.tokyo.prototype1.orderCountriesByContinent.xsl"/>
+    </java>
+  </target>
+  
+  <target name="step5-csv-to-csv" description="Complete CSV to CSV processing">
+    <mkdir dir="${out.data.dir}" />
+    <java classpathref="run.classpath" classname="net.sf.saxon.Transform">
+      <arg line="-o ${out.data.dir}/result.xmlchain.xml"/>
+      <arg line="${in.data.dir}/sample.xml"/>
+      <arg line="${src.xslt}/net.sf.tokyo.prototype1.orderCountriesByContinent.xsl"/>
+    </java>
+    <java classpathref="run.classpath" classname="net.sf.saxon.Transform">
+      <arg line="-o ${out.data.dir}/result.xmlchain.csv"/>
+      <arg line="${out.data.dir}/result.xmlchain.xml"/>
+      <arg line="${src.xslt}/net.sf.tokyo.prototype1.xml-to-csv.xsl"/>
+    </java>
+    
+    <java classpathref="run.classpath" classname="net.sf.saxon.Transform">
+      <arg line="-x net.sf.tokyo.prototype1.Step5_CsvToSaxNaut"/>
+      <arg line="-o ${out.data.dir}/result.csvchain.csv"/> <!-- note: actual path is configured in serializer -->
+      <arg line="${in.data.dir}/sample.csv"/>
+      <arg line="${src.xslt}/net.sf.tokyo.prototype1.orderCountriesByContinent.tokyonaut-to-csv.xsl"/>
+    </java>
+  </target>
+  
+  <target name="all" 
+    depends="step1-print-csv, 
+             step2-reorder-xml, 
+             step3-filter-sax-events, 
+             step4-csv-to-sax-events,
+             step5-csv-to-csv" 
+    description="Default target (All Tasks)." 
+  />
+    
+</project>

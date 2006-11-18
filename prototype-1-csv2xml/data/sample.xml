@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<csv xmlns="http://tokyo.sf.net/prototype1/csv" >
+  <line>
+    <field>France</field>
+    <field>Paris</field>
+    <field>Europe</field>
+  </line>
+  <line>
+    <field>Canada</field>
+    <field>Toronto</field>
+    <field>America</field>
+  </line>
+  <line>
+    <field>Japan</field>
+    <field>Tokyo</field>
+    <field>Asia</field>
+  </line>
+</csv>

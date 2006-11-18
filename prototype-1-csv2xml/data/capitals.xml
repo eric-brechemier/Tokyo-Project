@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<csv xmlns="http://sf.tokyo.net/prototype1/csv">
+  <line>
+    <field>Federated States of Micronesia</field>
+    <field>Palikir</field>
+    <field>Oceania</field>
+  </line>
+  <line>
+    <field>Fiji</field>
+    <field>Suva</field>
+    <field>Oceania</field>
+  </line>
+  <line>
+    <field>Finland</field>
+    <field>Helsinki</field>
+    <field>Europe</field>
+  </line>
+  <line>
+    <field>France</field>
+    <field>Paris</field>
+    <field>Europe</field>
+  </line>
+</csv>
