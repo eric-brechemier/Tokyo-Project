@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
 =================================
 Title: Roadmap for Tokyo Project
-Last modified: 2006-10-24
+Last modified: 2006-11-24
 By: Eric Bréchemier
 Encoding: UTF-8
 =================================
@@ -66,72 +66,6 @@ Current Tasks:
   * API Update
   * Prototype Update
 
-Next Milestone:
-  => Tokyo Project "Shibuya" release (0.2.1)
-  TARGET: 2006-11-01
-  Phase: 2-Pre-Alpha
-  Content:
-    Shibuya is an important step in Tokyo Project, with the release of a new API at its core,
-    the TokyoNautilus API. This release includes updated project documentation and roadmap, 
-    as well as a new prototype demonstrating how the API can help to manipulate CSV data 
-    using XSLT as if it was XML.
-    
-Future Milestones:
-  => Tokyo Project "Harajuku" release (0.2.2)
-  TARGET: Mid-November 2006
-  Phase: 2-Pre-Alpha
-  Content:
-    Extended prototype using external configuration file (XML) instead of hard-coded rules (Java)
-    for CSV translation to and from SAX events.
-  
-  => Tokyo Project "Sendagaya" release (0.2.3)
-  TARGET: Early December 2006
-  Phase: 2-Pre-Alpha
-    Browse PDF file structure using TokyoNautilus API;
-    implementation will either use a custom implementation based on a partial grammar definition file 
-    for PDF, or some external tool providing PDF parsing functionalities.
-  
-  => Tokyo Project "Yoyogi" release (0.2.4)
-  TARGET: Mid-December 2006
-  Phase: 2-Pre-Alpha
-    HTML Documentation for project, to be displayed on Sourceforge Project Home Page.
-    Documentation will include
-      - Project presentation (Context, License, API, Architecture, Process, Tools, and Roadmap)
-      - API Documentation (Javadoc)
-      - Links to project SVN and files download
-  
-  => Tokyo Project "Shinjuku" release (0.3.1)
-  TARGET: Mid-January 2007
-  Phase: 3-Alpha
-  Content:
-    First sample: reading mbox mail files and output xhtml for viewing
-  
-  => Tokyo Project "Ikebukuro" release (0.3.2)
-  TARGET: February 2007
-  Phase: 3-Alpha
-  Content:
-    Second sample: output PDF files from XML descriptions 
-  
-  => Tokyo Project "Roppongi" release (0.3.3)
-  TARGET: March 2007
-  Phase: 3-Alpha
-  Content:
-    Third sample: simple implementation of source code analysis
-  
-  => Tokyo Project "Ueno" release (0.5)
-  TARGET: April-May 2007
-  Phase: 4-Beta
-  Content:
-    More robust implementations for three samples,
-    based on comments/feedback to be collected.
-  
-  => Tokyo Project "Ginza" release (1.0)
-  TARGET: October 2007
-  Phase: 5-Production/Stable
-  Content:  
-    Substantial feedback received, 
-    no severe bug open, less than 3 minor bugs open, few new bugs every week.
-  
 Past Milestones:
   => Tokyo Project "Chiyoda-ku" release (0.1)
   RELEASED: 2005-08-01
@@ -152,7 +86,77 @@ Past Milestones:
     using XSLT to reorder this data, AS IF it was merely XML. 
     Prototyping phase ended successfully prior to this release, demonstrating that the process defined 
     as part of Tokyo Project allows Text-to-Text conversion. Besides, no major issue appeared during 
-    this experimentation as for Binary-to-Binary conversion, which will be demonstrated during the next 
-    phase of Tokyo Project.
+    this experimentation as for Binary-to-Binary conversion, which will be demonstrated during a
+    following phase of Tokyo Project.
     
+  => Tokyo Project "Shibuya" release (0.3)
+  RELEASED: 2006-11-24
+  Phase: 2-Pre-Alpha
+  Content:
+    Shibuya is an important step in Tokyo Project, with the release of a new API at its core,
+    the TokyoNautilus API. This release includes updated project documentation and roadmap, 
+    as well as a new prototype demonstrating how the API can help to manipulate CSV data 
+    using XSLT as if it was XML.
+    
+Next Milestone:
+  => Tokyo Project "Harajuku" release (0.3.x)
+  TARGET: December 2006
+  Phase: 2-Pre-Alpha
+  Content:
+    Extended prototype using external configuration file (XML) instead of hard-coded rules (Java)
+    for CSV translation to and from SAX events.
+  
+  => Tokyo Project "Shinjuku" release (0.4)
+  TARGET: 2007
+  Phase: 2-Pre-Alpha
+    Browse PDF file structure using TokyoNautilus API;
+    implementation will either use a custom implementation based on a partial grammar definition file 
+    for PDF, or some external tool providing PDF parsing functionalities.
+  
+  => Tokyo Project "Roppongi" release (0.4.x)
+  TARGET: 2007
+  Phase: 2-Pre-Alpha
+    HTML Documentation for project, to be displayed on Sourceforge Project Home Page.
+    Documentation will include
+      - Project presentation (Context, License, API, Architecture, Process, Tools, and Roadmap)
+      - API Documentation (Javadoc)
+      - Links to project SVN and files download
+  
+  => Tokyo Project "Ebisu" release (0.5)
+  TARGET: 2007
+  Phase: 3-Alpha
+  Content:
+    First sample: reading mbox mail files and output xhtml for viewing
+  
+  => Tokyo Project "Ikebukuro" release (0.6)
+  TARGET: 2007
+  Phase: 3-Alpha
+  Content:
+    Second sample: output PDF files from XML descriptions 
+  
+  => Tokyo Project "Takadanobaba" release (0.7)
+  TARGET: 2007
+  Phase: 3-Alpha
+  Content:
+    Third sample: simple implementation of source code analysis
+  
+  => Tokyo Project "Ueno" release (0.8)
+  TARGET: 2007
+  Phase: 4-Beta
+  Content:
+    More robust implementations for three samples
+    
+  => Tokyo Project "Nihombashi", "Marunouchi", "Ochanomizu",... releases (0.9.x)
+  TARGET: 2007
+  Phase: 4-Beta
+  Content:
+    Series of updates based on collected comments/feedback.
+  
+  => Tokyo Project "Ginza" release (1.0)
+  TARGET: 2007
+  Phase: 5-Production/Stable
+  Content:  
+    Substantial feedback received, 
+    no severe bug open, less than 3 minor bugs open, few new bugs every week.
+      
 =============== END OF DOCUMENT: Tokyo Project - Roadmap ===============
