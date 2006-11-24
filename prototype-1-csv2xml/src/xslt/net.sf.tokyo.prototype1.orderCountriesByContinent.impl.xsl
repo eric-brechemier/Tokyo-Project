@@ -7,7 +7,8 @@
 >
   <!--
   Implementation part of XSL Transformation:
-  Reorder {"countries","http://tokyo.sf.net/prototype1/countries"}
+  Reorder "countries" (data:line), based on continent name (data:field[3]) 
+  and country name (data:field[1]).
   -->
   
   <xsl:template match="data:csv">
