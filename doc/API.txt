@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
 =========================================
 Title: Tokyo Project - Data handling API 
-Last modified: 2006-11-17
+Last modified: 2006-11-24
 By: Eric Bréchemier
 Encoding: UTF-8
 =========================================
@@ -33,8 +33,8 @@ Encoding: UTF-8
                         *******************************
 
 
-This documents defines the "TokyoNautilus" data handling API designed as part of Tokyo Project.
-This API is at the center of data access in the differents tools demonstrated in this project.
+This documents defines the TokyoNautilus data handling API designed as part of the Tokyo Project.
+This API is at the core of data access in the differents tools demonstrated in this project.
 
 The TokyoNautilus API enables both XML and non-XML data browsing through a concise API. Nautilus is a 
 reference to Captain Nemo's submarine in "Twenty Thousand Leagues Under the Sea" by Jules Verne.
@@ -296,7 +296,8 @@ then country name:
   >
     <!--
     Implementation part of XSL Transformation:
-    Reorder {"countries","http://tokyo.sf.net/prototype1/countries"}
+    Reorder "countries" (data:line), based on continent name (data:field[3]) 
+    and country name (data:field[1]).
     -->
     
     <xsl:template match="data:csv">
@@ -381,7 +382,7 @@ public class Step3_SaxFilter
 
 
 4°) Know Yourself. Finally, we can now adapt the CSV processing code for SAX Events generation, 
-and replace the XML Parser events. This can be easily done in two steps using the Tokyo Nautilus
+and replace the XML Parser events. This can be easily done in two steps using the TokyoNautilus
 Architecture: 
 - starting from previous SAX Filter, we can make it implement the ITokyoNaut interface:
 
