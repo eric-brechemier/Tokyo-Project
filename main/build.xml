@@ -3,7 +3,7 @@
  The Tokyo Project is hosted on Sourceforge:
  http://sourceforge.net/projects/tokyo/
  
- Copyright (c) 2005-2006 Eric Bréchemier
+ Copyright (c) 2005-2007 Eric Bréchemier
  http://eric.brechemier.name
  
  This library is free software; you can redistribute it and/or
@@ -22,18 +22,19 @@
 -->
 <project name="tokyo.main" default="all" basedir=".">
   <!--
-  Tokyo Project Main - Build file to build TokyoNautilus API Library and test it
+  Tokyo Project Main - Build file to build Tokyo API Library and test it
   Author: Eric Bréchemier
-  Version: 1.1
+  Version: 1.2
   
   History:
     1.0 - File Creation
     1.1 - Updated for "Shibuya" version of API
+    1.2 - Updated for "Harajuku" version of Tokyo API
   
   See ../third-party for Third Party Dependencies.
   -->
   
-  <property name="lib.name" value="TokyoNautilus-Shibuya" />
+  <property name="lib.name" value="TokyoNautilus-Harajuku" />
   
   <property name="out.dir" location="out" />
   <property name="out.classes.dir" location="${out.dir}/class" />
@@ -42,11 +43,11 @@
   <property name="out.doc.dir" location="${out.dir}/doc" />
   
   <property name="javadoc.packages" value="net.sf.tokyo" />
-  <property name="javadoc.title" value="TokyoNautilus API by Tokyo Project" />
+  <property name="javadoc.title" value="Tokyo API by Tokyo Project" />
   <property name="javadoc.copyright" 
     value="
     The Tokyo Project is hosted on Sourceforge: &lt;a href='http://sourceforge.net/projects/tokyo/' target='_top'>http://sourceforge.net/projects/tokyo/&lt;/a> 
-    &lt;br/>Copyright &amp;#169; 2005-2006 Eric Br&amp;eacute;chemier: &lt;a href='http://eric.brechemier.name' target='_top'>http://eric.brechemier.name&lt;a/>
+    &lt;br/>Copyright &amp;#169; 2005-2007 Eric Br&amp;eacute;chemier: &lt;a href='http://eric.brechemier.name' target='_top'>http://eric.brechemier.name&lt;a/>
     &lt;font size='-1'>
     &lt;p>
     This library is free software; you can redistribute it and/or
@@ -130,7 +131,7 @@
     <mkdir dir="${out.test.dir}" />
     <javac classpathref="test.classpath" srcdir="${src.test.java}" destdir="${out.test.dir}" />
     
-    <java classpathref="test.run.classpath" classname="net.sf.tokyo.test.Joshua" />
+    <java classpathref="test.run.classpath" classname="net.sf.tokyo.test.NullTokyoNautTest" />
   </target>
   
   <target name="all" depends="build, test, doc" description="Default target (All Tasks)." />
