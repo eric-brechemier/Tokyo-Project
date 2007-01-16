@@ -55,7 +55,8 @@ public interface ITokyoNaut
    * @param rules list of rewrite operations (read only)
    * @param state current state resulting from previous morph operation (read only)
    * @param values current values (read only)
-   * @return optimistic evaluation of remaining steps (subsequent calls of morph required to complete the operation)
+   * @return optimistic evaluation of remaining steps (subsequent calls of morph required to complete the operation).
+   *         Negative values are reserved for error codes.
    */ 
   public int remain(Object[] rules, Object[] state, Object[] values);
   
