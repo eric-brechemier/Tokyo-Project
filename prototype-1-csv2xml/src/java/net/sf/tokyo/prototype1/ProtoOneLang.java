@@ -24,6 +24,30 @@ package net.sf.tokyo.prototype1;
 
 import net.sf.tokyo.ITokyoNaut;
 
+
+/**
+ * Prototype One Language Definition.<br/>
+ *
+ * <p>
+ * In the context of this language, rules[0] shall contain a ProtoOneLang instance;
+ * following boxes of rules shall contain TokyoNauts only..
+ * </p>
+ *
+ * <p>
+ * state[0] will contain an int[1] array currentRulePosition, 
+ * indicating the position in the rules array of the rule currently executed.
+ * </p>
+ * 
+ * <p>
+ * Each TokyoNaut is supposed to look at currentRulePosition in state[0];
+ * it can then read and store its state in state[currentRulePosition[0]],
+ * and shall transform data taking input in data[currentRulePosition[0]],
+ * putting result into data[currentRulePosition[0]+1]
+ * </p> 
+ *
+ * @author Eric Br&eacute;chemier
+ * @version Harajuku
+ */
 public class ProtoOneLang
 {
   public static String URI = "http://sf.tokyo.net/prototype-1/lang";
@@ -32,6 +56,8 @@ public class ProtoOneLang
   {
     return URI;
   }
+  
+  
   
   
   
