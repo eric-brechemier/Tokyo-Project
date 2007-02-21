@@ -3,7 +3,7 @@
  The Tokyo Project is hosted on Sourceforge:
  http://sourceforge.net/projects/tokyo/
  
- Copyright (c) 2005-2006 Eric Bréchemier
+ Copyright (c) 2005-2007 Eric Bréchemier
  http://eric.brechemier.name
  
  This library is free software; you can redistribute it and/or
@@ -25,14 +25,15 @@
   <!--
   Tokyo Project Prototype 1 - Build file to build and run Prototype 1
   Author: Eric Bréchemier
-  Version: 1.1
+  Version: 1.2
   
   History:
     1.0 - File Creation
     1.1 - Updated for "Shibuya" version of API
-  
+    1.2 - Updated for "Harajuku" version of Tokyo API
+    
   See ../third-party for Third Party Dependencies.
-  See ../main        for TokyoNautilus API
+  See ../main        for Tokyo API
   -->
   <property name="lib.name" value="TokyoProject-PrototypeOne" />
   
@@ -98,63 +99,16 @@
     <jar destfile="${out.lib.dir}/${lib.name}.jar" basedir="${out.classes.dir}"/>
   </target>
   
-  <target name="step1-print-csv" depends="build" description="Print CSV Sample">
-    <java classpathref="run.classpath" classname="net.sf.tokyo.prototype1.Step1_PrintCSV">
+  <target name="run" depends="build" description="Run Prototype 1">
+    <java classpathref="run.classpath" classname="net.sf.tokyo.prototype1.ProtoOneMainLoop">
       <arg value="${in.data.dir}/sample.csv"/>
-    </java>
-  </target>
-  
-  <target name="step2-reorder-xml" description="Reorder records in XML Sample using XSLT">
-    <java classpathref="run.classpath" classname="net.sf.saxon.Transform">
-      <!-- <arg line="-o ${out.data.dir}/sample.reord.xml"/> print to System.out -->
-      <arg line="${in.data.dir}/sample.xml"/>
       <arg line="${src.xslt}/net.sf.tokyo.prototype1.orderCountriesByContinent.xsl"/>
-    </java>
-  </target>
-  
-  <target name="step3-filter-sax-events" description="Filter events produced by default SAX parser">
-    <java classpathref="run.classpath" classname="net.sf.saxon.Transform">
-      <arg line="-x net.sf.tokyo.prototype1.Step3_SaxFilter"/>
-      <arg line="${in.data.dir}/sample.xml"/>
-      <arg line="${src.xslt}/net.sf.tokyo.prototype1.orderCountriesByContinent.xsl"/>
-    </java>
-  </target>
-  
-  <target name="step4-csv-to-sax-events" description="Create SAX Events from CSV">
-    <java classpathref="run.classpath" classname="net.sf.saxon.Transform">
-      <arg line="-x net.sf.tokyo.prototype1.Step4_CsvToSaxNaut"/>
-      <arg line="${in.data.dir}/sample.csv"/>
-      <arg line="${src.xslt}/net.sf.tokyo.prototype1.orderCountriesByContinent.xsl"/>
-    </java>
-  </target>
-  
-  <target name="step5-csv-to-csv" description="Complete CSV to CSV processing">
-    <mkdir dir="${out.data.dir}" />
-    <java classpathref="run.classpath" classname="net.sf.saxon.Transform">
-      <arg line="-o ${out.data.dir}/result.xmlchain.xml"/>
-      <arg line="${in.data.dir}/sample.xml"/>
-      <arg line="${src.xslt}/net.sf.tokyo.prototype1.orderCountriesByContinent.xsl"/>
-    </java>
-    <java classpathref="run.classpath" classname="net.sf.saxon.Transform">
-      <arg line="-o ${out.data.dir}/result.xmlchain.csv"/>
-      <arg line="${out.data.dir}/result.xmlchain.xml"/>
-      <arg line="${src.xslt}/net.sf.tokyo.prototype1.xml-to-csv.xsl"/>
-    </java>
-    
-    <java classpathref="run.classpath" classname="net.sf.saxon.Transform">
-      <arg line="-x net.sf.tokyo.prototype1.Step5_CsvToSaxNaut"/>
-      <arg line="-o ${out.data.dir}/result.csvchain.csv"/> <!-- note: actual path is configured in serializer -->
-      <arg line="${in.data.dir}/sample.csv"/>
-      <arg line="${src.xslt}/net.sf.tokyo.prototype1.orderCountriesByContinent.tokyonaut-to-csv.xsl"/>
+      <arg line="${out.data.dir}/result.csv"/>
     </java>
   </target>
   
   <target name="all" 
-    depends="step1-print-csv, 
-             step2-reorder-xml, 
-             step3-filter-sax-events, 
-             step4-csv-to-sax-events,
-             step5-csv-to-csv" 
+    depends="run" 
     description="Default target (All Tasks)." 
   />
     
