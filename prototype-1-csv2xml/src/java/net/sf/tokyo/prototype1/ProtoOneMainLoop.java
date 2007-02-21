@@ -53,7 +53,7 @@ public class ProtoOneMainLoop implements ITokyoNaut
     
     final int RULES_COUNT = 7;
     Object[] state = new Object[RULES_COUNT];
-    Object[] data = new Object[RULES_COUNT];
+    Object[] data = new Object[RULES_COUNT+1];
     
     mainLoop.morph(rules,state,data);
   }
