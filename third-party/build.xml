@@ -3,7 +3,7 @@
  The Tokyo Project is hosted on Sourceforge:
  http://sourceforge.net/projects/tokyo/
  
- Copyright (c) 2005-2006 Eric Bréchemier
+ Copyright (c) 2005-2007 Eric Bréchemier
  http://eric.brechemier.name
  
  This library is free software; you can redistribute it and/or
@@ -24,12 +24,13 @@
   <!--
   Tokyo Project Third Party - Build file to download third party libraries from mirrors
   Author: Eric Bréchemier
-  Version: 1.2
+  Version: 1.3
   
   History:
     1.0 - File Creation
     1.1 - Replaced MPL 1.0 with Saxon Conditions of Use on saxonica.com
     1.2 - Added JUnit download
+    1.3 - Download files only the first time, no connection required after
     
   List of Third Party Modules:
     * "The Saxon XSLT and XQuery Processor from Saxonica Limited"
@@ -42,7 +43,7 @@
     <!-- default values for properties missing in property file -->
       <!-- Saxon Processor -->
     <property name="saxon.mirror.name" value="heanet" />
-    <property name="saxon.zip.name" value="saxonb8-7-1j.zip" />
+    <property name="saxon.zip.name" value="saxonb8-9j.zip" />
     <property name="saxon.download.url" value="http://${saxon.mirror.name}.dl.sourceforge.net/sourceforge/saxon/${saxon.zip.name}" />
     <property name="saxon.license.url" value="http://www.saxonica.com/documentation/conditions/intro.html" />
     <property name="saxon.license.other.url" value="http://www.saxonica.com/documentation/conditions/other.html" />
@@ -57,6 +58,15 @@
   <property name="download.dir" location="download" />
   <property name="lib.dir" location="lib" />
   
+  <!-- Local Location of Saxon files -->
+  <property name="saxon.zip.location" location="${download.dir}/${saxon.zip.name}" />
+  <property name="saxon.license.location" location="${lib.dir}/saxon.license.html" />
+  <property name="saxon.license.other.location" location="${lib.dir}/saxon.license.other.html" />
+  
+  <!-- Local Location of JUnit files -->
+  <property name="junit.zip.location" location="${download.dir}/${junit.zip.name}" />
+  <property name="junit.license.location" location="${lib.dir}/junit.license.html" />
+  
   <target name="clean" description="Clean up output directories">
     <delete dir="${lib.dir}" />
     <delete dir="${download.dir}" />
@@ -69,8 +79,19 @@
     <mkdir dir="${download.dir}" />
   </target>
   
-  <target name="get-saxon" depends="init" description="Get Saxon-B XSLT Processor">
-    <property name="saxon.zip.location" location="${download.dir}/${saxon.zip.name}" />
+  <target name="isSaxonCached">
+    <condition property="saxonCached">
+      <and>
+        <available file="${saxon.zip.location}"/>
+        <available file="${saxon.license.location}"/>
+        <available file="${saxon.license.other.location}"/>
+      </and>
+    </condition>
+  </target>
+  
+  <target name="get-saxon" depends="init, isSaxonCached" unless="saxonCached" 
+    description="Get Saxon-B XSLT Processor"
+  >
     <get src="${saxon.download.url}" dest="${saxon.zip.location}"
       verbose="true" usetimestamp="true" ignoreerrors="true"
     />
@@ -79,16 +100,26 @@
         <include name="*.jar"/>
       </patternset>
     </unzip>
-    <get src="${saxon.license.url}" dest="${lib.dir}/saxon.license.html"
+    <get src="${saxon.license.url}" dest="${saxon.license.location}"
       verbose="true" usetimestamp="true" ignoreerrors="true"
     />
-    <get src="${saxon.license.other.url}" dest="${lib.dir}/saxon.license.other.html"
+    <get src="${saxon.license.other.url}" dest="${saxon.license.other.location}"
       verbose="true" usetimestamp="true" ignoreerrors="true"
     />
   </target>
   
-  <target name="get-junit" depends="init" description="Get JUnit">
-    <property name="junit.zip.location" location="${download.dir}/${junit.zip.name}" />
+  <target name="isJUnitCached">  
+    <condition property="junitCached">
+      <and>
+        <available file="${junit.zip.location}"/>
+        <available file="${junit.license.location}"/>
+      </and>
+    </condition>
+  </target>
+  
+  <target name="get-junit" depends="init, isJUnitCached" unless="junitCached" 
+    description="Get JUnit"
+  >
     <get src="${junit.download.url}" dest="${junit.zip.location}"
       verbose="true" usetimestamp="true" ignoreerrors="true"
     />
@@ -104,6 +135,6 @@
         <include name="*.jar"/>
       </fileset>
     </copy>
-    <copy file="${download.dir}/${junit.zip.prefix}/${junit.license.name}" tofile="${lib.dir}/junit.license.html" verbose="true" />
+    <copy file="${download.dir}/${junit.zip.prefix}/${junit.license.name}" tofile="${junit.license.location}" verbose="true" />
   </target>
 </project>
