@@ -84,7 +84,7 @@ Given that state, rules and data have been properly initialized, the following l
 a step by step transformation until completion:
 
 int[] index = {0};
-ITokyoNaut current = rules[index]; 
+ITokyoNaut current = rules[index[0]];
 while (current != null)
 {
   current = current.morph(state,rules,data,index);
