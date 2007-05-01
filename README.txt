@@ -20,7 +20,7 @@ binary documents created by commercial applications, as long as their file forma
 The Tokyo Project is hosted on Sourceforge:
 http://sourceforge.net/projects/tokyo/
 
-Copyright (C) 2005-2006 Eric Bréchemier
+Copyright (C) 2005-2007 Eric Bréchemier
 http://eric.brechemier.name
 
 This library is free software; you can redistribute it and/or
