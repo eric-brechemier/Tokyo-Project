@@ -30,12 +30,17 @@ public class NullTokyoNautTest
 {
   public static void main(String[] args)
   {
-    Object[] state = {};
-    Object[] rules = {"http://tokyo.sf.net/null/rules","DO_NOTHING"};
-    Object[] data = {};
+    Object[] state = {null};
+    ITokyoNaut[] rules = {new NullTokyoNaut()};
+    Object[] data = {null};
     
-    ITokyoNaut tokyoNaut = new NullTokyoNaut();
-    tokyoNaut.morph(state,rules,data); 
+    int[] index = {0};
+    ITokyoNaut current = rules[index[0]];
+    while (current != null)
+    {
+      current = current.morph(state,rules,data,index);
+    }
+    
     System.out.println("Tokyo API coverage test complete.");
   }
 }
