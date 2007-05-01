@@ -2,7 +2,7 @@
 The Tokyo Project is hosted on Sourceforge:
 http://sourceforge.net/projects/tokyo/
 
-Copyright (c) 2005-2006 Eric Bréchemier
+Copyright (c) 2005-2007 Eric Bréchemier
 http://eric.brechemier.name
 
 This library is free software; you can redistribute it and/or
@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
 ===============================================
 Title: Tokyo Project - Architecture Definition
-Last modified: 2006-10-24
+Last modified: 2007-05-01
 By: Eric Bréchemier
 Encoding: UTF-8
 ===============================================
@@ -38,7 +38,12 @@ Encoding: UTF-8
 - transformation of non-XML documents to XML and back again
 
 * VISION
-- different architecture can be defined to implement the proposed process:
+- the adaptation of a specific data format can be done by writing custom code by hand, which 
+could be the easiest approach for a programmer, or by writing some configuration file instead 
+to automate the transformation process. This could be as complex as the EBNF of the data format 
+grammar, or as simple as a property file or tasks described in XML a la Apache Ant.
+
+- different architectures can be defined to implement the proposed process:
     - using the formalized grammar as a basis for the development of data-to-xml
     and xml-to-data processors
     - generating the code of those processors from grammar files
@@ -56,21 +61,36 @@ Encoding: UTF-8
   Therefore, I ended designing a new simple API as part of this project, 
   and I coined this Tokyo Project API "TokyoNautilus", a strange combination in reference
   to Jules Verne's "Mobilis in Mobili" and a strong attraction for Japan.
-    
+  
 - the basic architecture is:
 
 For Parsing
-non-XML data -> [non-XML Parser] -> [TokyoNautilus API] -> [XML API Adaptor] -> [XML Application]
+non-XML data 
+ -> [non-XML Parser] 
+    -> [TokyoNautilus API] 
+       -> [XML API Adaptor] 
+           -> [XML Application]
 e.g.
-CSV -> CSV parser -> TokyoNautilus API -> SAX API Adaptor -> XSLT Processor
+CSV 
+  -> CSV parser 
+     -> TokyoNautilus API 
+        -> SAX API Adaptor 
+            -> XSLT Processor
 
 For Serializing
-[XML Application] -> [XML Serializer Adaptor] -> [TokyoNautilus API] -> [non-XML Serializer] -> non-XML data
+[XML Application] 
+  -> [XML Serializer Adaptor] 
+      -> [TokyoNautilus API] 
+         -> [non-XML Serializer] 
+            -> non-XML data
 e.g.
-XSLT Processor -> DOM API -> TokyoNautilus API -> CSV Serializer -> CSV
+XSLT Processor 
+  -> DOM API 
+     -> TokyoNautilus API 
+        -> CSV Serializer 
+           -> CSV
 
-The same TokyoNautilus API can be used both for data parsing and serializing; however, different instances
-may implement the parsing and serializing parts.                                                                                
+
 
 
 * IN A NUTSHELL
