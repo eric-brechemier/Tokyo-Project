@@ -72,6 +72,11 @@ arrays can be seen as a table where the row of index "i" is made of (state[i],ru
 The current index is the position of the current TokyoNaut, which will execute its atomic morph 
 operation in the run of the morph call.
 
+Current TokyoNaut takes data as input in data[index[0]] and applies a transformation resulting to
+new data as output stored in data[index[1]], provided as input for the following transformation.
+First transformation would typically take input data from a file or a data input stream, while
+last transformation would typically store output data in a file or a data output stream.
+
 The returned TokyoNaut instance is the next to be called to continue the transformation process,
 or null if the transformation is complete (in which case index[0] shall be set to rules.length).
 
