@@ -78,8 +78,8 @@ or null if the transformation is complete (in which case index[0] shall be set t
 Given that state, rules and data have been properly initialized, the following loop would run
 a step by step transformation until completion:
 
-ITokyoNaut current = rules[0];
-int[] index = new int[1]; 
+int[] index = {0};
+ITokyoNaut current = rules[index]; 
 while (current != null)
 {
   current = current.morph(state,rules,data,index);
