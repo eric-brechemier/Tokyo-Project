@@ -28,5 +28,8 @@ import net.sf.tokyo.ITokyoNaut;
  */
 public class NullTokyoNaut implements ITokyoNaut
 {
-  public void morph(Object[] state, Object[] rules, Object[] data)     { return; }
+  public ITokyoNaut morph(Object[] state, ITokyoNaut[] rules, Object[] data, int[] index)
+  {
+    return null;
+  }
 }
