@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
 =========================================
 Title: Tokyo Project - Data Handling API 
-Last modified: 2007-02-20
+Last modified: 2007-05-01
 By: Eric Bréchemier
 Encoding: UTF-8
 =========================================
@@ -41,41 +41,52 @@ it is made of one interface, ITokyoNaut, with a single method, "morph":
 
 public interface ITokyoNaut
 {
-  public void morph(Object[] state, Object[] rules, Object[] data);
+  public ITokyoNaut morph(Object[] state, ITokyoNaut[] rules, Object[] data, int[] index);
 }
 
 The name "TokyoNaut" is composed of "Tokyo", a mind-changing city where this project started, 
 while "Naut" is a shorthand reference to Nautilus, Captain Nemo's submarine in Jules Verne's
 "Twenty Thousand Leagues Under the Sea". 
-Additional inspiration comes from Captain Nemo's motto: "Mobilis in Mobili".
+More inspiration comes from Captain Nemo's motto: "Mobilis in Mobili".
 
-Instances of classes that implement the ITokyoNaut interface are designed here as TokyoNaut instances,
-or simply TokyoNauts. Their mission is to rewrite incrementally some input data, one step at a time.
-Each call of the "morph" method runs one single rewrite step, which could correspond to one line of text,
-one binary structure or an XML fragment depending on the format at hand and the choice of implementation.
+Instances of classes that implement the ITokyoNaut interface are called TokyoNaut instances, or 
+simply TokyoNauts. Their mission is to rewrite incrementally some input data, one step at a time.
+Each call of the "morph" method runs one single rewrite step, which could correspond to one line 
+of text, one binary structure or an XML fragment depending on the format at hand and the choice 
+of implementation.
 
-The order of "morph" parameters can be easily remembered with the sentence: "State rules data."
+The order of "morph" parameters can be easily remembered with the sentence: "State rules data index."
 which has no hidden purpose excepted mnemotechnics.
 
-TokyoNaut instances shall be stateless; each one will be allocated one box in the "state" array
+TokyoNaut instances can be stateless; each one will be allocated one box in the "state" array
 allowing to preserve some required properties or objects too costly to be created at each new run.
 
-A set of simple TokyoNaut instances may be associated to realize a complex data transformation.
-For example by first converting an array of binary data to an array of Strings, second adding
-some structure markers at strategic places resulting in a new array, we can provide an XML view of 
-custom non-xml data. We will provide such an example below, applied to CSV data about World Countries.
+A set of simple TokyoNaut instances may be associated to realize a complex data transformation,
+each one located in a separate row of the "rules" array.
+Prototype One provides such an example, applied to CSV data about World Countries.
 
-The "rules" array contains the transformation rules that organize the collaboration of different
-TokyoNaut instances. In the run of a data transformation, the same three structures, "state", "rules" 
-and "data" are provided to all collaborating TokyoNauts. Implementors have full latitude to choose 
-how to represent instructions or rules, e.g. by defining Classes corresponding to different operations. 
-In order to facilitate interoperability and versioning, the first box of the "rules" array, at rules[0], 
-shall contain an Object identifying the language chosen/defined for the following rules. 
-Calling rules[0].toString() shall return a URI (Unified Resource Identifier) identifying the language, 
-such as "http://www.example.com/tokyo/ant/1.0" for the (hypothetical) version of 1.0 of a custom language 
-defined by the owner of "example.com" based on Apache Ant tasks.
+"state" and "data" have the same number of elements as "rules". The association of these three 
+arrays can be seen as a table where the row of index "i" is made of (state[i],rules[i],data[i]).
 
-TODO: ADD EXAMPLE OF CSV PARSING FOR PROTOTYPE 1
+"index" is a single element array (int[1]) providing current index as a read/write parameter.
+The current index is the position of the current TokyoNaut, which will execute its atomic morph 
+operation in the run of the morph call.
 
+The returned TokyoNaut instance is the next to be called to continue the transformation process,
+or null if the transformation is complete (in which case index[0] shall be set to rules.length).
+
+Given that state, rules and data have been properly initialized, the following loop would run
+a step by step transformation until completion:
+
+ITokyoNaut current = rules[0];
+int[] index = new int[1]; 
+while (current != null)
+{
+  current = current.morph(state,rules,data,index);
+}
+
+In the above example, it is not possible to replace the "while loop" with a "for loop",
+because the flow of morph operations will typically loop back and forth from data providers
+to data consumers, involding several passes trough the same TokyoNauts until completion.
 
 =============== END OF DOCUMENT: Tokyo Project - Data Handling API ===============
