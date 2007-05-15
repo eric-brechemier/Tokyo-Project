@@ -33,8 +33,8 @@ package net.sf.tokyo;
  * </p>
  *
  * <p>
- * Each call of "morph" is intended to rewrite the input data by interpreting a set of instructions 
- * or "rules", one step at a time, and updating the associated state for use in following runs. 
+ * Each call of "morph" is intended to rewrite the input data by interpreting a set of instructions, 
+ * one step at a time, going back and forth from data providers to data consumers. 
  * </p>
  * 
  * @author Eric Br&eacute;chemier
@@ -44,51 +44,69 @@ public interface ITokyoNaut
 {
   
   /**
-   * Rewrite data according to rules based on atomic transformations (TokyoNauts).<br/>
+   * Rewrite data based on atomic transformation actions (TokyoNauts).<br/>
    *
    * <p>
-   * Each call of the "morph" method runs one single rewrite step, which could correspond to 
-   * one line of text, one binary structure or an XML fragment depending on the format at hand 
-   * and the choice of implementation.
+   * Each call of the "morph" method runs a data transformation by the selected action, 
+   * reading bytes from an input queue, and writing bytes to an output queue
+   * that will become the input queue of the following TokyoNaut.
    * </p>
    *
    * <p>
-   * A set of simple TokyoNaut instances may be associated to realize a complex data transformation,
-   * each one located in a separate row of the "rules" array.
-   * </p>
-   *
-   * <p>
-   * "state" and "data" have the same number of elements as "rules". The association of these three 
-   * arrays can be seen as a table where the row of index "i" is made of (state[i],rules[i],data[i]).
-   * </p>
-   *
-   * <p>
-   * "index" is a single element array (int[1]) providing current index as a read/write parameter.
-   * The current index is the position of the current TokyoNaut, which will execute its atomic morph 
-   * operation in the run of the morph call.
-   * </p>
-   *
-   * <p>
-   * Current TokyoNaut takes data as input in data[index[0]] and applies a transformation resulting to 
-   * new data as output stored in data[index[1]], provided as input for the following transformation.
-   * First transformation would typically take input data from a file or a data input stream, while
-   * last transformation would typically store output data in a file or a data output stream.
-   * </p>
-   *
-   * <p> 
-   * The returned TokyoNaut instance is the next to be called to continue the transformation process,
-   * or null if the transformation is complete (in which case index[0] shall be set to rules.length).
+   * You can picture the data matrix as an abacus, and TokyoNauts as fingers moving bytes/beads
+   * on the rows/rods to apply operations.
    * </p>
    * 
    * <p>
-   * Given that state, rules and data have been properly initialized, the following loop would run
+   * TokyoNaut instances are chained to realize a complex data transformation;
+   * each tokyonaut is located in a separate row of the "action" array,
+   * takes its input from the "data" queue in the same row, and generates output
+   * in the "data" queue in the above row (index incremented by one).
+   * </p>
+   *
+   * <p>
+   * Current TokyoNaut, the TokyoNaut instance currently called, takes data as input in 
+   * data[here[0]] and applies a transformation resulting in new data as output stored 
+   * in data[here[0]+1]. Output data from one action, is provided as input for the following 
+   * transformation.
+   * First transformation will usually take input data from a file or a data input stream, while
+   * last transformation will store output data in a file or a data output stream.
+   * </p>
+   *
+   * <p>
+   * "data" and "action" have the same number of elements. "here" is a single element array 
+   * (int[1]) providing the index of current row as a read/write parameter: 
+   * here[0] is the position of TokyoNaut instance on which the "morph" method is called.
+   * </p>
+   *
+   * <p>
+   * Each row of "data" is a queue where bytes are written by the TokyoNaut at the same index,
+   * and read by the TokyoNaut at the upper index. The first byte, data[here[0]][0] indicates
+   * the number of bytes available (from 0 to 253) and the second byte, data[here[0]][1] gives
+   * the offset to the head of the queue (set to 2 by the data producer, and incremented by the
+   * data reader). No data is added to the queue before it has been emptied. Using this convention,
+   * queues cannot exceed 255 bytes of length, with 253 bytes of useful payload.
+   * data[here[0]][0]=0xFF is reserved for data queues following a different convention to support
+   * more important payloads.
+   * </p>
+   *
+   * <p> 
+   * index is updated at the end of the morph method, either incremented when some output data
+   * remains to be consumed, or decremented to have new data written in the (now empty) input buffer.
+   * The returned TokyoNaut instance is the next to be called to go on the transformation process,
+   * in both cases corresponding to action[here[0]].
+   * It is null if the transformation is complete (and here[0] is set to -1).
+   * </p>
+   *
+   * <p>
+   * Given that action and data have been properly initialized, the following loop would run
    * a step by step transformation until completion:
 <PRE>
-int[] index = {0};
-ITokyoNaut current = rules[index[0]];
+int[] here = {0};
+ITokyoNaut current = action[here[0]];
 while (current != null)
 {
-  current = current.morph(state,rules,data,index);
+  current = current.morph(action,data,here);
 }     
 </PRE>
    * </p>
@@ -99,12 +117,11 @@ while (current != null)
    * to data consumers, involding several passes trough the same TokyoNauts until completion.
    * </p>
    *
-   * @param state initial configuration and current state of atomic transformations
-   * @param rules chain of atomic transformations (TokyoNauts)
-   * @param data buffers of data for atomic transformations
-   * @param index position of current TokyoNaut, identical in the three arrays state,rules,data
-   * @return next TokyoNaut to run i.e. rules[index[0]] or null when transformation is complete
+   * @param action chain of atomic transformations (TokyoNauts)
+   * @param data queues of data (output of TokyoNaut on same row/input of TokyoNaut on next row)
+   * @param here position of current TokyoNaut, identical in action and data
+   * @return next TokyoNaut to run i.e. action[index[0]] or null when transformation is complete
    */
-  public ITokyoNaut morph(Object[] state, ITokyoNaut[] rules, Object[] data, int[] index);
+  public ITokyoNaut morph(ITokyoNaut[] action, byte[][] data, int[] here);
   
 }
