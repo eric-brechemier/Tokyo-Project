@@ -30,15 +30,14 @@ public class NullTokyoNautTest
 {
   public static void main(String[] args)
   {
-    Object[] state = {null};
-    ITokyoNaut[] rules = {new NullTokyoNaut()};
-    Object[] data = {null};
+    ITokyoNaut[] action = {new NullTokyoNaut()};
+    byte[][] data = new byte[1][255];
     
-    int[] index = {0};
-    ITokyoNaut current = rules[index[0]];
+    int[] here = {0};
+    ITokyoNaut current = action[here[0]];
     while (current != null)
     {
-      current = current.morph(state,rules,data,index);
+      current = current.morph(action,data,here);
     }
     
     System.out.println("Tokyo API coverage test complete.");
