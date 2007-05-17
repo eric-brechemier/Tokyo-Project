@@ -60,15 +60,15 @@ public interface ITokyoNaut
    * <p>
    * TokyoNaut instances are chained to realize a complex data transformation;
    * each tokyonaut is located in a separate row of the "action" array,
-   * takes its input from the "data" queue in the same row, and generates output
-   * in the "data" queue in the above row (index incremented by one).
+   * takes its input from the "data" queue in the previous row, and generates output
+   * in the "data" queue in the row at the same level.
    * </p>
    *
    * <p>
-   * Current TokyoNaut, the TokyoNaut instance currently called, takes data as input in 
-   * data[here[0]] and applies a transformation resulting in new data as output stored 
-   * in data[here[0]+1]. Output data from one action, is provided as input for the following 
-   * transformation.
+   * More precisely, current TokyoNaut, the TokyoNaut instance currently called, takes data
+   * as input in data[here[0]-1] and applies a transformation resulting in new data as output 
+   * stored in data[here[0]]. Output data from one action is provided as input for the following 
+   * transformation. <br />
    * First transformation will usually take input data from a file or a data input stream, while
    * last transformation will store output data in a file or a data output stream.
    * </p>
@@ -84,22 +84,23 @@ public interface ITokyoNaut
    * and read by the TokyoNaut at the upper index. The first byte, data[here[0]][0] indicates
    * the number of bytes available (from 0 to 253) and the second byte, data[here[0]][1] gives
    * the offset to the head of the queue (set to 2 by the data producer, and incremented by the
-   * data reader). No data is added to the queue before it has been emptied. Using this convention,
-   * queues cannot exceed 255 bytes of length, with 253 bytes of useful payload.
-   * data[here[0]][0]=0xFF is reserved for data queues following a different convention to support
-   * more important payloads.
+   * data reader). Using this convention, queues cannot exceed 255 bytes of length, with 253 bytes 
+   * of useful payload. data[here[0]][0]=0xFF is reserved for data queues following a different 
+   * convention to support more important payloads. <br />
+   * No data is added to the queue before it has been emptied. 
    * </p>
    *
    * <p> 
-   * index is updated at the end of the morph method, either incremented when some output data
-   * remains to be consumed, or decremented to have new data written in the (now empty) input buffer.
+   * "here" index is updated at the end of the morph method, either incremented when some output 
+   * data remains to be consumed, or decremented to have new data written in the (now empty) input 
+   * buffer. <br />
    * The returned TokyoNaut instance is the next to be called to go on the transformation process,
-   * in both cases corresponding to action[here[0]].
-   * It is null if the transformation is complete (and here[0] is set to -1).
+   * in both cases corresponding to action[here[0]]. <br />
+   * It is null if the transformation is complete (in which case here[0] is set to -1).
    * </p>
    *
    * <p>
-   * Given that action and data have been properly initialized, the following loop would run
+   * Given that "action" and "data" have been properly initialized, the following loop would run
    * a step by step transformation until completion:
 <PRE>
 int[] here = {0};
@@ -120,7 +121,7 @@ while (current != null)
    * @param action chain of atomic transformations (TokyoNauts)
    * @param data queues of data (output of TokyoNaut on same row/input of TokyoNaut on next row)
    * @param here position of current TokyoNaut, identical in action and data
-   * @return next TokyoNaut to run i.e. action[index[0]] or null when transformation is complete
+   * @return next TokyoNaut to run i.e. action[here[0]] or null when transformation is complete
    */
   public ITokyoNaut morph(ITokyoNaut[] action, byte[][] data, int[] here);
   
