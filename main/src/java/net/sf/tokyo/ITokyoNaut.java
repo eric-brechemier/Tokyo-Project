@@ -81,13 +81,17 @@ public interface ITokyoNaut
    *
    * <p>
    * Each row of "data" is a queue where bytes are written by the TokyoNaut at the same index,
-   * and read by the TokyoNaut at the upper index. The first byte, data[here[0]][0] indicates
-   * the number of bytes available (from 0 to 253) and the second byte, data[here[0]][1] gives
-   * the offset to the head of the queue (set to 2 by the data producer, and incremented by the
-   * data reader). Using this convention, queues cannot exceed 255 bytes of length, with 253 bytes 
-   * of useful payload. data[here[0]][0]=0xFF is reserved for data queues following a different 
-   * convention to support more important payloads. <br />
-   * No data is added to the queue before it has been emptied. 
+   * and read by the TokyoNaut at the upper index. <br />
+   * The array starts with three bytes of header, followed by 252 bytes of payload.
+   * In header, the first byte, data[here[0]][0] is set to '1' in this version, corresponding
+   * to the conventions (with associated limitations such as the array size) described below.
+   * Implementations wishing to use different conventions should set the first byte to a different
+   * value; values in the range 0xF0 to 0xFF are reserved for private use and hence a good choice.
+   * The second byte, data[here[0]][1] indicates the offset to the head of the queue (initially 
+   * set to 3 by the data producer, and incremented by the data reader), and the second byte gives
+   * the number of bytes available (from 0 to 252). 
+   * Using this convention, queues cannot exceed 255 bytes of length, with 252 bytes 
+   * of useful payload. No data is added to the queue before it has been emptied. 
    * </p>
    *
    * <p> 
