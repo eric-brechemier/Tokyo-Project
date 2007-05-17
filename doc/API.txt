@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
 =========================================
 Title: Tokyo Project - Data Handling API 
-Last modified: 2007-05-01
+Last modified: 2007-05-17
 By: Eric Bréchemier
 Encoding: UTF-8
 =========================================
@@ -41,7 +41,7 @@ it is made of one interface, ITokyoNaut, with a single method, "morph":
 
 public interface ITokyoNaut
 {
-  public ITokyoNaut morph(Object[] state, ITokyoNaut[] rules, Object[] data, int[] index);
+  public ITokyoNaut morph(ITokyoNaut[] action, byte[][] data, int[] here);
 }
 
 The name "TokyoNaut" is composed of "Tokyo", a mind-changing city where this project started, 
@@ -51,43 +51,37 @@ More inspiration comes from Captain Nemo's motto: "Mobilis in Mobili".
 
 Instances of classes that implement the ITokyoNaut interface are called TokyoNaut instances, or 
 simply TokyoNauts. Their mission is to rewrite incrementally some input data, one step at a time.
-Each call of the "morph" method runs one single rewrite step, which could correspond to one line 
-of text, one binary structure or an XML fragment depending on the format at hand and the choice 
-of implementation.
-
-The order of "morph" parameters can be easily remembered with the sentence: "State rules data index."
-which has no hidden purpose excepted mnemotechnics.
-
-TokyoNaut instances can be stateless; each one will be allocated one box in the "state" array
-allowing to preserve some required properties or objects too costly to be created at each new run.
+Each call of the "morph" method runs one single rewrite step, morphing non-xml data towards xml
+data using fixed size input and ouput buffers.
 
 A set of simple TokyoNaut instances may be associated to realize a complex data transformation,
-each one located in a separate row of the "rules" array.
+each one located in a separate row of the "action" array.
 Prototype One provides such an example, applied to CSV data about World Countries.
 
-"state" and "data" have the same number of elements as "rules". The association of these three 
-arrays can be seen as a table where the row of index "i" is made of (state[i],rules[i],data[i]).
+"action" and "data" have the same number of elements. The association of these two arrays 
+can be seen as a single table where the row of index "i" is made of (action[i],data[i]).
 
-"index" is a single element array (int[1]) providing current index as a read/write parameter.
-The current index is the position of the current TokyoNaut, which will execute its atomic morph 
-operation in the run of the morph call.
+"here" is a single element array (int[1]) providing current index as a read/write parameter.
+The current index is the position of the current TokyoNaut, the instance on which the "morph"
+operation has been called, which will execute its atomic transformation operation in the run 
+of the morph call.
 
-Current TokyoNaut takes data as input in data[index[0]] and applies a transformation resulting to
-new data as output stored in data[index[1]], provided as input for the following transformation.
-First transformation would typically take input data from a file or a data input stream, while
-last transformation would typically store output data in a file or a data output stream.
+Current TokyoNaut takes data as input in data[here[0]-1] and applies a transformation resulting to
+new data as output stored in data[here[0]], provided as input for the following transformation.
+First transformation will typically take input data from a file or a data input stream, while
+last transformation will store output data in a file or a data output stream.
 
 The returned TokyoNaut instance is the next to be called to continue the transformation process,
-or null if the transformation is complete (in which case index[0] shall be set to rules.length).
+or null if the transformation is complete (in which case here[0] shall be set to -1).
 
-Given that state, rules and data have been properly initialized, the following loop would run
+Given that "action" and "data" have been properly initialized, the following loop would run
 a step by step transformation until completion:
 
-int[] index = {0};
-ITokyoNaut current = rules[index[0]];
+int[] here = {0};
+ITokyoNaut current = action[here[0]];
 while (current != null)
 {
-  current = current.morph(state,rules,data,index);
+  current = current.morph(action,data,here);
 }
 
 In the above example, it is not possible to replace the "while loop" with a "for loop",
