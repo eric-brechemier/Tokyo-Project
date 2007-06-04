@@ -30,15 +30,18 @@ public class NullTokyoNautTest
 {
   public static void main(String[] args)
   {
-    ITokyoNaut[] action = {new NullTokyoNaut()};
-    byte[][] data = new byte[1][255];
+    ITokyoNaut nullTokyoNaut = new NullTokyoNaut();
+    ITokyoNaut nullTokyoNautSrc = new NullTokyoNaut();
+    byte[] data = new byte[255];
     
-    int[] here = {0};
-    ITokyoNaut current = action[here[0]];
-    while (current != null)
+    nullTokyoNaut.plug(nullTokyoNautSrc);
+    
+    while ( nullTokyoNaut.available()>0 )
     {
-      current = current.morph(action,data,here);
+      nullTokyoNaut.read(data,0,255);
     }
+    
+    nullTokyoNaut.unplug();
     
     System.out.println("Tokyo API coverage test complete.");
   }
