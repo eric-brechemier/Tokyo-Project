@@ -28,9 +28,23 @@ import net.sf.tokyo.ITokyoNaut;
  */
 public class NullTokyoNaut implements ITokyoNaut
 {
-  public ITokyoNaut morph(ITokyoNaut[] action, byte[][] data, int[] here)
+  public int available()
   {
-    here[0] = -1;
-    return null;
+    return 0;
+  }
+  
+  public int read(byte[] buffer, int offset, int length)
+  {
+    return -1;
+  }
+  
+  public ITokyoNaut plug(ITokyoNaut source)
+  {
+    return source;
+  }
+  
+  public void unplug()
+  {
+    
   }
 }
