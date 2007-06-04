@@ -33,8 +33,16 @@ package net.sf.tokyo;
  * </p>
  *
  * <p>
- * Each call of "morph" is intended to rewrite the input data by interpreting a set of instructions, 
- * one step at a time, going back and forth from data providers to data consumers. 
+ * Methods available() and read() are similar to same methods in InputStream, but the intention
+ * is to get nodes one by one, with available() returning the number of bytes of current node,
+ * and read() writing the bytes representing the node, starting with 0x00 to mark the node start
+ * (Push on stack), one byte to identify the node type, all the bytes corresponding to the node 
+ * content, including child nodes, and ending with 0xFF to mark the node end (Pop from stack).
+ * </p>
+ *
+ * <p>
+ * Plug and unplug allow to initialize a chain of collaborating TokyoNauts, and unchain them
+ * to let them free any allocated ressources at the end of the processing.
  * </p>
  * 
  * @author Eric Br&eacute;chemier
@@ -44,101 +52,53 @@ public interface ITokyoNaut
 {
   
   /**
-   * Rewrite data based on atomic transformation actions (TokyoNauts).<br/>
+   * Return the number of bytes available for writing.<br/>
    *
    * <p>
-   * Each call of the "morph" method runs a data transformation by the selected action, 
-   * reading bytes from an input queue, and writing bytes to an output queue
-   * that will become the input queue of the following TokyoNaut.
+   * Consistent with InputStream.available(): 
+   * "Returns the number of bytes that can be read (or skipped over) from this input stream 
+   * without blocking by the next caller of a method for this input stream."
    * </p>
    *
-   * <p>
-   * You can picture the data matrix as an abacus, and TokyoNauts as fingers moving bytes/beads
-   * on the rows/rods to apply operations.
-   * </p>
-   * 
-   * <p>
-   * TokyoNaut instances are chained to realize a complex data transformation;
-   * each tokyonaut is located in a separate row of the "action" array,
-   * takes its input from the "data" queue in the previous row, and generates output
-   * in the "data" queue in the row at the same level.
-   * </p>
-   *
-   * <p>
-   * More precisely, current TokyoNaut, the TokyoNaut instance currently called, takes data
-   * as input in data[here[0]-1] and applies a transformation resulting in new data as output 
-   * stored in data[here[0]]. Output data from one action is provided as input for the following 
-   * transformation. <br />
-   * First transformation will usually take input data from a file or a data input stream, while
-   * last transformation will store output data in a file or a data output stream.
-   * </p>
-   *
-   * <p>
-   * "data" and "action" have the same number of elements. "here" is a single element array 
-   * (int[1]) providing the index of current row as a read/write parameter: 
-   * here[0] is the position of TokyoNaut instance on which the "morph" method is called.
-   * </p>
-   *
-   * <p>
-   * Each row of "data" is a queue where bytes are written by the TokyoNaut at the same index,
-   * and read by the TokyoNaut at the upper index. <br />
-   * The array starts with five bytes of header, followed by 250 bytes of payload.
-   * In header, the first byte, data[here[0]][0] is set to '1' in this version, corresponding
-   * to the conventions (with associated limitations such as the array size) described below.
-   * Implementations wishing to use different conventions should set the first byte to a different
-   * value; values in the range 0xF0 to 0xFF are reserved for private use and hence a good choice.
-   * The second byte, data[here[0]][1] indicates the offset to the head of the queue (initially 
-   * set to 5 by the data producer, and incremented by the data reader), and the third byte gives
-   * the offset to the tail of the queue (one byte after the last byte of available data). <br />
-   * Fourth and Fifth bytes can be used to store rollback values respectly for the head and tail of
-   * the queue. These rollback values are practical to restore previous values when a short section 
-   * of data does not fit at the end of the queue. <br />
-   * </p>
-   *
-   * <p>
-   * Using the above convention, queues cannot exceed 255 bytes of length, with 250 bytes 
-   * of useful payload. No data is added to the queue before it has been emptied. <br />
-   * When the queue is empty, head == tail. An empty queue is the last stage of a suite of morph
-   * operations, and all TokyoNauts must write such an empty queue when their processing is complete
-   * e.g. when input data has been processed completely and no more data is available in input. <br />
-   * A processing associating several TokyoNauts will end with each TokyoNaut, from the first data
-   * producer to the last data provider, will create an empty queue to be consumed by the following
-   * TokyoNaut; and the last TokyoNaut of the chain shall return null upon receiving such a message.
-   * </p>
-   *
-   * <p> 
-   * "here" index is updated at the end of the morph method, either incremented when some output 
-   * data remains to be consumed, or decremented to have new data written in the (now empty) input 
-   * buffer. <br />
-   * The returned TokyoNaut instance is the next to be called to go on the transformation process,
-   * in both cases corresponding to action[here[0]]. <br />
-   * It is null if the transformation is complete (in which case here[0] is set to -1).
-   * </p>
-   *
-   * <p>
-   * Given that "action" and "data" have been properly initialized, the following loop would run
-   * a step by step transformation until completion:
-<PRE>
-int[] here = {0};
-ITokyoNaut current = action[here[0]];
-while (current != null)
-{
-  current = current.morph(action,data,here);
-}     
-</PRE>
-   * </p>
-   * 
-   * <p>
-   * In the above example, it is not possible to replace the "while loop" with a "for loop",
-   * because the flow of morph operations will typically loop back and forth from data providers
-   * to data consumers, involding several passes trough the same TokyoNauts until completion.
-   * </p>
-   *
-   * @param action chain of atomic transformations (TokyoNauts)
-   * @param data queues of data (output of TokyoNaut on same row/input of TokyoNaut on next row)
-   * @param here position of current TokyoNaut, identical in action and data
-   * @return next TokyoNaut to run i.e. action[here[0]] or null when transformation is complete
+   * @return the number of bytes that can be read without blocking, or null if none is available
    */
-  public ITokyoNaut morph(ITokyoNaut[] action, byte[][] data, int[] here);
+  public int available();
+  
+  /**
+   * Return the number of bytes available for writing.<br/>
+   *
+   * <p>
+   * Consistent with InputStream.read(byte[],int,int):
+   * "Reads up to len bytes of data from the input stream into an array of bytes. An attempt 
+   * is made to read as many as len bytes, but a smaller number may be read, possibly zero. 
+   * The number of bytes actually read is returned as an integer. (...)"
+   * </p>
+   *
+   * @param buffer the buffer into which the data is read.
+   * @param offset the start offset in array b  at which the data is written.
+   * @param length the maximum number of bytes to read.
+   * @return the total number of bytes read into the buffer, or -1 if there is no more data because the end of the stream has been reached.
+   */
+  public int read(byte[] buffer, int offset, int length);
+  
+  /**
+   * Plug a source from which data will be read.<br/>
+   *
+   * @param source TokyoNaut providing data to be read.
+   * @return source parameter to allow a chaing of plug calls.
+   */
+  // 
+  public ITokyoNaut plug(ITokyoNaut source);
+  
+  /**
+   * Unplug source.<br/>
+   *
+   * <p>
+   * This method unplug recursively all source TokyoNauts chained from this point.
+   * If no source has been set by a previous call to plug(), nothing happens.
+   * </p>
+   *
+   */
+  public void unplug();
   
 }
