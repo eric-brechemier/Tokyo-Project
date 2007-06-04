@@ -23,8 +23,16 @@
 package net.sf.tokyo.prototype1;
 
 import net.sf.tokyo.ITokyoNaut;
+import net.sf.tokyo.prototype1.tokyonauts.NReadFile;
+import net.sf.tokyo.prototype1.tokyonauts.NParseCsv;
+import net.sf.tokyo.prototype1.tokyonauts.NXslTransform;
+import net.sf.tokyo.prototype1.tokyonauts.NWriteCsv;
+import net.sf.tokyo.prototype1.tokyonauts.NWriteFile;
+import net.sf.tokyo.prototype1.tokyonauts.NSpy;
+import net.sf.tokyo.prototype1.tokyonauts.NSpyConsume;
+import net.sf.tokyo.prototype1.tokyonauts.NSpyLoopBack;
 
-public class ProtoOneMainLoop implements ITokyoNaut
+public class ProtoOneMainLoop
 {
   public static void main(String[] args)
   {
@@ -37,46 +45,57 @@ public class ProtoOneMainLoop implements ITokyoNaut
     String stylesheetFilePath = args[1];
     String outCsvFilePath = args[2];
     
-    Object startRule = new int[]{2};
-    ITokyoNaut mainLoop = new ProtoOneMainLoop();
-    Object[] rules =
+    System.out.println("Starting ProtoOne:"
+      + "\n  InCsv: " + inCsvFilePath
+      + "\n  Xsl: " + stylesheetFilePath
+      + "\n  OutCsv: " + outCsvFilePath
+    );
+    
+    
+    ITokyoNaut[] action =
     {
-      new ProtoOneLang(),
-      new ProtoOneLang.InFileNaut(),
-      new ProtoOneLang.InCsvNaut(),
-      new ProtoOneLang.InSaxNaut(),
-      new ProtoOneLang.XslTransformNaut(),
-      new ProtoOneLang.OutSaxNaut(),
-      new ProtoOneLang.OutCsvNaut(),
-      new ProtoOneLang.OutFileNaut()
+      new NReadFile(inCsvFilePath),
+      new NSpy(NSpy.STYLE_HEX),
+      new NParseCsv("http://tokyo.sf.net/proto1/countries/2007","world","country",new String[]{"name","capital","continent"}),
+      new NSpyConsume(NSpy.STYLE_HEX)
     };
     
-    final int RULES_COUNT = 7;
-    Object[] state = new Object[RULES_COUNT];
-    Object[] data = new Object[RULES_COUNT+1];
-    
-    mainLoop.morph(rules,state,data);
-  }
-    
-  public void morph(Object[] rules, Object[] state, Object[] data)
-  {
-    if (  !ProtoOneLang.URI.equals( rules[0].toString() )  )
-      return;
-    
-    int[] currentRuleIndex = new int[1];
-    state = new Object[] {currentRuleIndex};
-    
-    do
+    /*
+    ITokyoNaut[] action =
     {
-      for (int i=1; i<rules.length; i++)
-      {
-        currentRuleIndex[0]=i;
-        ITokyoNaut currentRule = (ITokyoNaut)rules[i];
-        currentRule.morph(rules,state,data);
-      }
-    } while( data[data.length-1]!=null );
+      new NReadFile(inCsvFilePath),
+      new NSpy(NSpy.STYLE_HEX),
+      new NParseCsv("http://tokyo.sf.net/proto1/countries/2007","world","country",new String[]{"name","capital","continent"}),
+      //new NSpyLoopBack(NSpy.STYLE_HEX,NSpyLoopBack.NO_LIMIT),
+      new NSpyLoopBack(NSpy.STYLE_CHAR,10),
+      new NXslTransform(stylesheetFilePath),
+      new NSpy(),
+      new NWriteCsv(),
+      new NSpy(),
+      new NWriteFile(outCsvFilePath)
+    };
+    */
     
-    return;
+    byte[][] data = new byte[action.length][255];
+    
+    try
+    {
+    
+      int[] here = {0};
+      ITokyoNaut current = action[here[0]];
+      while (current != null)
+      {
+        System.out.println("Applying TokyoNaut "+here[0]+"...");
+        current = current.morph(action,data,here);
+      }
+      
+      System.out.println("ProtoOne completed.");
+      
+    }
+    catch(Exception e)
+    {
+      System.err.println("Error in Main Loop: "+e);
+    }
   }
   
 }
