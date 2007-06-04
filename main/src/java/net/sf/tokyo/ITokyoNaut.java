@@ -82,16 +82,28 @@ public interface ITokyoNaut
    * <p>
    * Each row of "data" is a queue where bytes are written by the TokyoNaut at the same index,
    * and read by the TokyoNaut at the upper index. <br />
-   * The array starts with three bytes of header, followed by 252 bytes of payload.
+   * The array starts with five bytes of header, followed by 250 bytes of payload.
    * In header, the first byte, data[here[0]][0] is set to '1' in this version, corresponding
    * to the conventions (with associated limitations such as the array size) described below.
    * Implementations wishing to use different conventions should set the first byte to a different
    * value; values in the range 0xF0 to 0xFF are reserved for private use and hence a good choice.
    * The second byte, data[here[0]][1] indicates the offset to the head of the queue (initially 
-   * set to 3 by the data producer, and incremented by the data reader), and the second byte gives
-   * the number of bytes available (from 0 to 252). 
-   * Using this convention, queues cannot exceed 255 bytes of length, with 252 bytes 
-   * of useful payload. No data is added to the queue before it has been emptied. 
+   * set to 5 by the data producer, and incremented by the data reader), and the third byte gives
+   * the offset to the tail of the queue (one byte after the last byte of available data). <br />
+   * Fourth and Fifth bytes can be used to store rollback values respectly for the head and tail of
+   * the queue. These rollback values are practical to restore previous values when a short section 
+   * of data does not fit at the end of the queue. <br />
+   * </p>
+   *
+   * <p>
+   * Using the above convention, queues cannot exceed 255 bytes of length, with 250 bytes 
+   * of useful payload. No data is added to the queue before it has been emptied. <br />
+   * When the queue is empty, head == tail. An empty queue is the last stage of a suite of morph
+   * operations, and all TokyoNauts must write such an empty queue when their processing is complete
+   * e.g. when input data has been processed completely and no more data is available in input. <br />
+   * A processing associating several TokyoNauts will end with each TokyoNaut, from the first data
+   * producer to the last data provider, will create an empty queue to be consumed by the following
+   * TokyoNaut; and the last TokyoNaut of the chain shall return null upon receiving such a message.
    * </p>
    *
    * <p> 
