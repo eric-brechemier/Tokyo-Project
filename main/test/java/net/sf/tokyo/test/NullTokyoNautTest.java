@@ -32,13 +32,14 @@ public class NullTokyoNautTest
   {
     ITokyoNaut nullTokyoNaut = new NullTokyoNaut();
     ITokyoNaut nullTokyoNautSrc = new NullTokyoNaut();
-    byte[] data = new byte[255];
+    int[] meta = new int[]{1,0,0,0,0};
+    byte[] data = new byte[300];
     
     nullTokyoNaut.plug(nullTokyoNautSrc);
     
-    while ( nullTokyoNaut.available()>0 )
+    while ( nullTokyoNaut.inTouch() )
     {
-      nullTokyoNaut.read(data,0,255);
+      nullTokyoNaut.read(meta,data);
     }
     
     nullTokyoNaut.unplug();
