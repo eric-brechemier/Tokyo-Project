@@ -35,9 +35,7 @@ package net.sf.tokyo;
  * <p>
  * Methods available() and read() are similar to same methods in InputStream, but the intention
  * is to get nodes one by one, with available() returning the number of bytes of current node,
- * and read() writing the bytes representing the node, starting with 0x00 to mark the node start
- * (Push on stack), one byte to identify the node type, all the bytes corresponding to the node 
- * content, including child nodes, and ending with 0xFF to mark the node end (Pop from stack).
+ * and read() writing the bytes representing the node.
  * </p>
  *
  * <p>
