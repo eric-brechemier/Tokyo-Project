@@ -32,6 +32,7 @@
     1.1 - Updated for "Shibuya" version of API
     1.2 - Updated for "Harajuku" version of Tokyo API
     1.3 - Changed depencies of tasks to allow run with partial rebuild
+    1.4 - Create "out/data" directory, required to create output file inside
     
   See ../third-party for Third Party Dependencies.
   See ../main        for Tokyo API
@@ -101,6 +102,8 @@
   </target>
   
   <target name="run" description="Run Prototype 1">
+    <delete dir="${out.data.dir}" />
+    <mkdir dir="${out.data.dir}" />
     <java classpathref="run.classpath" classname="net.sf.tokyo.prototype1.ProtoOneMainLoop">
       <arg value="${in.data.dir}/sample.csv"/>
       <arg line="${src.xslt}/net.sf.tokyo.prototype1.orderCountriesByContinent.xsl"/>
