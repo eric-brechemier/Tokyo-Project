@@ -49,30 +49,30 @@ public class ProtoOneMainLoop
       + "\n  OutCsv: " + outCsvFilePath
     );
     
-    
     ITokyoNaut csvOuput = new NWriteFile(outCsvFilePath);
     
-    /* Basic Test: no change 
+    /* Basic Test: no change
     csvOuput
       .plug( new NReadFile(inCsvFilePath) );
     */
     
+    /* Basic Test + Spy Filter */
+    csvOuput
+      .plug( new NSpy() )
+      .plug( new NReadFile(inCsvFilePath) );
+
+    
+    /*
     csvOuput
       .plug( new NWriteCsv() )
       .plug( new NParseCsv() )
       .plug( new NReadFile(inCsvFilePath) );
-    
+    */
     
     /* Complete chain...
     csvOuput
       .plug( new NSpy()  )
       .plug( new NWriteCsv() )
-      
-      , using 0xFF to mark a node start (e.g. signal
-      to Push the node on context stack), one byte to identify the node type, followed by all the bytes 
-      corresponding to the node content including child nodes, and ending with 0x00 to mark the node 
-      end (Pop from stack)
-      
       .plug( new NSpy() )
       .plug( new NXslTransform(stylesheetFilePath) )
       .plug( new NSpy() )
@@ -81,14 +81,15 @@ public class ProtoOneMainLoop
       .plug( new NReadFile(inCsvFilePath) );
     */
     
-    byte[] buffer = new byte[255];
-    while( csvOuput.available()>0 )
+    int[] meta = new int[]{1,0,200,0,0};
+    byte[] data = new byte[255];
+    
+    while( csvOuput.inTouch() )
     {
-      int read = csvOuput.read(buffer,0,255);
+      csvOuput.read(meta,data);
+      
     }
-    
     csvOuput.unplug();
-    
   }
   
 }
