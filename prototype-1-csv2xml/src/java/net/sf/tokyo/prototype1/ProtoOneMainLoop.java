@@ -29,8 +29,6 @@ import net.sf.tokyo.prototype1.tokyonauts.NXslTransform;
 import net.sf.tokyo.prototype1.tokyonauts.NWriteCsv;
 import net.sf.tokyo.prototype1.tokyonauts.NWriteFile;
 import net.sf.tokyo.prototype1.tokyonauts.NSpy;
-import net.sf.tokyo.prototype1.tokyonauts.NSpyConsume;
-import net.sf.tokyo.prototype1.tokyonauts.NSpyLoopBack;
 
 public class ProtoOneMainLoop
 {
@@ -52,50 +50,45 @@ public class ProtoOneMainLoop
     );
     
     
-    ITokyoNaut[] action =
-    {
-      new NReadFile(inCsvFilePath),
-      new NSpy(NSpy.STYLE_HEX),
-      new NParseCsv("http://tokyo.sf.net/proto1/countries/2007","world","country",new String[]{"name","capital","continent"}),
-      new NSpyConsume(NSpy.STYLE_HEX)
-    };
+    ITokyoNaut csvOuput = new NWriteFile(outCsvFilePath);
     
-    /*
-    ITokyoNaut[] action =
-    {
-      new NReadFile(inCsvFilePath),
-      new NSpy(NSpy.STYLE_HEX),
-      new NParseCsv("http://tokyo.sf.net/proto1/countries/2007","world","country",new String[]{"name","capital","continent"}),
-      //new NSpyLoopBack(NSpy.STYLE_HEX,NSpyLoopBack.NO_LIMIT),
-      new NSpyLoopBack(NSpy.STYLE_CHAR,10),
-      new NXslTransform(stylesheetFilePath),
-      new NSpy(),
-      new NWriteCsv(),
-      new NSpy(),
-      new NWriteFile(outCsvFilePath)
-    };
+    /* Basic Test: no change 
+    csvOuput
+      .plug( new NReadFile(inCsvFilePath) );
     */
     
-    byte[][] data = new byte[action.length][255];
+    csvOuput
+      .plug( new NWriteCsv() )
+      .plug( new NParseCsv() )
+      .plug( new NReadFile(inCsvFilePath) );
     
-    try
-    {
     
-      int[] here = {0};
-      ITokyoNaut current = action[here[0]];
-      while (current != null)
-      {
-        System.out.println("Applying TokyoNaut "+here[0]+"...");
-        current = current.morph(action,data,here);
-      }
+    /* Complete chain...
+    csvOuput
+      .plug( new NSpy()  )
+      .plug( new NWriteCsv() )
       
-      System.out.println("ProtoOne completed.");
+      , using 0xFF to mark a node start (e.g. signal
+      to Push the node on context stack), one byte to identify the node type, followed by all the bytes 
+      corresponding to the node content including child nodes, and ending with 0x00 to mark the node 
+      end (Pop from stack)
       
-    }
-    catch(Exception e)
+      .plug( new NSpy() )
+      .plug( new NXslTransform(stylesheetFilePath) )
+      .plug( new NSpy() )
+      .plug( new NParseCsv("http://tokyo.sf.net/proto1/countries/2007","world","country",new String[]{"name","capital","continent"}) )
+      .plug( new NSpy(NSpy.STYLE_HEX) )
+      .plug( new NReadFile(inCsvFilePath) );
+    */
+    
+    byte[] buffer = new byte[255];
+    while( csvOuput.available()>0 )
     {
-      System.err.println("Error in Main Loop: "+e);
+      int read = csvOuput.read(buffer,0,255);
     }
+    
+    csvOuput.unplug();
+    
   }
   
 }
