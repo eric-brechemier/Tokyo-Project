@@ -28,14 +28,14 @@ import net.sf.tokyo.ITokyoNaut;
  */
 public class NullTokyoNaut implements ITokyoNaut
 {
-  public int available()
+  public boolean inTouch()
   {
-    return 0;
+    return false;
   }
   
-  public int read(byte[] buffer, int offset, int length)
+  public void read(int[]meta, byte[] data)
   {
-    return -1;
+    return;
   }
   
   public ITokyoNaut plug(ITokyoNaut source)
