@@ -33,9 +33,8 @@ package net.sf.tokyo;
  * </p>
  *
  * <p>
- * Methods available() and read() are similar to same methods in InputStream, but the intention
- * is to get nodes one by one, with available() returning the number of bytes of current node,
- * and read() writing the bytes representing the node.
+ * Methods inTouch() and read() are called in turn to check whether data is available for reading,
+ * and then have meta and data buffers filled by reading TokyoNaut's writing.
  * </p>
  *
  * <p>
@@ -50,46 +49,117 @@ public interface ITokyoNaut
 {
   
   /**
-   * Return the number of bytes available for writing.<br/>
+   * Check whether TokyoNaut is available for writing.<br/>
    *
    * <p>
-   * Consistent with InputStream.available(): 
-   * "Returns the number of bytes that can be read (or skipped over) from this input stream 
-   * without blocking by the next caller of a method for this input stream."
    * </p>
    *
-   * @return the number of bytes that can be read without blocking, or null if none is available
+   * @return true when the TokyoNaut is likely to write again, false meaning the end
    */
-  public int available();
+  public boolean inTouch();
   
   /**
-   * Return the number of bytes available for writing.<br/>
+   * Read meta/data written by the TokyoNaut.<br/>
    *
    * <p>
-   * Consistent with InputStream.read(byte[],int,int):
-   * "Reads up to len bytes of data from the input stream into an array of bytes. An attempt 
-   * is made to read as many as len bytes, but a smaller number may be read, possibly zero. 
-   * The number of bytes actually read is returned as an integer. (...)"
+   * The TokyoNaut will take information from the meta array to determine the offset position
+   * and the expected or maximal length to be written in the data buffer. It will then update
+   * the meta array to reflect the changes following her writing.
    * </p>
    *
-   * @param buffer the buffer into which the data is read.
-   * @param offset the start offset in array b  at which the data is written.
-   * @param length the maximum number of bytes to read.
-   * @return the total number of bytes read into the buffer, or -1 if there is no more data because the end of the stream has been reached.
+   * <p>
+   * Below is the definition of fields for leading version 0x01.
+   * Versions 0x00-0x9F are "reserved", while 0xA0-0xFF are "user-defined".
+   * Implemetors wishing to define their own set of fields MUST signal it with
+   * a leading version in the "user-defined" range.
+   * </p>
+   *
+   * <p>
+   * <table border="1">
+   *   <tr>
+   *     <th>version</th>
+   *     <th>offset</th>
+   *     <th>length</th>
+   *     <th>node type</th>
+   *     <th>relative level of node</th>
+   *   </tr>
+   *   <tr>
+   *     <td>0x01</td>
+   *     <td>
+   *     position of next byte to be written, updated to next available byte, or 
+   *     -1 if no more data is available, or data.length if buffer is full
+   *     </td>
+   *     <td>number of bytes expected, changed to number of bytes actually written</td>
+   *     <td>
+   *     type of data item, the table below defines data items for XML, range 0x00-0x9F is reserved,
+   *     0xA0-0xFF user-defined.
+   *     </td>
+   *     <td>
+   *     relative level increments when pushing nodes on current path (+1), 
+   *     negative when popping them to attach them to ancestors (-i for ith ancestor), 
+   *     null (0) means a continuation of data corresponding to current node. <br/>
+   *     Note 1: Node items (prefix, local name, string) are considered one level above the node itself. <br/>
+   *     Note 2: Siblings are attached to the parent node (-1).
+   *     </td>
+   *   </tr>
+   * </table>
+   * </p>
+   *
+   * <p>
+   * <table border="1">
+   *   <tr>
+   *     <th>
+   *     XML Node Types
+   *     </th>
+   *   </tr>
+   *   <tr>
+   *     <td>
+   *       <ul>
+   *         <li><b>0x10 - Root Node</b></li>
+   *         <li><b>0x20 - Element Node</b></li>
+   *         <li>&nbsp;&nbsp;0x21 - Element Node - prefix</li>
+   *         <li>&nbsp;&nbsp;0x22 - Element Node - local part of name</li>
+   *         <li><b>0x30 - Attribute Node</b></li>
+   *         <li>&nbsp;&nbsp;0x31 - Attribute Node - prefix</li>
+   *         <li>&nbsp;&nbsp;0x32 - Attribute Node - local part of name</li>
+   *         <li>&nbsp;&nbsp;0x33 - Attribute Node - string-value</li>
+   *         <li><b>0x40 - Namespace Node</b></li>
+   *         <li>&nbsp;&nbsp;0x41 - Namespace Node - prefix (= local part of name)</li>
+   *         <li>&nbsp;&nbsp;0x42 - Namespace Node - namespace URI (= string-value)</li>
+   *         <li><b>0x50 - Processing Instruction Node</b></li>
+   *         <li>&nbsp;&nbsp;0x51 - Processing Instruction Node - target (= local part of name)</li>
+   *         <li>&nbsp;&nbsp;0x52 - Processing Instruction Node - string-value</li>
+   *         <li><b>0x60 - Comment Node</b></li>
+   *         <li>&nbsp;&nbsp;0x61 - Comment Node - string-value</li>
+   *         <li><b>0x70 - Text Node</b></li>
+   *         <li>&nbsp;&nbsp;0x71 - Text Node - string-value</li>
+   *       </ul>
+   *     </td>
+   *   </tr>
+   * </table>
+   * </p>
+   *
+   * @param meta information about data, with fields defined by leading version number.
+   * @param data the buffer into which the data is read.
    */
-  public int read(byte[] buffer, int offset, int length);
+  public void read(int[]meta, byte[] data);
   
   /**
-   * Plug a source from which data will be read.<br/>
+   * Plug the TokyoNaut to a source TokyoNaut from which meta/data will be read.<br/>
    *
-   * @param source TokyoNaut providing data to be read.
+   * <p>
+   * Following an exclusive mode of relationship, a single source TokyoNaut can be plugged 
+   * with each TokyoNaut at a given time. Subsequent calls to plug() will unplug and replace 
+   * previously plugged TokyoNaut.
+   * </p>
+   *
+   * @param source TokyoNaut providing meta/data to be read.
    * @return source parameter to allow a chaing of plug calls.
    */
-  // 
   public ITokyoNaut plug(ITokyoNaut source);
   
   /**
-   * Unplug source.<br/>
+   * Unplug the TokyoNaut from previously plugged source TokyoNaut.<br/>
    *
    * <p>
    * This method unplug recursively all source TokyoNauts chained from this point.
