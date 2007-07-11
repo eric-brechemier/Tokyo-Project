@@ -24,27 +24,44 @@ package net.sf.tokyo.test;
 import net.sf.tokyo.ITokyoNaut;
 
 /**
- * Null implementation of ITokyoNaut interface.
+ * Null implementation of ITokyoNaut interface.<br/>
+ *
+ * <p>
+ * Provides simple forwarding of meta/data.
+ * This source code can be used as a base for TokyoNaut implementations.
+ * </p>
  */
 public class NullTokyoNaut implements ITokyoNaut
 {
+  protected ITokyoNaut _destination;
+  
   public boolean inTouch()
   {
+    if (_destination != null)
+      return _destination.inTouch();
+    
     return false;
   }
   
-  public void read(int[]meta, byte[] data)
+  public void send(int[]meta, byte[] data)
   {
-    return;
+    if (_destination != null)
+      _destination.send(meta,data);
   }
   
-  public ITokyoNaut plug(ITokyoNaut source)
+  public ITokyoNaut plug(ITokyoNaut destination)
   {
-    return source;
+    if (_destination!=null)
+      _destination.unplug();
+    
+    _destination = destination;
+    return destination;
   }
   
   public void unplug()
   {
-    
+    if (_destination!=null)
+      _destination.unplug();
+    _destination = null;
   }
 }

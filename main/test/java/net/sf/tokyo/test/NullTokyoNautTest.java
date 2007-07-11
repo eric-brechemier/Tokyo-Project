@@ -31,16 +31,14 @@ public class NullTokyoNautTest
   public static void main(String[] args)
   {
     ITokyoNaut nullTokyoNaut = new NullTokyoNaut();
-    ITokyoNaut nullTokyoNautSrc = new NullTokyoNaut();
+    ITokyoNaut nullTokyoNautDst = new NullTokyoNaut();
     int[] meta = new int[]{1,0,0,0,0};
-    byte[] data = new byte[300];
+    byte[] data = new byte[500];
     
-    nullTokyoNaut.plug(nullTokyoNautSrc);
+    nullTokyoNaut.plug(nullTokyoNautDst);
     
-    while ( nullTokyoNaut.inTouch() )
-    {
-      nullTokyoNaut.read(meta,data);
-    }
+    do nullTokyoNaut.send(meta,data);
+    while ( nullTokyoNaut.inTouch() );
     
     nullTokyoNaut.unplug();
     
