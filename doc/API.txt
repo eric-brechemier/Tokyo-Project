@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
 =========================================
 Title: Tokyo Project - Data Handling API 
-Last modified: 2007-05-17
+Last modified: 2007-08-19
 By: Eric Bréchemier
 Encoding: UTF-8
 =========================================
@@ -37,11 +37,17 @@ This documents defines the Tokyo API designed as part of the Tokyo Project. The 
 at the core of custom data handling in the differents applications demonstrated in this project.
 
 Tokyo API enables both XML and non-XML data transformations through a concise API: 
-it is made of one interface, ITokyoNaut, with a single method, "morph":
+it is made of one interface, ITokyoNaut, as defined below:
 
 public interface ITokyoNaut
 {
-  public ITokyoNaut morph(ITokyoNaut[] action, byte[][] data, int[] here);
+  public boolean areWeThereYet();
+  
+  public void filter(int[] meta, byte[] data);
+  
+  public ITokyoNaut plug(ITokyoNaut source);
+  
+  public void unplug();
 }
 
 The name "TokyoNaut" is composed of "Tokyo", a mind-changing city where this project started, 
@@ -55,37 +61,42 @@ Each call of the "morph" method runs one single rewrite step, morphing non-xml d
 data using fixed size input and ouput buffers.
 
 A set of simple TokyoNaut instances may be associated to realize a complex data transformation,
-each one located in a separate row of the "action" array.
-Prototype One provides such an example, applied to CSV data about World Countries.
+by chaining one TokyoNaut to the following through the use of the plug() method. Prototype One 
+provides an example of a chained transformation, applied to CSV data about World Countries.
 
-"action" and "data" have the same number of elements. The association of these two arrays 
-can be seen as a single table where the row of index "i" is made of (action[i],data[i]).
+"meta" contains information about the current data item:
+  meta[0]: VERSION - 0x01 for the present specification
 
-"here" is a single element array (int[1]) providing current index as a read/write parameter.
-The current index is the position of the current TokyoNaut, the instance on which the "morph"
-operation has been called, which will execute its atomic transformation operation in the run 
-of the morph call.
+The following fields are defined in the scope of version "0x01".
+  meta[1]: EVENT   - "1" for "START DATA ITEM", 
+                     "0" for "CONTINUE DATA ITEM", 
+                     "-1" for "END DATA ITEM"
+  meta[2]: ITEM    - data item type, based on the XML Infoset
+  meta[3]: OFFSET  - offset in bytes in "data" buffer for the start of current chunk of item data
+  meta[4]: LENGTH  - length in bytes in "data" buffer for the current chunk of item data
 
-Current TokyoNaut takes data as input in data[here[0]-1] and applies a transformation resulting to
-new data as output stored in data[here[0]], provided as input for the following transformation.
-First transformation will typically take input data from a file or a data input stream, while
-last transformation will store output data in a file or a data output stream.
+Following proper initialization, the following loop will run a step by step transformation 
+until completion:
 
-The returned TokyoNaut instance is the next to be called to continue the transformation process,
-or null if the transformation is complete (in which case here[0] shall be set to -1).
+  while ( tokyoNaut.areWeThereYet()==false )
+  {
+    tokyoNaut.filter(meta,data);
+  }
 
-Given that "action" and "data" have been properly initialized, the following loop would run
-a step by step transformation until completion:
+TokyoNauts can be associated in a chain of filters, by connecting them with the plug() method,
+in the order of source to destination, e.g.:
 
-int[] here = {0};
-ITokyoNaut current = action[here[0]];
-while (current != null)
-{
-  current = current.morph(action,data,here);
-}
+  source.plug(filterOne).plug(filterTwo).plug(destination);
+  
+  while ( destination.areWeThereYet()==false )
+  {
+    source.filter(meta,data);
+  }
+  
+  source.unplug();
 
-In the above example, it is not possible to replace the "while loop" with a "for loop",
-because the flow of morph operations will typically loop back and forth from data providers
-to data consumers, involding several passes trough the same TokyoNauts until completion.
+In this case, note that the loop condition is tested on the "destination" TokyoNaut at the end 
+of the chain, while the "filter" and final "unplug" calls are made on the "source" TokyoNaut
+at the beginning.
 
 =============== END OF DOCUMENT: Tokyo Project - Data Handling API ===============
