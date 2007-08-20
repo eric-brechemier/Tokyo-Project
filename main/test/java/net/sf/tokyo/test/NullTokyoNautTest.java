@@ -37,8 +37,8 @@ public class NullTokyoNautTest
     
     nullTokyoNaut.plug(nullTokyoNautDst);
     
-    do nullTokyoNaut.send(meta,data);
-    while ( nullTokyoNaut.inTouch() );
+    do nullTokyoNaut.filter(meta,data);
+    while ( !nullTokyoNaut.areWeThereYet() );
     
     nullTokyoNaut.unplug();
     
