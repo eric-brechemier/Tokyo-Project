@@ -35,18 +35,18 @@ public class NullTokyoNaut implements ITokyoNaut
 {
   protected ITokyoNaut _destination;
   
-  public boolean inTouch()
+  public boolean areWeThereYet()
   {
     if (_destination != null)
-      return _destination.inTouch();
-    
-    return false;
+      return _destination.areWeThereYet();
+    else
+      return true;
   }
   
-  public void send(int[]meta, byte[] data)
+  public void filter(int[]meta, byte[] data)
   {
     if (_destination != null)
-      _destination.send(meta,data);
+      _destination.filter(meta,data);
   }
   
   public ITokyoNaut plug(ITokyoNaut destination)
