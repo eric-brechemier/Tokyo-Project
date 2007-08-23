@@ -36,12 +36,12 @@ public abstract class NXslTransform implements ITokyoNaut
     // TODO: initialize Stylesheet, Sax Source and Sax Result
   }
   
-  public boolean inTouch()
+  public boolean areWeThereYet()
   {
-    return false;
+    return true;
   }
   
-  public void read(int[]meta, byte[] data)
+  public void filter(int[]meta, byte[] data)
   {
     return;
   }
