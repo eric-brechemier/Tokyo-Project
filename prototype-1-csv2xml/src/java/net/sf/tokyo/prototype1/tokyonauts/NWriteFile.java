@@ -31,20 +31,17 @@ import net.sf.tokyo.ITokyoNaut;
  * Write byte array data into a file.<br/>
  *
  */
-public class NWriteFile implements ITokyoNaut
+public class NWriteFile extends NCommonBase implements ITokyoNaut
 {
   protected FileOutputStream _out;
-  protected ITokyoNaut _source;
-  
-  // TODO: move constants to separate "VersionOne" class
-  protected static final byte OFFSET = 1;
-  protected static final byte LENGTH = 2;
+  protected boolean _completed;
   
   public NWriteFile(String outputFilePath)
   {
     try 
     {
       _out = new FileOutputStream(outputFilePath);
+      _completed = false;
     }
     catch(Exception e)
     {
@@ -52,50 +49,44 @@ public class NWriteFile implements ITokyoNaut
     }
   }
   
-  public boolean inTouch()
+  public boolean areWeThereYet()
   {
-    if (_source==null)
-      return false;
+    if (_out==null || _completed)
+      return true;
     
-    return _source.inTouch();
+    return false;
   }
   
-  public void read(int[]meta, byte[] data)
+  public void filter(int[]meta, byte[] data)
   {
-    if (_source==null)
-    {
-      meta[OFFSET] = -1;
+    if(areWeThereYet() || meta[VERSION]!=VERSION_ONE)
       return;
-    }
+    
+    if (meta[EVENT]==END && meta[ITEM]==ITEM_DOCUMENT)
+      _completed = true;
     
     try
     {
-      int startOffset = meta[OFFSET];
+      _out.write(data,meta[OFFSET],meta[LENGTH]);
       
-      _source.read(meta,data);
-      _out.write(data,startOffset,meta[LENGTH]);
-      return;
+      super.filter(meta,data);
     }
     catch(IOException e)
     {
-      System.err.println("Error in NWriteFile.read(): "+e);
+      System.err.println("Error in NWriteFile.filter(): "+e);
       return;
     }
     catch(IndexOutOfBoundsException iobe)
     {
-      System.err.println("Wrong Index Range ["+meta[OFFSET]+","+meta[LENGTH]+"] in NWriteFile.read(): "+iobe);
+      System.err.println("Wrong Index Range ["+meta[OFFSET]+","+meta[LENGTH]+"] in NWriteFile.filter(): "+iobe);
       return;
     }
     
   }
   
-  public ITokyoNaut plug(ITokyoNaut source)
+  public ITokyoNaut plug(ITokyoNaut destination)
   {
-    if (_source!=null)
-      _source.unplug();
-    
-    _source = source;
-    return source;
+    return super.plug(destination);
   }
   
   public void unplug()
@@ -103,10 +94,12 @@ public class NWriteFile implements ITokyoNaut
     try
     {
       if (_out!=null)
+      {
         _out.close();
+        _out = null;
+      }
       
-      if (_source!=null)
-        _source.unplug();
+      super.unplug();
     }
     catch(IOException e)
     {
