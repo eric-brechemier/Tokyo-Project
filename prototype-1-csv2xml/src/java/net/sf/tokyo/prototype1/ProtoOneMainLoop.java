@@ -36,60 +36,156 @@ public class ProtoOneMainLoop
   {
     if (args.length <3)
     {
-      System.out.println("Usage: [ProtoOneMain] inCsvFilePath stylesheetFilePath outCsvFilePath");
+      System.out.println("Usage: [ProtoOneMain] inCsvFilePath stylesheetFilePath outDir");
       return;
     }
     String inCsvFilePath = args[0];
     String stylesheetFilePath = args[1];
-    String outCsvFilePath = args[2];
+    String outDirPath = args[2];
     
     System.out.println("Starting ProtoOne:"
       + "\n  InCsv: " + inCsvFilePath
       + "\n  Xsl: " + stylesheetFilePath
-      + "\n  OutCsv: " + outCsvFilePath
+      + "\n  outDir: " + outDirPath
     );
     
-    ITokyoNaut csvOuput = new NWriteFile(outCsvFilePath);
+    ITokyoNaut fileInput = new NReadFile(inCsvFilePath);
     
-    /* Basic Test: no change
-    csvOuput
-      .plug( new NReadFile(inCsvFilePath) );
-    */
+    String outCsvFilePath = outDirPath + "/01_result_basic.csv";
+    ITokyoNaut fileOuput = new NWriteFile(outCsvFilePath);
     
-    /* Basic Test + Spy Filter */
-    csvOuput
-      .plug( new NSpy() )
-      .plug( new NReadFile(inCsvFilePath) );
-
+    ITokyoNaut headTokyoNaut = fileInput;
+    ITokyoNaut tailTokyoNaut = fileOuput;
     
-    /*
-    csvOuput
-      .plug( new NWriteCsv() )
-      .plug( new NParseCsv() )
-      .plug( new NReadFile(inCsvFilePath) );
-    */
-    
-    /* Complete chain...
-    csvOuput
-      .plug( new NSpy()  )
-      .plug( new NWriteCsv() )
-      .plug( new NSpy() )
-      .plug( new NXslTransform(stylesheetFilePath) )
-      .plug( new NSpy() )
-      .plug( new NParseCsv("http://tokyo.sf.net/proto1/countries/2007","world","country",new String[]{"name","capital","continent"}) )
-      .plug( new NSpy(NSpy.STYLE_HEX) )
-      .plug( new NReadFile(inCsvFilePath) );
-    */
+    /* Basic Test: no spy */
+    System.out.println("Basic Test: In=>Out");
+    fileInput.plug(fileOuput);
     
     int[] meta = new int[]{1,0,200,0,0};
     byte[] data = new byte[255];
     
-    while( csvOuput.inTouch() )
+    while( tailTokyoNaut.areWeThereYet()==false )
     {
-      csvOuput.read(meta,data);
-      
+      headTokyoNaut.filter(meta,data);
     }
-    csvOuput.unplug();
+    headTokyoNaut.unplug();
+    
+    // ***
+    
+    /* Basic Test + wrapping spy */
+    System.out.println("Basic Test + Spy: In=>Spy=>Out");
+    fileInput = new NReadFile(inCsvFilePath);
+    outCsvFilePath = outDirPath + "/02_result_with_spy.csv";
+    fileOuput = new NWriteFile(outCsvFilePath);
+    
+    ITokyoNaut spyOne = new NSpy(NSpy.STYLE_CHAR);
+    fileInput.plug(spyOne).plug(fileOuput);
+    
+    headTokyoNaut = fileInput;
+    tailTokyoNaut = fileOuput;
+    
+    meta = new int[]{1,0,200,0,0};
+    data = new byte[255];
+    
+    while( tailTokyoNaut.areWeThereYet()==false )
+    {
+      headTokyoNaut.filter(meta,data);
+    }
+    headTokyoNaut.unplug();
+    
+    
+    /* Basic Test + 2 Spy Filters */
+    System.out.println("Basic Test + 2 Spies: In=>Spy=>Out=>Spy");
+    fileInput = new NReadFile(inCsvFilePath);
+    outCsvFilePath = outDirPath + "/03_result_with_two_spies.csv";
+    fileOuput = new NWriteFile(outCsvFilePath);
+    
+    spyOne = new NSpy(NSpy.STYLE_CHAR);
+    ITokyoNaut spyTwo = new NSpy();
+    fileInput.plug(spyOne).plug(fileOuput).plug(spyTwo);
+    
+    headTokyoNaut = fileInput;
+    tailTokyoNaut = spyTwo;
+    
+    meta = new int[]{1,0,200,0,0};
+    data = new byte[255];
+    
+    while( tailTokyoNaut.areWeThereYet()==false )
+    {
+      headTokyoNaut.filter(meta,data);
+    }
+    headTokyoNaut.unplug();
+        
+    // ***
+    
+    /* Read Csv... */
+    System.out.println("Read CSV: In=>ParseCSV=>Spy=>Out=>Spy");
+    fileInput = new NReadFile(inCsvFilePath);
+    outCsvFilePath = outDirPath + "/04_result_parseCSV.csv";
+    fileOuput = new NWriteFile(outCsvFilePath);
+    
+    spyOne = new NSpy(NSpy.STYLE_CHAR);
+    spyTwo = new NSpy();
+    ITokyoNaut csvReader = new NParseCsv();
+    fileInput.plug(csvReader).plug(spyOne).plug(fileOuput).plug(spyTwo);
+    
+    headTokyoNaut = fileInput;
+    tailTokyoNaut = fileOuput;
+    
+    meta = new int[]{1,0,200,0,0};
+    data = new byte[255];
+    
+    while( tailTokyoNaut.areWeThereYet()==false )
+    {
+      headTokyoNaut.filter(meta,data);
+    }
+    headTokyoNaut.unplug();
+    
+    // ***
+    
+    /* Write Csv... */
+    System.out.println("Read CSV: In=>ParseCSV=>WriteCSV=>Spy=>Out");
+    fileInput = new NReadFile(inCsvFilePath);
+    outCsvFilePath = outDirPath + "/05_result_writeCSV.csv";
+    fileOuput = new NWriteFile(outCsvFilePath);
+    
+    spyOne = new NSpy(NSpy.STYLE_CHAR);
+    csvReader = new NParseCsv();
+    ITokyoNaut csvWriter = new NWriteCsv();
+    fileInput.plug(csvReader).plug(csvWriter).plug(fileOuput).plug(spyOne);
+    
+    headTokyoNaut = fileInput;
+    tailTokyoNaut = spyOne;
+    
+    meta = new int[]{1,0,200,0,0};
+    data = new byte[255];
+    
+    while( tailTokyoNaut.areWeThereYet()==false )
+    {
+      headTokyoNaut.filter(meta,data);
+    }
+    headTokyoNaut.unplug();
+    
+    
+    
+    /* Complete chain ... to XML
+    
+    */
+    
+    /* Complete chain ... from XML
+    
+    */
+    
+    /* Complete chain in two parts + XSLT processing
+    
+    */
+    
+    /* Complete chain in one part 
+     * by encapsulating XSLT processing in the middle
+    fileInput.plug(csvReader).plug(spyOne).plug(xslTransform).plug(spyTwo).plug(csvWriter).plug(fileOuput);
+    */
+    
+    
   }
   
 }
