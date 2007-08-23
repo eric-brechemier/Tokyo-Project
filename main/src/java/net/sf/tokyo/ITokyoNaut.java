@@ -99,9 +99,9 @@ while( tokyoNaut.areWeThereYet()==false )
    * </p>
    *
    * <p>
-   * Versions 0x00-0x9F are "reserved" for current and future versions of this specification, 
-   * while versions 0xA0-0xFF are "user-defined".
-   * Implementors wishing to define their own set of fields MUST signal it with
+   * Versions 0x00-0xFF are "reserved" for current and future versions of this specification, 
+   * while versions 0x100-0xFFFF are "user-defined". Versions 0x10000-0xFFFFFFFF are "reserved" 
+   * for future use. Implementors wishing to define their own set of fields MUST signal it with
    * a leading version in the "user-defined" range.
    * </p>
    *
@@ -340,6 +340,7 @@ filter({1,-1,0x10,0,0},{});
    * @param data the buffer into which the data is written.
    */
   public void filter(int[]meta, byte[] data);
+  
   
   /**
    * Plug the TokyoNaut to a destination TokyoNaut.<br/>
