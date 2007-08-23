@@ -30,19 +30,24 @@ import net.sf.tokyo.ITokyoNaut;
  * Read file and write data into a byte array buffer.<br/>
  *
  */
-public class NReadFile implements ITokyoNaut
+public class NReadFile extends NCommonBase implements ITokyoNaut
 {
   protected FileInputStream _in;
+  protected byte _state;
   
-  // TODO: move constants to separate "VersionOne" class
-  protected static final byte OFFSET = 1;
-  protected static final byte LENGTH = 2;
+  protected static final byte STATE_UNSET = -1;
+  protected static final byte STATE_OPENED = 0;
+  protected static final byte STATE_AVAILABLE = 1;
+  protected static final byte STATE_CLOSED = 2;
   
   public NReadFile(String inputFilePath)
   {
+    _state = STATE_UNSET;
+    
     try 
     {
       _in = new FileInputStream(inputFilePath);
+      _state = STATE_OPENED;
     }
     catch(Exception e)
     {
@@ -50,54 +55,92 @@ public class NReadFile implements ITokyoNaut
     }
   }
   
-  public boolean inTouch()
+  public boolean areWeThereYet()
   {
-    try
+    switch(_state)
     {
-      return _in.available() > 0;
-    }
-    catch(IOException e)
-    {
-      System.err.println("Error in NReadFile.available(): "+e);
-      return false;
+      case STATE_OPENED:
+      case STATE_AVAILABLE:
+        return false;
+      default:
+        return true;
     }
   }
   
-  public void read(int[]meta, byte[] data)
+  public void filter(int[]meta, byte[] data)
   {
+    if(areWeThereYet() || meta[VERSION]!=VERSION_ONE)
+      return;
+    
     try
     {
-      // TODO: handle buffer limits
-      // setting meta[OFFSET] to data.length when buffer is full
-      
-      int actualLength = _in.read(data,meta[OFFSET],meta[LENGTH]);
-      if (actualLength == -1)
+      meta[ITEM] = ITEM_DOCUMENT;
+      switch(_state)
       {
-        meta[OFFSET] = -1;
-        meta[LENGTH] = 0;
+        case STATE_OPENED:
+          meta[EVENT] = START;
+          _state = STATE_AVAILABLE;
+          break;
+        case STATE_AVAILABLE:
+          if(_in.available() > 0)
+          {
+            meta[EVENT] = CONTINUATION;
+          }
+          else
+          {
+            meta[EVENT] = END;
+            _state = STATE_CLOSED;
+          }
+          break;
+        default: 
+          // unexpected
+          meta[EVENT] = ERROR;
+          meta[ITEM] = 0x0F;
+      }
+      
+      if(_state == STATE_AVAILABLE)
+      {
+        int maxLength = data.length - meta[OFFSET];
+        meta[LENGTH] = _in.read(data,meta[OFFSET],maxLength);
       }
       else
       {
-        meta[OFFSET] += actualLength;
-        meta[LENGTH] = actualLength;
+        meta[OFFSET] = 0;
+        meta[LENGTH] = 0;
       }
-      return; 
+      
+      _destination.filter(meta,data);
     }
     catch(IOException e)
     {
-      System.err.println("Error in NReadFile.read(): "+e);
+      System.err.println("Error in NReadFile.filter(): "+e);
       return;
     }
     
   }
   
-  public ITokyoNaut plug(ITokyoNaut source)
+  public ITokyoNaut plug(ITokyoNaut destination)
   {
-    return source;
+    return super.plug(destination);
   }
   
   public void unplug()
   {
-    
+    try
+    {
+      _state = STATE_UNSET;
+      
+      if (_in != null)
+      {
+        _in.close();
+        _in = null;
+      }
+      
+      super.unplug();
+    } 
+    catch(Exception e)
+    {
+      System.err.println("Error in NReadFile.unplug(): "+e);
+    }
   }
 }
