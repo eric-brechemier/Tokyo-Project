@@ -33,35 +33,18 @@ import net.sf.tokyo.ITokyoNaut;
  */
 public class NullTokyoNaut implements ITokyoNaut
 {
-  protected ITokyoNaut _destination;
-  
-  public boolean areWeThereYet()
+  public boolean areWeThereYet(int[] meta, byte[] data)
   {
-    if (_destination != null)
-      return _destination.areWeThereYet();
-    else
-      return true;
+    return false;
   }
   
-  public void filter(int[]meta, byte[] data)
+  public ITokyoNaut plug(ITokyoNaut friend)
   {
-    if (_destination != null)
-      _destination.filter(meta,data);
+    return friend;
   }
   
-  public ITokyoNaut plug(ITokyoNaut destination)
+  public ITokyoNaut unplug(ITokyoNaut foe)
   {
-    if (_destination!=null)
-      _destination.unplug();
-    
-    _destination = destination;
-    return destination;
-  }
-  
-  public void unplug()
-  {
-    if (_destination!=null)
-      _destination.unplug();
-    _destination = null;
+    return foe;
   }
 }
