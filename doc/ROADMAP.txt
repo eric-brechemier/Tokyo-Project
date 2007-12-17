@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
 =================================
 Title: Roadmap for Tokyo Project
-Last modified: 2006-11-24
+Last modified: 2007-12-17
 By: Eric Bréchemier
 Encoding: UTF-8
 =================================
@@ -100,15 +100,15 @@ Past Milestones:
     
 Next Milestone:
   => Tokyo Project "Harajuku" release (0.4)
-  TARGET: June 2007
+  TARGET: December 2007
   Phase: 3-Alpha
   Content:
-    New Tokyo API demonstrating atomic transformations performed by different TokyoNauts.
+    New Tokyo API demonstrating atomic annotations performed by different TokyoNauts.
     Extended prototype using external configuration file (XML) instead of hard-coded rules (Java code)
     for CSV translation to and from SAX events.
   
   => Tokyo Project "Roppongi" release (0.5)
-  TARGET: July 2007
+  TARGET: January 2008
   Phase: 3-Alpha
     HTML Documentation for project, to be displayed on Sourceforge Project Home Page.
     Documentation will include
@@ -117,44 +117,44 @@ Next Milestone:
       - Links to project SVN and files download
   
   => Tokyo Project "Shinjuku" release (0.6)
-  TARGET: August 2007
+  TARGET: March 2008
   Phase: 3-Alpha
     Browse PDF file structure using TokyoNautilus API;
     implementation will either use a custom implementation based on a partial grammar definition file 
     for PDF, or some external tool providing PDF parsing functionalities.
   
   => Tokyo Project "Ebisu" release (0.7)
-  TARGET: September 2007
+  TARGET: June 2008
   Phase: 3-Alpha
   Content:
     First sample: reading mbox mail files and output xhtml for viewing
   
   => Tokyo Project "Ikebukuro" release (0.7.5)
-  TARGET: October 2007
+  TARGET: September 2008
   Phase: 3-Alpha
   Content:
     Second sample: output PDF files from XML descriptions 
   
   => Tokyo Project "Takadanobaba" release (0.8)
-  TARGET: October 2007
+  TARGET: November 2008
   Phase: 4-Beta
   Content:
     Third sample: simple implementation of source code analysis
   
   => Tokyo Project "Ueno" release (0.8)
-  TARGET: November 2007
+  TARGET: December 2008
   Phase: 4-Beta
   Content:
     More robust implementations for three samples
     
   => Tokyo Project "Nihombashi", "Marunouchi", "Ochanomizu",... releases (0.9.x)
-  TARGET: December 2007
+  TARGET: 2009
   Phase: 4-Beta
   Content:
     Series of updates based on collected comments/feedback.
   
   => Tokyo Project "Ginza" release (1.0)
-  TARGET: 2007-2008
+  TARGET: 2009
   Phase: 5-Production/Stable
   Content:  
     Substantial feedback received, 
