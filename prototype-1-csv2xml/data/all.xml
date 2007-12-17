@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!-- comment-content-info71-010 -->
+<?pi-target-info41-020 pi-content-info42-021?>
+<!DOCTYPE document-element-info22-080
+  PUBLIC "public-identifier-info82-030" "system-identifier-info81-031"
+  [
+    <!ELEMENT empty-element-unused EMPTY>
+    <!ELEMENT any-element-unused ANY>
+    <!ELEMENT mixed-element-with-child-unused (empty-element-unused|any-element-unused)*>
+    <!ELEMENT mixed-element-pcdata-unused (#PCDATA)>
+    <!ELEMENT children-choice-element-unused (a|b?)>
+    <!ELEMENT children-optional-choice-element-unused (a|b?|c*)?>
+    <!ELEMENT children-multiple-optional-choice-element-unused (a|b?|c*|d+)*>
+    <!ELEMENT children-multiple-choice-element-unused (a|b?|c*|d+|e)+>
+    <!ELEMENT children-sequence-element-unused (a)>
+    <!ELEMENT children-optional-seq-element-unused (a,b?)?>
+    <!ELEMENT children-multiple-optional-seq-element-unused (a,b?,c*)*>
+    <!ELEMENT children-multiple-seq-element-unused (a,b?,c*,d+)+>
+    <!ELEMENT children-nested-sequence-choice-element-unused ( a, (a|b|c)?, (a,b,c)*, (a|(b|(c|d)))+ )?>
+    <!ELEMENT children-nested-choice-sequence-element-unused ( a | (a,b,c)? | (a|b|c)* | (a,(b,(c,d)))+ )?>
+    <!ELEMENT a EMPTY><!ELEMENT b EMPTY><!ELEMENT c EMPTY><!ELEMENT d EMPTY><!ELEMENT e EMPTY>
+    <!ELEMENT f EMPTY><!ELEMENT g EMPTY><!ELEMENT h EMPTY><!ELEMENT i EMPTY><!ELEMENT j EMPTY>
+    <!ELEMENT k EMPTY><!ELEMENT l EMPTY><!ELEMENT m EMPTY><!ELEMENT n EMPTY><!ELEMENT o EMPTY>
+    <!ELEMENT p EMPTY><!ELEMENT q EMPTY><!ELEMENT r EMPTY><!ELEMENT s EMPTY><!ELEMENT t EMPTY>
+    <!ELEMENT u EMPTY><!ELEMENT v EMPTY><!ELEMENT w EMPTY><!ELEMENT x EMPTY><!ELEMENT y EMPTY>
+    <!ELEMENT z EMPTY>
+    
+    <!ATTLIST a>
+    <!ATTLIST b string-required-attribute CDATA #REQUIRED>
+    <!ATTLIST c string-optional-attribute CDATA #IMPLIED>
+    <!ATTLIST d string-fixed-attribute CDATA #FIXED "fixed-value">
+    <!ATTLIST e string-default-value-attribute CDATA "default-value">
+    <!ATTLIST f string-default-value-reference-entity-attribute CDATA "&amp;">
+    <!ATTLIST g string-default-value-reference-character-dec-attribute CDATA "&#10;">
+    <!ATTLIST h string-default-value-reference-character-hex-attribute CDATA "&#xA;">
+    <!ATTLIST i 
+      tokenized-id-optional-attribute ID #IMPLIED
+      tokenized-idref-optional-attribute IDREF #IMPLIED
+      tokenized-idrefs-optional-attribute IDREFS #IMPLIED
+      tokenized-entity-default-attribute ENTITY "unparsed-entity"
+      tokenized-entities-optional-attribute ENTITIES #IMPLIED
+      tokenized-nmtoken-default-attribute NMTOKEN "nmtoken1"
+      tokenized-nmtokens-default-attribute NMTOKENS "nmtoken1 nmtoken2 nmtoken3"
+    >
+    <!ELEMENT nonempty-element ANY>
+    <!ATTLIST nonempty-element enumerated-notation-default-attribute NOTATION (notation1|notation2|notation3) "notation3">
+    <!ATTLIST j enumerated-enumeration-fixed-attribute (nmtoken1|nmtoken2|nmtoken3) #FIXED "nmtoken1">
+    
+    <!ENTITY unparsed-entity SYSTEM "http://example.org/img/entity.jpg" NDATA JPEG>
+    <!ENTITY general-entity-internal-value-parsed "entity-replacement-value">
+    <!-- 
+    [WFC: PEs in Internal Subset]
+    http://www.w3.org/TR/2006/REC-xml-20060816/#wfc-PEinInternalSubset
+    
+    <!ENTITY % PEReference1 "parameter-entity-internal-parsed-replacement">
+    Not allowed in the internal DTD subset
+    <!ENTITY general-entity-internal-parameter-entity-reference-parsed "%PEReference1;">
+    -->
+    <!ENTITY general-entity-internal-entity-reference-parsed "&general-entity-internal-value-parsed;">
+    <!ENTITY general-entity-internal-char-reference-parsed "&#41;">
+    <!ENTITY general-entity-external-system-parsed SYSTEM "system-identifier">
+    <!ENTITY general-entity-external-system-unparsed SYSTEM "system-identifier" NDATA notation-of-unparsed-entity>
+    <!ENTITY general-entity-external-public-parsed PUBLIC "public-identifier" "system-identifier">
+    <!ENTITY general-entity-external-public-unparsed PUBLIC "public-identifier" "system-identifier" NDATA notation-of-unparsed-entity>
+    <!ENTITY % parameter-entity-internal-value-parsed "parameter-entity-replacement-value">
+    <!-- [WFC: PEs in Internal Subset]
+    Not allowed in the internal DTD subset
+    <!ENTITY % parameter-entity-internal-parameter-entity-reference-parsed "%PEReference1;">
+    -->
+    <!ENTITY % parameter-entity-internal-entity-reference-parsed "&general-entity-internal-value-parsed;">
+    <!ENTITY % parameter-entity-internal-char-reference-parsed "&#x29;">
+    <!ENTITY % parameter-entity-external-system-parsed SYSTEM "system-identifier">
+    <!ENTITY % parameter-entity-external-public-parsed PUBLIC "public-identifier" "system-identifier">
+    
+    <!NOTATION JPEG
+      PUBLIC "ISO/IEC 10918:1993//NOTATION Digital Compression and Coding of Continuous-tone Still Images (JPEG)//EN"
+      "http://en.wikipedia.org/wiki/JPEG">
+    <!NOTATION notation-of-unparsed-entity SYSTEM "http://www.ietf.org/rfc/rfc2368.txt">
+    <!NOTATION notation1 PUBLIC "application/atom+xml">
+    <!NOTATION notation2 SYSTEM "about:notation">
+    <!NOTATION notation3 PUBLIC "application/json" "http://www.ietf.org/rfc/rfc4627.txt">
+    
+    <?pi-target-info41-040 pi-content-info42-041?>
+    <!-- comment-content-info71-050 -->
+    <!ELEMENT document-element-info22-081 EMPTY>
+    
+    <!-- TODO declare element with prefix, namespace, attributes and children -->
+    <!-- TODO declare children elements -->
+  ]
+>
+<!-- comment-content-info71-060 -->
+<?pi-target-info41-070 pi-content-info42-071?>
+
+<document-element-info22-080>
+  
+  
+  
+</document-element-info22-080>
+
+<!-- comment-content-info71-0x0 -->
+<?pi-target-info41-0x0 pi-content-info42-0x1?>
+
