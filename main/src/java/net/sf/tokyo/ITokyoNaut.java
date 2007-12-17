@@ -38,16 +38,42 @@ package net.sf.tokyo;
  * </p>
  *
  * <p>
- * Methods areWeThereYet() and filter() are called in turn to check whether processing is complete, 
- * and have meta and data buffers filtered and transmitted along the chain of TokyoNauts.
+ * areWeThereYet() and translate() are called in turn to check whether processing is complete, 
+ * and have meta and data buffers converted and transmitted along the chain of TokyoNauts.
  * </p>
  *
  * @author Eric Br&eacute;chemier
- * @version Harajuku
+ * @version NANA
  */
 public interface ITokyoNaut
 {
+  public static final int VERSION = 0;
+  public static final int LANGUAGE = 1;
+  public static final int TOKEN = 2;
+  public static final int LEFT = 3;
+  public static final int OFFSET = 4;
+  public static final int LENGTH = 5;
+  public static final int RIGHT = 6;
   
+  public static final int VERSION_NANA = 7;
+  
+  public static final int LANGUAGE_BINARY       = 0;
+  public static final int LANGUAGE_UNICODE_TEXT = 1;
+  public static final int LANGUAGE_ERROR        = 0xFA11ED;
+  
+  public static final int TOKEN_SPARK           = 0;
+  public static final int TOKEN_BINARY          = 1;
+  
+  public static final int LEFT_START = 1;
+  public static final int LEFT_CONTINUED = 0;
+  public static final int RIGHT_CONTINUED = 0;
+  public static final int RIGHT_END = -1;
+  
+  public boolean areWeThereYet(int[] meta, byte[] data);
+  public ITokyoNaut plug(ITokyoNaut friend);
+  public ITokyoNaut unplug(ITokyoNaut foe);
+  
+  // TODO REMOVE THE BELOW, EXTRACTING ANY USEFUL COMMENTS FOR ABOVE (IF ANY)
   /**
    * Check whether TokyoNaut is available for communication.<br/>
    *
@@ -60,7 +86,7 @@ byte[] data = new byte[500];
 
 while( tokyoNaut.areWeThereYet()==false )
 {
-  tokyoNaut.filter(meta,data);
+  tokyoNaut.translate(meta,data);
 } 
 </pre>
    * </p>
@@ -68,10 +94,10 @@ while( tokyoNaut.areWeThereYet()==false )
    * @return false until this TokyoNaut has reached the end of its own processing 
    *         (e.g. following the end of input meta/data)
    */
-  public boolean areWeThereYet();
+  //public boolean areWeThereYet();
   
   /**
-   * Filter meta/data through this TokyoNaut and send to the following.<br/>
+   * Filter meta/data through this TokyoNaut, communicate converted events to the following.<br/>
    *
    * <p>
    * Allows to process an event corresponding to the start, continuation or end of a data item.
@@ -156,14 +182,25 @@ while( tokyoNaut.areWeThereYet()==false )
    * 
    * <p>
    * In the descriptions below, an Extended Backus-Naur Form (EBNF) grammar is used to define 
-   * the meaningful sequences of item definitions, with the syntax defined in 
+   * the allowed sequences of item definitions, with the syntax defined in 
    * <a href="http://www.w3.org/TR/xml/#sec-notation">XML 1.0 Recommendation EBNF Notation</a>.
    * The order of events is based on the document order defined in 
    * <a href="http://www.w3.org/TR/xml/#sec-documents">XML 1.0 Documents</a>.
-   * In order to avoid cyclic inclusion of the same information items, references to information 
-   * items excepted as children (e.g. parent, owner, references...) are left out of current scope.
    * </p>
-   
+   *
+   * <p>
+   * I chose to differ from the XML Information Set regarding [notations], [unparsed entities] and 
+   * [all declarations processed], defined as part of the Document Information Item section. These items
+   * belong to the DTD (Document Type Declaration) processing, and as such I moved the corresponding events
+   * to the end of the DocumentTypeDeclaration rule. However, to keep a simple numbering scheme based on 
+   * XML Infoset, I kept the item type values deriving from their declaration in §2.1: 0x13, 0x14, 0x19.
+   * </p>
+   *
+   * <p>
+   * In order to avoid cyclic inclusion of the same information items, references to information items
+   * excepted references to children (e.g. parent, owner, references...) are out of current scope.
+   * </p>
+   *
    * <p>
    * <table border="1">
    *   <tr>
@@ -175,16 +212,16 @@ while( tokyoNaut.areWeThereYet()==false )
    *     <td>
    *       <ul>
    *         <li><b>0x10 - Document Information Item</b><br/>
-   *         <code>Document ::= DocumentBaseUri? (XmlVersion CharacterEncoding? Standalone?)? UnparsedEntities? Notations? AllDeclarationsProcessed? DocumentChildren</code>
+   *         <code>Document ::= DocumentBaseUri? (XmlVersion CharacterEncoding? Standalone?)? DocumentChildren</code>
    *         </li>
    *         <li>&nbsp;&nbsp;0x11 - Document Children<br/>
    *         <code>DocumentChildren ::= (Comment|PI)* DocumentTypeDeclaration? (Comment|PI)* Element (Comment|PI)*</code>
    *         </li>
    *         <li>&nbsp;&nbsp;0x12 - Document Element (unused, replaced with Element in DocumentChildren)</li>
-   *         <li>&nbsp;&nbsp;0x13 - Notations<br/>
+   *         <li>&nbsp;&nbsp;0x13 - Notations (see Document Type Declaration)<br/>
    *         <code>Notations ::= Notation*</code>
    *         </li>
-   *         <li>&nbsp;&nbsp;0x14 - UnparsedEntities<br/>
+   *         <li>&nbsp;&nbsp;0x14 - UnparsedEntities (see Document Type Declaration)<br/>
    *         <code>UnparsedEntities ::= UnparsedEntity*</code>
    *         </li>
    *         <li>&nbsp;&nbsp;0x15 - DocumentBaseUri</li>
@@ -193,7 +230,7 @@ while( tokyoNaut.areWeThereYet()==false )
    *         <code>Standalone ::= 'yes' | 'no'</code>
    *         </li>
    *         <li>&nbsp;&nbsp;0x18 - XmlVersion</li>
-   *         <li>&nbsp;&nbsp;0x19 - AllDeclarationsProcessed (default 'false')<br/>
+   *         <li>&nbsp;&nbsp;0x19 - AllDeclarationsProcessed (default 'false') (see Document Type Declaration)<br/>
    *         <code>AllDeclarationsProcessed ::= 'true' | 'false'</code>
    *         </li>
    
@@ -262,7 +299,7 @@ while( tokyoNaut.areWeThereYet()==false )
    *         <li>&nbsp;&nbsp;0x72 - CommentParent (unused)</li>
 
    *         <li><b>0x80 - Document Type Declaration Information Item</b><br/>
-   *         <code>DocumentTypeDeclaration ::= DTDPublicIdentifier? DTDSystemIdentifier? DTDContent?</code>
+   *         <code>DocumentTypeDeclaration ::= DTDPublicIdentifier? DTDSystemIdentifier? DTDContent? UnparsedEntities? Notations? AllDeclarationsProcessed?</code>
    *         </li>
    *         <li>&nbsp;&nbsp;0x81 - DTDSystemIdentifier</li>
    *         <li>&nbsp;&nbsp;0x82 - DTDPublicIdentifier</li>
@@ -303,43 +340,43 @@ while( tokyoNaut.areWeThereYet()==false )
    * The sequence below represents a very short XML document, with a single empty element &lt;book/&gt;:<br/>
 <PRE>
 // Document
-filter({1,1,0x10,0,0},{});
+translate({1,1,0x10,0,0},{});
   // DocumentChildren
-  filter({1,1,0x11,0,0},{});
+  translate({1,1,0x11,0,0},{});
     // Element
-    filter({1,1,0x20,0,0},{});
+    translate({1,1,0x20,0,0},{});
       // Element Local Name
-      filter({1,1,0x22,0,4},{'b','o','o','k'});
-      filter({1,-1,0x22,0,0},{});
-    filter({1,-1,0x20,0,0},{});
-  filter({1,-1,0x11,0,0},{});
-filter({1,-1,0x10,0,0},{});
+      translate({1,1,0x22,0,4},{'b','o','o','k'});
+      translate({1,-1,0x22,0,0},{});
+    translate({1,-1,0x20,0,0},{});
+  translate({1,-1,0x11,0,0},{});
+translate({1,-1,0x10,0,0},{});
 </PRE>
    *
    * <p>
-   * The sample below illustrates the data continuation; it is equivalent to above examples:
+   * The sample below illustrates the data continuation; it is equivalent to the above example:
 <PRE>
 // Document
-filter({1,1,0x10,0,0},{});
+translate({1,1,0x10,0,0},{});
   // DocumentChildren
-  filter({1,1,0x11,0,0},{});
+  translate({1,1,0x11,0,0},{});
     // Element
-    filter({1,1,0x20,0,0},{});
+    translate({1,1,0x20,0,0},{});
       // Element Local Name
-      filter({1,1,0x22,0,1},{'b'});
-      filter({1,0,0x22,0,1},{'o'});
-      filter({1,0,0x22,0,2},{'o','k'});
-      filter({1,-1,0x22,0,0},{});
-    filter({1,-1,0x20,0,0},{});
-  filter({1,-1,0x11,0,0},{});
-filter({1,-1,0x10,0,0},{});
+      translate({1,1,0x22,0,1},{'b'});
+      translate({1,0,0x22,0,1},{'o'});
+      translate({1,0,0x22,0,2},{'o','k'});
+      translate({1,-1,0x22,0,0},{});
+    translate({1,-1,0x20,0,0},{});
+  translate({1,-1,0x11,0,0},{});
+translate({1,-1,0x10,0,0},{});
 </PRE>   
    * </p>
    *
    * @param meta information about data, with fields defined by leading version number.
    * @param data the buffer into which the data is written.
    */
-  public void filter(int[]meta, byte[] data);
+  //public void translate(int[]meta, byte[] data);
   
   
   /**
@@ -354,7 +391,7 @@ filter({1,-1,0x10,0,0},{});
    * @param destination TokyoNaut.
    * @return destination parameter to allow a chain of plug calls.
    */
-  public ITokyoNaut plug(ITokyoNaut destination);
+  //public ITokyoNaut plug(ITokyoNaut destination);
   
   /**
    * Unplug the TokyoNaut from previously plugged destination TokyoNaut.<br/>
@@ -365,6 +402,6 @@ filter({1,-1,0x10,0,0},{});
    * </p>
    *
    */
-  public void unplug();
+  //public void unplug();
   
 }
