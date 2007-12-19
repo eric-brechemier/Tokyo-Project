@@ -1,30 +1,47 @@
-/*
- * The Tokyo Project is hosted on Sourceforge:
- * http://sourceforge.net/projects/tokyo/
- * 
- * Copyright (c) 2005-2007 Eric Bréchemier
- * http://eric.brechemier.name
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- */
+/* ===============================================================
+ The Tokyo Project is hosted on Sourceforge:
+ http://sourceforge.net/projects/tokyo/
+ 
+ Copyright (c) 2005-2007 Eric Bréchemier
+ http://eric.brechemier.name
+ Licensed under BSD License and/or MIT License.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                         BSD License
+                             ~~~
+             http://creativecommons.org/licenses/BSD/
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                          MIT License
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  Copyright (c) 2005-2007 Eric Bréchemier <tokyo@eric.brechemier.name>
+  
+  Permission is hereby granted, free of charge, to any person
+  obtaining a copy of this software and associated documentation
+  files (the "Software"), to deal in the Software without
+  restriction, including without limitation the rights to use,
+  copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the
+  Software is furnished to do so, subject to the following
+  conditions:
+
+  The above copyright notice and this permission notice shall be
+  included in all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+  OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+  HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+  WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+  OTHER DEALINGS IN THE SOFTWARE.
+================================================================== */
 package net.sf.tokyo.prototype1.tokyonauts;
 
 import net.sf.tokyo.ITokyoNaut;
 
 /**
- * Base implementation of ITokyoNaut interface based on Version One.<br/>
+ * Base implementation of ITokyoNaut interface based on Version NANA.<br/>
  *
  * <p>
  * Provides simple forwarding of meta/data.
@@ -33,72 +50,119 @@ import net.sf.tokyo.ITokyoNaut;
  */
 public class NCommonBase implements ITokyoNaut
 {
-  protected ITokyoNaut _destination;
+  protected ITokyoNaut _src;
+  protected int[] _mymeta;
   
-  protected static final byte VERSION_ONE = 0x01;
-  
-  protected static final byte VERSION = 0;
-  protected static final byte EVENT = 1;
-  protected static final byte ITEM = 2;
-  protected static final byte OFFSET = 3;
-  protected static final byte LENGTH = 4;
-  
-  protected static final byte START = 1;
-  protected static final byte CONTINUATION = 0;
-  protected static final byte END = -1;
-  protected static final byte ERROR = 0xE;
-  
-  // useful item types in the scope of this prototype
-  protected static final int ITEM_DOCUMENT = 0x10;
-  protected static final int ITEM_DOCUMENT_CHILDREN = 0x11;
-  protected static final int ITEM_DOCUMENT_CHARACTER_ENCODING = 0x16;
-  protected static final int ITEM_ELEMENT = 0x20;
-  protected static final int ITEM_ELEMENT_NAMESPACE_NAME = 0x21;
-  protected static final int ITEM_ELEMENT_LOCAL_NAME = 0x22;
-  protected static final int ITEM_ELEMENT_PREFIX = 0x23;
-  protected static final int ITEM_ELEMENT_CHILDREN = 0x24;
-  protected static final int ITEM_ELEMENT_ATTRIBUTES = 0x25;
-  protected static final int ITEM_ELEMENT_NAMESPACE_ATTRIBUTES = 0x26;
-  protected static final int ITEM_ATTRIBUTE = 0x30;
-  protected static final int ITEM_ATTRIBUTE_NAMESPACE_NAME = 0x31;
-  protected static final int ITEM_ATTRIBUTE_LOCAL_NAME = 0x32;
-  protected static final int ITEM_ATTRIBUTE_PREFIX = 0x33;
-  protected static final int ITEM_ATTRIBUTE_NORMALIZED_VALUE = 0x34;
-  protected static final int ITEM_CHARACTERS = 0x60;
-  protected static final int ITEM_CHARACTERS_CODE = 0x61;
-  protected static final int ITEM_NAMESPACE = 0xB0;
-  protected static final int ITEM_NAMESPACE_PREFIX = 0xB1;
-  protected static final int ITEM_NAMESPACE_NAME = 0xB2;
-  
-  public boolean areWeThereYet()
+  protected NCommonBase()
   {
-    if (_destination != null)
-      return _destination.areWeThereYet();
+    _src = null;
+    _mymeta = null;
+  }
+  
+  public boolean areWeThereYet(int[] meta, byte[] data)
+  {
+    if ( !_checkParams(meta,data) )
+    {
+      meta[LANGUAGE]=LANGUAGE_ERROR;
+      meta[TOKEN]=0xA00;
+      return true;
+    }
     
-    return true;
-  }
-  
-  public void filter(int[]meta, byte[] data)
-  {
-    if (_destination != null)
-      _destination.filter(meta,data);
-  }
-  
-  public ITokyoNaut plug(ITokyoNaut destination)
-  {
-    if (_destination!=null)
-      _destination.unplug();
+    if ( _src==null || _src.areWeThereYet(meta,data) )
+      return true;
     
-    _destination = destination;
-    return destination;
+    _loadmy(meta);
+    System.out.println("NULL Processing in... "+this);
+    _savemy(meta);
+    
+    return false;
   }
   
-  public void unplug()
+  // @return false iff params are not valid or not supported (null or unsupported version)
+  protected boolean _checkParams(int[] meta, byte[] data)
   {
-    if (_destination==null)
+    return
+    (
+          meta!=null
+      &&  data!=null
+      &&  meta[VERSION]==VERSION_NANA
+    );
+  }
+  
+  protected void _loadmy(int[] meta)
+  {
+    if (_mymeta==null)
       return;
+    
+    System.arraycopy(_mymeta,0,meta,0,meta.length);
+  }
+  
+  protected void _savemy(int[] meta)
+  {
+    if (_mymeta==null)
+      _mymeta = new int[meta.length];
+    
+    System.arraycopy(meta,0,_mymeta,0,_mymeta.length);
+  }
+  
+  
+  public ITokyoNaut plug(ITokyoNaut friend)
+  {
+    // Source or Destination?
+    // for now, we don't know whether this is a source or a destination
+    // which will be determined by the following ping/pong exchange.
+    // This is because, for usability, the call is actually src.plug(dest)
+    // while for ease of implementation, the inside wanted relationship is
+    // dest._src = src
+    
+    // Step 1: [@source] if null or same as current source, do nothing
+    // Step 4: [@destination] _src is null and the friend param is not, so we continue
+    // Step 7: [@source] this time, _src is set, so we stop and return _src
+    // 
+    if (friend==null || friend==_src )
+      return friend;
+    
+    // Step 2: [@source] set _src to stop the recursion at Step 7,
+    //                   original source is saved in "previous", to be restored at step 11.
+    // Step 5: [@destination] set _src, which is actually the final desired effect in destination
+    ITokyoNaut previous = _src;
+    _src = friend;
+    
+    // A different behavior in source and destination:
+    // Due to the sequence,
+    // User --> source --> destination
+    //                 <--
+    //                 ...> (result)
+    //        (result) <...
+    // destination gets the result before source does, which means
+    // that the destination can detect its role because it gets ******** as result.
+    
+    // Step 3: [@source] Check the reverse associate
+      // Step 6: [@destination] Check the reverse associate
+      // Step 8: [@destination] result is received, per Step 7, result will be "this"
+    // Step 10: [@source] Check the reverse associate, per Step 9, result will be destination "friend" (not "this")
+    ITokyoNaut result = friend.plug(this);
+    
+    if ( result!=this )
+    {
+      // Step 11: [@source] we received destination, different from self,
+      //                    _src is reset to previous to cancel the association process in this direction.
+      //                    (the final association is unidirectional destination-->source)
+      //                    The destination "friend" is returned to allow chained calls.
       
-    _destination.unplug();
-    _destination = null;
+      _src = previous;
+      System.out.println("Added: association "+this+" <-- "+friend);
+      return friend;
+    }
+    
+    // Step 9:  [@destination] we received self, we will return self to confirm it is the actual destination
+    return this;
+  }
+  
+  public ITokyoNaut unplug(ITokyoNaut foe)
+  {
+    _src = null;
+    _mymeta = null;
+    return foe;
   }
 }
