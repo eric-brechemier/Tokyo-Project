@@ -445,7 +445,8 @@ Step: 3
    * Plug this {@link net.sf.tokyo.ITokyoNaut TokyoNaut} to a destination {@link net.sf.tokyo.ITokyoNaut TokyoNaut}.<br/>
    *
    * <p>
-   * If the given {@link net.sf.tokyo.ITokyoNaut TokyoNaut} is null nothing happens.
+   * If the given {@link net.sf.tokyo.ITokyoNaut TokyoNaut} is null nothing happens and 
+   * {@link #plug(ITokyoNaut) plug()} returns the given parameter.
    * </p>
    *
    * @param friend destination {@link net.sf.tokyo.ITokyoNaut TokyoNaut}
@@ -461,7 +462,8 @@ Step: 3
    *
    * <p>
    * If the given {@link net.sf.tokyo.ITokyoNaut TokyoNaut} is null or no destination has been set 
-   * by a previous call to {@link #plug(ITokyoNaut) plug()}, nothing happens.
+   * by a previous call to {@link #plug(ITokyoNaut) plug()}, nothing happens and 
+   * {@link #unplug(ITokyoNaut) unplug()} returns the given parameter.
    * </p>
    *
    * <p>
