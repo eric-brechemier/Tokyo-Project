@@ -64,12 +64,8 @@ public class NWriteFile extends NCommonBase implements ITokyoNaut
   
   public boolean areWeThereYet(int[]meta, byte[] data)
   {
-    if (!_checkParams(meta,data) || _src==null || _out==null)
-    {
-      meta[LANGUAGE]=LANGUAGE_ERROR;
-      meta[TOKEN]=0x200;
+    if ( super.areWeThereYet(meta,data) || _src==null || _out==null )
       return true;
-    }
     
     if ( _src.areWeThereYet(meta,data) )
       return true;
