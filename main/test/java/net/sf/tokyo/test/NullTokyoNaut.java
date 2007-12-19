@@ -44,7 +44,7 @@ import net.sf.tokyo.ITokyoNaut;
  * Null implementation of ITokyoNaut interface.<br/>
  *
  * <p>
- * Provides simple forwarding of meta/data.
+ * Does nothing and if used without boundary will run in a main loop forever.
  * This source code can be used as a base for TokyoNaut implementations.
  * </p>
  */
