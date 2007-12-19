@@ -124,7 +124,7 @@
     <mkdir dir="${out.data.dir}" />
     <java classpathref="run.classpath" classname="net.sf.tokyo.prototype1.ProtoOneMainLoop">
       <arg value="${in.data.dir}/sample.csv"/>
-      <arg line="${src.xslt}/net.sf.tokyo.prototype1.orderCountriesByContinent.xsl"/>
+      <!--arg line="${src.xslt}/net.sf.tokyo.prototype1.orderCountriesByContinent.xsl"/-->
       <arg line="${out.data.dir}"/>
     </java>
   </target>
