@@ -435,7 +435,16 @@ Step: 3
    *       </p>
    *        
    * @return false until this {@link net.sf.tokyo.ITokyoNaut TokyoNaut} has reached the end of its 
-   *         own processing (e.g. following the end of input meta/data)
+   *         own processing (e.g. following the end of input meta/data).
+   *       <p>
+   *         <strong>Important:</strong> on the last turn, when the {@link net.sf.tokyo.ITokyoNaut TokyoNaut}
+   *         completes a last token before the end of processing, {@link #areWeThereYet(int[],byte[]) areWeThereYet()}
+   *         still returns false, and only returns true at the following run, which garantees that the result
+   *         is always false when there is some relevant data. On the other hand, when the result is true,
+   *         meta and data can be considered irrelevant and be discarded; for example, meta can optionally 
+   *         be checked for error signalling based on meta[{@link #LANGUAGE}] = {@link #LANGUAGE_ERROR} 
+   *         usage.
+   *       </p>
    */
   public boolean areWeThereYet(int[] meta, byte[] data);
   
