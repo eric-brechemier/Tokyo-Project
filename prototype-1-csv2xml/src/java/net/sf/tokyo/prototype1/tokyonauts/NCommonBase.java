@@ -44,70 +44,42 @@ import net.sf.tokyo.ITokyoNaut;
  * Base implementation of ITokyoNaut interface based on Version NANA.<br/>
  *
  * <p>
- * Provides simple forwarding of meta/data.
- * Used as a base class for TokyoNaut implementations in Prototype One.
+ * Abstract class used as a base class for TokyoNaut implementations in Prototype One.
  * </p>
  */
-public class NCommonBase implements ITokyoNaut
+public abstract class NCommonBase implements ITokyoNaut
 {
   protected ITokyoNaut _src;
-  protected int[] _mymeta;
   
   protected NCommonBase()
   {
     _src = null;
-    _mymeta = null;
   }
   
   public boolean areWeThereYet(int[] meta, byte[] data)
   {
-    if ( !_checkParams(meta,data) )
+    if (meta==null)
+      return true;
+      
+    if 
+      (    data==null 
+        || meta[OFFSET]<0 || meta[OFFSET]>data.length 
+        || meta[OFFSET]+meta[LENGTH]<0 || meta[OFFSET]+meta[LENGTH]>data.length 
+      )
     {
-      meta[LANGUAGE]=LANGUAGE_ERROR;
-      meta[TOKEN]=0xA00;
+      meta[LANGUAGE] = LANGUAGE_ERROR;
+      meta[TOKEN] = 0xA00;
       return true;
     }
-    
-    if ( _src==null || _src.areWeThereYet(meta,data) )
-      return true;
-    
-    _loadmy(meta);
-    System.out.println("NULL Processing in... "+this);
-    _savemy(meta);
     
     return false;
   }
   
-  // @return false iff params are not valid or not supported (null or unsupported version)
-  protected boolean _checkParams(int[] meta, byte[] data)
-  {
-    return
-    (
-          meta!=null
-      &&  data!=null
-      &&  meta[VERSION]==VERSION_NANA
-    );
-  }
-  
-  protected void _loadmy(int[] meta)
-  {
-    if (_mymeta==null)
-      return;
-    
-    System.arraycopy(_mymeta,0,meta,0,meta.length);
-  }
-  
-  protected void _savemy(int[] meta)
-  {
-    if (_mymeta==null)
-      _mymeta = new int[meta.length];
-    
-    System.arraycopy(meta,0,_mymeta,0,_mymeta.length);
-  }
-  
-  
   public ITokyoNaut plug(ITokyoNaut friend)
   {
+    if (friend==null)
+      return friend;
+    
     // Source or Destination?
     // for now, we don't know whether this is a source or a destination
     // which will be determined by the following ping/pong exchange.
@@ -151,7 +123,7 @@ public class NCommonBase implements ITokyoNaut
       //                    The destination "friend" is returned to allow chained calls.
       
       _src = previous;
-      System.out.println("Added: association "+this+" <-- "+friend);
+      //System.out.println("Added: association "+this+" <-- "+friend);
       return friend;
     }
     
@@ -161,8 +133,12 @@ public class NCommonBase implements ITokyoNaut
   
   public ITokyoNaut unplug(ITokyoNaut foe)
   {
-    _src = null;
-    _mymeta = null;
+    if (foe!=null)
+      foe.unplug(null);
+    
+    if (foe==_src)
+      _src = null;
+    
     return foe;
   }
 }
