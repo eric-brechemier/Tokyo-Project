@@ -41,13 +41,14 @@
   <!--
   Tokyo Project Main - Build file to build Tokyo API Library and test it
   Author: Eric Bréchemier
-  Version: 1.2
+  Version: 1.4
   
   History:
     1.0 - File Creation
     1.1 - Updated for "Shibuya" version of API
     1.2 - Updated for "Harajuku" version of Tokyo API
     1.3 - Fixed typo for third-party target
+    1.4 - Changed copyright notice in javadoc from LGPL to BSD/MIT
   
   See ../third-party for Third Party Dependencies.
   -->
@@ -64,27 +65,18 @@
   <property name="javadoc.title" value="Tokyo API by Tokyo Project" />
   <property name="javadoc.copyright" 
     value="
-    The Tokyo Project is hosted on Sourceforge: &lt;a href='http://sourceforge.net/projects/tokyo/' target='_top'>http://sourceforge.net/projects/tokyo/&lt;/a> 
-    &lt;br/>Copyright &amp;#169; 2005-2007 Eric Br&amp;eacute;chemier: &lt;a href='http://eric.brechemier.name' target='_top'>http://eric.brechemier.name&lt;a/>
-    &lt;font size='-1'>
     &lt;p>
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+    The Tokyo Project is hosted on Sourceforge:  &lt;br/>
+    &lt;a href='http://sourceforge.net/projects/tokyo/' target='_top'>http://sourceforge.net/projects/tokyo/&lt;/a>
     &lt;/p>
     &lt;p>
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+    Copyright (c) 2005-2007 Eric Br&amp;eacute;chemier     &lt;br/>
+    &lt;a href='http://eric.brechemier.name' target='_top'>http://eric.brechemier.name&lt;a/>&lt;br/>
+    &lt;hr/>
+    Licensed under BSD License and/or MIT License.  &lt;br/>
+    See: &lt;a href='http://creativecommons.org/licenses/BSD/' target='_top'>http://creativecommons.org/licenses/BSD/&lt;a/>
     &lt;/p>
-    &lt;p>
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
-    &lt;/p>
-    &lt;font/>
+    &lt;hr/>
     " 
   />
   <property name="javadoc.src.encoding" value="UTF-8" />
