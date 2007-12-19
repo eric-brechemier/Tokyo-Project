@@ -1,28 +1,16 @@
 ==================================================================================
-The Tokyo Project is hosted on Sourceforge:
-http://sourceforge.net/projects/tokyo/
-
-Copyright (c) 2005-2006 Eric Bréchemier
-http://eric.brechemier.name
-
-This library is free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public
-License as published by the Free Software Foundation; either
-version 2.1 of the License, or (at your option) any later version.
-
-This library is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public
-License along with this library; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+ The Tokyo Project is hosted on Sourceforge:
+ http://sourceforge.net/projects/tokyo/
+ 
+ Copyright (c) 2005-2007 Eric Bréchemier
+ http://eric.brechemier.name
+ Licensed under BSD License and/or MIT License.
+ See: http://creativecommons.org/licenses/BSD/
 ==================================================================================
 
 ==========================================
 Title: Tokyo Project - Process Definition
-Last modified: 2006-10-14
+Last modified: 2007-12-19
 By: Eric Bréchemier
 Encoding: UTF-8
 ==========================================
@@ -49,12 +37,12 @@ Encoding: UTF-8
     - from non-xml to xml, for applications input,
     corresponding to XML parsing
     - from xml to non-xml, for applications output,
-    corresponding to XML serializing
+    corresponding to XML serialization
 
 - an XML parser works on standard XML files/data and implements some XML Parser API (DOM, SAX,...)
   Applications do not access XML data directly, but through the provided API
   
-- an XML serializer implements some XML Serializer API (DOM,...).
+- an XML serializer implements some XML Serializer API (DOM,XML Pull,StAX...).
   Applications often do not create XML data directly, but through the provided API.
   Some applications create XML data directly - this data will have to be converted in a second step.
     
@@ -64,41 +52,61 @@ Encoding: UTF-8
   Structure in non-XML data is often implicit or uses a very specific syntax.
   Applications often need to know some grammar to be able to parse the data.
 
-- the first step of the process is formalizing the grammar of your data.
-  This definition may be done with different notations (EBNF, tables, encoding algorithm,...).
-  It should contain:
+* A SAMPLE SIMPLE PROCESS
+Enough concepts! Let me introduce a simple sample process, or a sample simple process if you prefer,
+applied to the first prototype: How to sort CSV records using XSLT.
+
+We will grow a working prototype step by step, using an iterative process. You can refer to the files 
+of this example in the folder "prototype-1-csv2xml" of Tokyo Project download.
+
+The first step will be to write the main loop, which we call ProtoOneMainLoop because it is the 
+Prototype One, and it is the main loop.
+
+[[WORK IN PROGRESS]]
+
+
+* FUTURE DIRECTION: AUTOMATION USING GRAMMAR DEFINITIONS
+  Inspired by the example of compiler program generation based on grammar definition,
+  I am quite convinced that the same could prove useful, given appropriate required 
+  adaptations, to transform data, e.g. to get an XML view of binary data:
+  
+  - define the grammar of your data
+  - define the vocabulary for your data viewed as XML
+  - define the syntax of your queries, e.g. the required XPath subset
+  - use them to create 
+      - one tool reading your data and implementing an XML parsing API,
+        with the following possible components:
+        * Query parsing and analysis
+        * State Machine for Data Grammar
+        * State Machine/Factory for Data Extraction
+        
+      - one tool providing an XML serializing API and writing your data,
+        with the following possible components:
+        * Query parsing and analysis
+        * State Machine for Data Grammar
+        * State Machine/Factory for Data Serialization
+      
+      - and maybe additional tools to validate input data / generated data
+      
+  - plug your tool on applications processing XML
+
+  NOTE:
+    - you may need some adapters for the expected API or extra conversion steps
+    - the application has to know the vocabulary of your data viewed as XML 
+      to understand its semantic
+  
+  At the core lies the need to formalize the grammar of your data, which could be done with 
+  several to be determined notations (EBNF, tables, encoding algorithm,...). I mean here that 
+  the tool should be extensible to support several grammars, not be limitated to a single one.
+  
+  Adapted to handle binary data and not just text and character tokens, the grammar should define:
     - some structure, which will be mapped to the XML tree structure
     - some codecs, defining the format of leaf nodes
     - some comments, explaining the semantics of different fields
     - there may also be some additional relations between different elements,
     that must be understood for proper decoding (choice, repeat, based on values read before)
+  
   This project may end up defining a general format good enough for 80% of grammar definitions,
   or using different grammar types for different formats.
-  
-* IN A NUTSHELL
-- define the grammar of your data
-- define the vocabulary for your data viewed as XML
-- define the syntax of your queries, e.g. the required XPath subset
-- use them to create 
-    - one tool reading your data and implementing an XML parsing API,
-      with the following possible components:
-      * Query parsing and analysis
-      * State Machine for Data Grammar
-      * State Machine/Factory for Data Extraction
-      
-    - one tool providing an XML serializing API and writing your data,
-      with the following possible components:
-      * Query parsing and analysis
-      * State Machine for Data Grammar
-      * State Machine/Factory for Data Serialization
-    
-    - and maybe additional tools to validate input data / generated data
-    
-- plug your tool on applications processing XML
-
-NOTE:
-    - you may need some adapters for the expected API or extra conversion steps
-    - the application has to know the vocabulary of your data viewed as XML 
-      to understand its semantic
-      
+        
 =============== END OF DOCUMENT: Tokyo Project - Process ===============
