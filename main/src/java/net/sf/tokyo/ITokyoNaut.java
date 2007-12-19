@@ -428,11 +428,10 @@ Step: 3
    *        When the length is null, no data is available in current buffer.
    *       </p>
    *       <p>
-   *        If the length is different from zero and data is null, or if the start offset (=offset)
-   *        or the end offset (=offset+length) is outside the bounds of data array
-   *        {@link #areWeThereYet(int[],byte[]) areWeThereYet()} signals optionally an error by setting
-   *        <code>meta[{@link #LANGUAGE}] = {@link #LANGUAGE_ERROR}</code> and an error code of its
-   *        choice to <code>meta[{@link #TOKEN}]</code> then returns true.
+   *        If data is null, or if the start offset (=offset) or the end offset (=offset+length) is 
+   *        outside the bounds of data array, {@link #areWeThereYet(int[],byte[]) areWeThereYet()}  
+   *        optionally signals an error by setting <code>meta[{@link #LANGUAGE}] = {@link #LANGUAGE_ERROR}</code> 
+   *        and an error code of its choice to <code>meta[{@link #TOKEN}]</code> then returns true.
    *       </p>
    *        
    * @return false until this {@link net.sf.tokyo.ITokyoNaut TokyoNaut} has reached the end of its 
