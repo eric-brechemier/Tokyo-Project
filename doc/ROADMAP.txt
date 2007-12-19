@@ -1,28 +1,16 @@
 ==================================================================================
-The Tokyo Project is hosted on Sourceforge:
-http://sourceforge.net/projects/tokyo/
-
-Copyright (c) 2005-2006 Eric Bréchemier
-http://eric.brechemier.name
-
-This library is free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public
-License as published by the Free Software Foundation; either
-version 2.1 of the License, or (at your option) any later version.
-
-This library is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public
-License along with this library; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+ The Tokyo Project is hosted on Sourceforge:
+ http://sourceforge.net/projects/tokyo/
+ 
+ Copyright (c) 2005-2007 Eric Bréchemier
+ http://eric.brechemier.name
+ Licensed under BSD License and/or MIT License.
+ See: http://creativecommons.org/licenses/BSD/
 ==================================================================================
 
 =================================
 Title: Roadmap for Tokyo Project
-Last modified: 2007-12-17
+Last modified: 2007-12-19
 By: Eric Bréchemier
 Encoding: UTF-8
 =================================
@@ -97,18 +85,21 @@ Past Milestones:
     the TokyoNautilus API. This release includes updated project documentation and roadmap, 
     as well as a new prototype demonstrating how the API can help to manipulate CSV data 
     using XSLT as if it was XML.
-    
+
+==================================================================================================
+==================================================================================================    
 Next Milestone:
   => Tokyo Project "Harajuku" release (0.4)
   TARGET: December 2007
   Phase: 3-Alpha
   Content:
-    New Tokyo API demonstrating atomic annotations performed by different TokyoNauts.
-    Extended prototype using external configuration file (XML) instead of hard-coded rules (Java code)
-    for CSV translation to and from SAX events.
-  
+    New Tokyo API demonstrating atomic annotations performed by different TokyoNauts
+    with showcase of sorting CSV records translated from/to XML through SAX using XSLT.
+    Extended prototype using external configuration file (XML Ant Tasks).
+==================================================================================================
+==================================================================================================
+    
   => Tokyo Project "Roppongi" release (0.5)
-  TARGET: January 2008
   Phase: 3-Alpha
     HTML Documentation for project, to be displayed on Sourceforge Project Home Page.
     Documentation will include
@@ -117,44 +108,37 @@ Next Milestone:
       - Links to project SVN and files download
   
   => Tokyo Project "Shinjuku" release (0.6)
-  TARGET: March 2008
   Phase: 3-Alpha
     Browse PDF file structure using TokyoNautilus API;
     implementation will either use a custom implementation based on a partial grammar definition file 
     for PDF, or some external tool providing PDF parsing functionalities.
   
   => Tokyo Project "Ebisu" release (0.7)
-  TARGET: June 2008
   Phase: 3-Alpha
   Content:
     First sample: reading mbox mail files and output xhtml for viewing
   
   => Tokyo Project "Ikebukuro" release (0.7.5)
-  TARGET: September 2008
   Phase: 3-Alpha
   Content:
     Second sample: output PDF files from XML descriptions 
   
   => Tokyo Project "Takadanobaba" release (0.8)
-  TARGET: November 2008
   Phase: 4-Beta
   Content:
     Third sample: simple implementation of source code analysis
   
   => Tokyo Project "Ueno" release (0.8)
-  TARGET: December 2008
   Phase: 4-Beta
   Content:
     More robust implementations for three samples
     
   => Tokyo Project "Nihombashi", "Marunouchi", "Ochanomizu",... releases (0.9.x)
-  TARGET: 2009
   Phase: 4-Beta
   Content:
     Series of updates based on collected comments/feedback.
   
   => Tokyo Project "Ginza" release (1.0)
-  TARGET: 2009
   Phase: 5-Production/Stable
   Content:  
     Substantial feedback received, 
