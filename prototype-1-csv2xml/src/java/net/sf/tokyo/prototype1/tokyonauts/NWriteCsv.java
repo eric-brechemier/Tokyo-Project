@@ -1,36 +1,57 @@
-/*
- * The Tokyo Project is hosted on Sourceforge:
- * http://sourceforge.net/projects/tokyo/
- * 
- * Copyright (c) 2005-2007 Eric Bréchemier
- * http://eric.brechemier.name
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- */
+/* ===============================================================
+ The Tokyo Project is hosted on Sourceforge:
+ http://sourceforge.net/projects/tokyo/
+ 
+ Copyright (c) 2005-2007 Eric Bréchemier
+ http://eric.brechemier.name
+ Licensed under BSD License and/or MIT License.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                         BSD License
+                             ~~~
+             http://creativecommons.org/licenses/BSD/
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                          MIT License
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  Copyright (c) 2005-2007 Eric Bréchemier <tokyo@eric.brechemier.name>
+  
+  Permission is hereby granted, free of charge, to any person
+  obtaining a copy of this software and associated documentation
+  files (the "Software"), to deal in the Software without
+  restriction, including without limitation the rights to use,
+  copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the
+  Software is furnished to do so, subject to the following
+  conditions:
+
+  The above copyright notice and this permission notice shall be
+  included in all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+  OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+  HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+  WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+  OTHER DEALINGS IN THE SOFTWARE.
+================================================================== */
 package net.sf.tokyo.prototype1.tokyonauts;
 
 import net.sf.tokyo.ITokyoNaut;
+
+import net.sf.tokyo.prototype1.tokyonauts.NCommonBase;
+
+import net.sf.tokyo.prototype1.languages.ICSV;
 
 import java.io.UnsupportedEncodingException;
 
 /**
  * Write Tokyo Project events to CSV.<br/>
  */
-public class NWriteCsv extends NCommonBase implements ITokyoNaut
+public class NWriteCsv extends NCommonBase implements ITokyoNaut, ICSV
 {
+  /*
   protected boolean _completed;
   protected String _charEncoding;
   protected int _lineNumber;
@@ -49,7 +70,7 @@ public class NWriteCsv extends NCommonBase implements ITokyoNaut
     return _completed;
   }
   
-  public void filter(int[]meta, byte[] data)
+  public void translate(int[]meta, byte[] data)
   {
     if(areWeThereYet() || meta[VERSION]!=VERSION_ONE)
       return;
@@ -58,13 +79,13 @@ public class NWriteCsv extends NCommonBase implements ITokyoNaut
     {
       case ITEM_DOCUMENT:
         _completed = (meta[EVENT]==END);
-        super.filter(meta,data);
+        super.translate(meta,data);
         break;
       
       case ITEM_CHARACTERS_CODE:
         meta[ITEM] = ITEM_DOCUMENT;
         meta[EVENT] = CONTINUATION;
-        super.filter(meta,data);
+        super.translate(meta,data);
         break;
       
       case ITEM_DOCUMENT_CHARACTER_ENCODING:
@@ -116,7 +137,7 @@ public class NWriteCsv extends NCommonBase implements ITokyoNaut
               meta[LENGTH] = 2;
               data[0] = '\r';
               data[1] = '\n';
-              super.filter(meta,data);
+              super.translate(meta,data);
             }
             _lineNumber ++;
             _fieldNumber = 1;
@@ -130,7 +151,7 @@ public class NWriteCsv extends NCommonBase implements ITokyoNaut
               meta[OFFSET] = 0;
               meta[LENGTH] = 1;
               data[0] = ',';
-              super.filter(meta,data);
+              super.translate(meta,data);
             }
             _fieldNumber++;
           }
@@ -155,4 +176,5 @@ public class NWriteCsv extends NCommonBase implements ITokyoNaut
   {
     super.unplug();
   }
+  */
 }
