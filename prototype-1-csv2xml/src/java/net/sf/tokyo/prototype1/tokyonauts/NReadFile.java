@@ -1,28 +1,43 @@
-/*
- * The Tokyo Project is hosted on Sourceforge:
- * http://sourceforge.net/projects/tokyo/
- * 
- * Copyright (c) 2005-2007 Eric Bréchemier
- * http://eric.brechemier.name
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- */
+/* ===============================================================
+ The Tokyo Project is hosted on Sourceforge:
+ http://sourceforge.net/projects/tokyo/
+ 
+ Copyright (c) 2005-2007 Eric Bréchemier
+ http://eric.brechemier.name
+ Licensed under BSD License and/or MIT License.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                         BSD License
+                             ~~~
+             http://creativecommons.org/licenses/BSD/
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                          MIT License
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  Copyright (c) 2005-2007 Eric Bréchemier <tokyo@eric.brechemier.name>
+  
+  Permission is hereby granted, free of charge, to any person
+  obtaining a copy of this software and associated documentation
+  files (the "Software"), to deal in the Software without
+  restriction, including without limitation the rights to use,
+  copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the
+  Software is furnished to do so, subject to the following
+  conditions:
+
+  The above copyright notice and this permission notice shall be
+  included in all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+  OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+  HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+  WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+  OTHER DEALINGS IN THE SOFTWARE.
+================================================================== */
 package net.sf.tokyo.prototype1.tokyonauts;
 
-import java.io.IOException;
 import java.io.FileInputStream;
 import net.sf.tokyo.ITokyoNaut;
 
@@ -33,21 +48,12 @@ import net.sf.tokyo.ITokyoNaut;
 public class NReadFile extends NCommonBase implements ITokyoNaut
 {
   protected FileInputStream _in;
-  protected byte _state;
-  
-  protected static final byte STATE_UNSET = -1;
-  protected static final byte STATE_OPENED = 0;
-  protected static final byte STATE_AVAILABLE = 1;
-  protected static final byte STATE_CLOSED = 2;
   
   public NReadFile(String inputFilePath)
   {
-    _state = STATE_UNSET;
-    
     try 
     {
       _in = new FileInputStream(inputFilePath);
-      _state = STATE_OPENED;
     }
     catch(Exception e)
     {
@@ -55,92 +61,60 @@ public class NReadFile extends NCommonBase implements ITokyoNaut
     }
   }
   
-  public boolean areWeThereYet()
+  public boolean areWeThereYet(int[] meta, byte[] data)
   {
-    switch(_state)
+    if ( !_checkParams(meta,data) || _in==null )
     {
-      case STATE_OPENED:
-      case STATE_AVAILABLE:
-        return false;
-      default:
+      meta[LANGUAGE]=LANGUAGE_ERROR;
+      meta[TOKEN]=0x100;
+      return true;
+    }
+    
+    try
+    {
+      if ( _in.available()==0 )
         return true;
-    }
-  }
-  
-  public void filter(int[]meta, byte[] data)
-  {
-    if(areWeThereYet() || meta[VERSION]!=VERSION_ONE)
-      return;
-    
-    try
-    {
-      meta[ITEM] = ITEM_DOCUMENT;
-      switch(_state)
-      {
-        case STATE_OPENED:
-          meta[EVENT] = START;
-          _state = STATE_AVAILABLE;
-          break;
-        case STATE_AVAILABLE:
-          if(_in.available() > 0)
-          {
-            meta[EVENT] = CONTINUATION;
-          }
-          else
-          {
-            meta[EVENT] = END;
-            _state = STATE_CLOSED;
-          }
-          break;
-        default: 
-          // unexpected
-          meta[EVENT] = ERROR;
-          meta[ITEM] = 0x0F;
-      }
       
-      if(_state == STATE_AVAILABLE)
-      {
-        int maxLength = data.length - meta[OFFSET];
-        meta[LENGTH] = _in.read(data,meta[OFFSET],maxLength);
-      }
-      else
-      {
-        meta[OFFSET] = 0;
+      _loadmy(meta);
+      meta[LANGUAGE] = LANGUAGE_BINARY;
+      meta[TOKEN] = TOKEN_BINARY;
+      meta[LEFT] = (_mymeta==null? LEFT_START: LEFT_CONTINUED);
+      meta[OFFSET] = 0;
+      meta[LENGTH] = data.length;
+      
+      meta[LENGTH] = _in.read(data,meta[OFFSET],meta[LENGTH]);
+      if (meta[LENGTH]==-1)
         meta[LENGTH] = 0;
-      }
+        
+      if (_in.available()==0)
+        meta[RIGHT] = RIGHT_END;
       
-      _destination.filter(meta,data);
+      _savemy(meta);
     }
-    catch(IOException e)
-    {
-      System.err.println("Error in NReadFile.filter(): "+e);
-      return;
-    }
-    
-  }
-  
-  public ITokyoNaut plug(ITokyoNaut destination)
-  {
-    return super.plug(destination);
-  }
-  
-  public void unplug()
-  {
-    try
-    {
-      _state = STATE_UNSET;
-      
-      if (_in != null)
-      {
-        _in.close();
-        _in = null;
-      }
-      
-      super.unplug();
-    } 
     catch(Exception e)
     {
-      System.err.println("Error in NReadFile.unplug(): "+e);
+      System.err.println("Error in NReadFile#areWeThereYet(): "+e);
+      meta[LANGUAGE]=LANGUAGE_ERROR;
+      meta[TOKEN]=0x101;
+      return true;
     }
+    
+    return false;
+  }
+  
+  public ITokyoNaut unplug(ITokyoNaut foe)
+  {
+    try
+    {
+      if (_in!=null)
+        _in.close();
+      _in = null;
+    }
+    catch(Exception e)
+    {
+      System.err.println("Error closing file in NReadFile#unplug() "+e);
+    }
+    
+    return super.unplug(foe);
   }
 }
