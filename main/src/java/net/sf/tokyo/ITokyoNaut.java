@@ -51,7 +51,7 @@ package net.sf.tokyo;
  *
  * <p>
  * {@link #plug(ITokyoNaut) plug()} lets you initialize a chain of collaborating TokyoNauts, while 
- * {@link #unplug(ITokyoNaut) unplug()} will unchain the TokyoNauts to let them free any allocated ressources 
+ * {@link #unplug(ITokyoNaut) unplug()} will unchain the TokyoNauts to let them free any allocated resources 
  * at the end of the processing.
  * </p>
  *
@@ -460,13 +460,20 @@ Step: 3
    * {@link net.sf.tokyo.ITokyoNaut TokyoNaut}.<br/>
    *
    * <p>
-   * If the given {@link net.sf.tokyo.ITokyoNaut TokyoNaut} is null or no destination has been set 
-   * by a previous call to {@link #plug(ITokyoNaut) plug()}, nothing happens and 
-   * {@link #unplug(ITokyoNaut) unplug()} returns the given parameter.
+   * This method is the expected place to free additional resources hold by this 
+   * {@link net.sf.tokyo.ITokyoNaut TokyoNaut} such as opened files or network streams.
    * </p>
    *
    * <p>
-   * This method is the expected place for deallocation of resources by this {@link net.sf.tokyo.ITokyoNaut TokyoNaut}.
+   * If the given {@link net.sf.tokyo.ITokyoNaut TokyoNaut} is null or if it has not been set as 
+   * destination by a previous call to {@link #plug(ITokyoNaut) plug()}, the deallocation alone is still
+   * performed and {@link #unplug(ITokyoNaut) unplug()} returns the given parameter.
+   * </p>
+   *
+   * <p>
+   * If the given {@link net.sf.tokyo.ITokyoNaut TokyoNaut} is not null, this method will invoke
+   * <code>foe.unplug(null)</code> to allow the last {@link net.sf.tokyo.ITokyoNaut TokyoNaut} to 
+   * free its resources too, without requiring an explicit call to unplug(null) made by you.
    * </p>
    *
    * @param foe previous destination {@link net.sf.tokyo.ITokyoNaut TokyoNaut}
