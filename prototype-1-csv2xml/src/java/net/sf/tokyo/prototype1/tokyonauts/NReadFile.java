@@ -48,12 +48,14 @@ import net.sf.tokyo.ITokyoNaut;
 public class NReadFile extends NCommonBase implements ITokyoNaut
 {
   protected FileInputStream _in;
+  protected boolean _isStart;
   
   public NReadFile(String inputFilePath)
   {
     try 
     {
       _in = new FileInputStream(inputFilePath);
+      _isStart = true;
     }
     catch(Exception e)
     {
@@ -63,22 +65,18 @@ public class NReadFile extends NCommonBase implements ITokyoNaut
   
   public boolean areWeThereYet(int[] meta, byte[] data)
   {
-    if ( !_checkParams(meta,data) || _in==null )
-    {
-      meta[LANGUAGE]=LANGUAGE_ERROR;
-      meta[TOKEN]=0x100;
+    if ( super.areWeThereYet(meta,data) || _in==null )
       return true;
-    }
     
     try
     {
       if ( _in.available()==0 )
         return true;
       
-      _loadmy(meta);
       meta[LANGUAGE] = LANGUAGE_BINARY;
       meta[TOKEN] = TOKEN_BINARY;
-      meta[LEFT] = (_mymeta==null? LEFT_START: LEFT_CONTINUED);
+      meta[LEFT] = (_isStart? LEFT_START: LEFT_CONTINUED);
+      _isStart = false;
       meta[OFFSET] = 0;
       meta[LENGTH] = data.length;
       
@@ -89,7 +87,6 @@ public class NReadFile extends NCommonBase implements ITokyoNaut
       if (_in.available()==0)
         meta[RIGHT] = RIGHT_END;
       
-      _savemy(meta);
     }
     catch(Exception e)
     {
