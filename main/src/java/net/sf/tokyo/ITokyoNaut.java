@@ -249,7 +249,7 @@ public interface ITokyoNaut
        * <p>
        *  <strong>Values:</strong>
        *  <ul>
-       *    <li>[0x0000-0xFFFFFFFF]   range of allowed offset values (in bytes)</li>
+       *    <li>[0x0000-0x7FFFFFFF]   range of allowed offset values (in bytes)</li>
        *  </ul>
        * </p>
        */
@@ -266,7 +266,7 @@ public interface ITokyoNaut
        * <p>
        *  <strong>Values:</strong>
        *  <ul>
-       *    <li>[0x0000-0xFFFFFFFF]   range of allowed length values (in bytes)</li>
+       *    <li>[0x0000-0x7FFFFFFF]   range of allowed length values (in bytes)</li>
        *  </ul>
        * </p>
        */
