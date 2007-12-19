@@ -57,12 +57,12 @@ public class NullTokyoNautTest
           (  
              "Step: "+step+"\n\t"
             +"Data Item:\n\t"
-            +"Language: "+getLanguageName(meta[ITokyoNaut.LANGUAGE])+"\n\t"
-            +"Token: "+getTokenName(meta[ITokyoNaut.TOKEN])+"\n\t"
-            +"Left Relation: "+getRelationName(meta[ITokyoNaut.LEFT])+"\n\t"
+            +"Language: "+getLanguageName(meta[ITokyoNaut.LANGUAGE])+formatMetaHex(meta[ITokyoNaut.LANGUAGE])+"\n\t"
+            +"Token: "+getTokenName(meta[ITokyoNaut.TOKEN])+formatMetaHex(meta[ITokyoNaut.TOKEN])+"\n\t"
+            +"Left Relation: "+getRelationName(meta[ITokyoNaut.LEFT])+formatLeftRight(meta[ITokyoNaut.LEFT])+"\n\t"
             +"Fragment Offset: "+formatOffset(meta[ITokyoNaut.OFFSET])+"\n\t"
             +"Fragment Length: "+formatLength(meta[ITokyoNaut.LENGTH])+"\n\t"
-            +"Right Relation: "+getRelationName(meta[ITokyoNaut.RIGHT])
+            +"Right Relation: "+getRelationName(meta[ITokyoNaut.RIGHT])+formatLeftRight(meta[ITokyoNaut.RIGHT])
           );
       }
     }
@@ -122,6 +122,16 @@ public class NullTokyoNautTest
       default:
         return "Unknown Relationship!";
     }
+  }
+  
+  public static String formatLeftRight(int meta)
+  {
+    return " ["+(meta==1?"+":"")+meta+"]";
+  }
+  
+  public static String formatMetaHex(int meta)
+  {
+    return " [Ox"+Integer.toHexString(meta)+"]";
   }
   
   public static String formatOffset(int offset)
