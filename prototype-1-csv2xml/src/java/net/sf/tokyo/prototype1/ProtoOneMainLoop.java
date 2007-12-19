@@ -39,7 +39,66 @@
 package net.sf.tokyo.prototype1;
 
 import net.sf.tokyo.ITokyoNaut;
+
 import net.sf.tokyo.prototype1.tokyonauts.FileToBinaryNaut;
+import net.sf.tokyo.prototype1.tokyonauts.BinaryToFileNaut;
+
+public class ProtoOneMainLoop
+{
+  public static void main(String[] args)
+  {
+    if (args.length <2)
+    {
+      System.out.println("Usage: [ProtoOneMain] inFilePath outDirPath");
+      return;
+    }
+    String inFilePath = args[0];
+    String outDirPath = args[1];
+    String outFilePath = outDirPath + "/result.csv";
+    
+    System.out.println("Starting ProtoOne:"
+      + "\n  In: " + inFilePath
+      + "\n  Out: " + outFilePath
+    );
+    
+    FileToBinaryNaut source = new FileToBinaryNaut(inFilePath);
+    BinaryToFileNaut destination = new BinaryToFileNaut(outFilePath);
+    
+    source.plug(destination);
+    
+    int[] meta = new int[] 
+      {
+        ITokyoNaut.VERSION_NANA, 
+        ITokyoNaut.LANGUAGE_BINARY, ITokyoNaut.TOKEN_SPARK,
+        ITokyoNaut.LEFT_START, 0, 0, ITokyoNaut.RIGHT_END
+      };
+    byte[] data = new byte[10];
+    
+    int step = 0;
+    final int STEP_LIMIT = 99;
+    
+    while(  !destination.areWeThereYet(meta,data)  &&  (step++ < STEP_LIMIT)  )
+    {
+      if ( meta[ITokyoNaut.VERSION] == ITokyoNaut.VERSION_NANA)
+      {
+        System.out.println
+          (  
+             "Step: "+step+"\n\t"
+            +"Language: "+meta[ITokyoNaut.LANGUAGE]+"\n\t"
+            +"Token: "+meta[ITokyoNaut.TOKEN]+"\n\t"
+            +"Left Relation: "+(meta[ITokyoNaut.LEFT]==1?"+":"")+meta[ITokyoNaut.LEFT]+"\n\t"
+            +"Fragment Offset: "+meta[ITokyoNaut.OFFSET]+"\n\t"
+            +"Fragment Length: "+meta[ITokyoNaut.LENGTH]+"\n\t"
+            +"Right Relation: "+meta[ITokyoNaut.RIGHT]+"\n"
+          );
+      }
+    }
+    
+    source.unplug(destination);
+  } 
+}
+
+/*
 import net.sf.tokyo.prototype1.tokyonauts.BinaryToJavaCharsNaut;
 import net.sf.tokyo.prototype1.tokyonauts.JavaCharsToUnicodeNaut;
 import net.sf.tokyo.prototype1.tokyonauts.UnicodeToCsvNaut;
@@ -47,12 +106,8 @@ import net.sf.tokyo.prototype1.tokyonauts.XSLNaut;
 import net.sf.tokyo.prototype1.tokyonauts.CsvToUnicodeNaut;
 import net.sf.tokyo.prototype1.tokyonauts.UnicodeToJavaCharsNaut;
 import net.sf.tokyo.prototype1.tokyonauts.JavaCharsToBinaryNaut;
-import net.sf.tokyo.prototype1.tokyonauts.BinaryToFileNaut;
 
-public class ProtoOneMainLoop
-{
-  public static void main(String[] args)
-  {
+
     if (args.length <3)
     {
       System.out.println("Usage: [ProtoOneMain] inCsvFilePath xslFilePath outDir");
@@ -131,122 +186,10 @@ public class ProtoOneMainLoop
         .unplug(writeUnicode)
       .unplug(writeText)
     .unplug(writeFile);
+    */
     
     // TODO REMOVE EVERYTHING BELOW, AFTER GETTING BACK USEFUL STUFF (IF ANY)
-    
     /*
-    ITokyoNaut headTokyoNaut = fileInput;
-    ITokyoNaut tailTokyoNaut = fileOuput;
-    
-    // Basic Test: no spy
-    System.out.println("Basic Test: In=>Out");
-    fileInput.plug(fileOuput);
-    
-    int[] meta = new int[]{1,0,200,0,0};
-    byte[] data = new byte[255];
-    
-    while( tailTokyoNaut.areWeThereYet()==false )
-    {
-      headTokyoNaut.translate(meta,data);
-    }
-    headTokyoNaut.unplug();
-    
-    // ***
-    
-    // Basic Test + wrapping spy
-    System.out.println("Basic Test + Spy: In=>Spy=>Out");
-    fileInput = new NReadFile(inCsvFilePath);
-    outCsvFilePath = outDirPath + "/02_result_with_spy.csv";
-    fileOuput = new NWriteFile(outCsvFilePath);
-    
-    ITokyoNaut spyOne = new NSpy(NSpy.STYLE_CHAR);
-    fileInput.plug(spyOne).plug(fileOuput);
-    
-    headTokyoNaut = fileInput;
-    tailTokyoNaut = fileOuput;
-    
-    meta = new int[]{1,0,200,0,0};
-    data = new byte[255];
-    
-    while( tailTokyoNaut.areWeThereYet()==false )
-    {
-      headTokyoNaut.translate(meta,data);
-    }
-    headTokyoNaut.unplug();
-    
-    
-    // Basic Test + 2 Spy Filters //
-    System.out.println("Basic Test + 2 Spies: In=>Spy=>Out=>Spy");
-    fileInput = new NReadFile(inCsvFilePath);
-    outCsvFilePath = outDirPath + "/03_result_with_two_spies.csv";
-    fileOuput = new NWriteFile(outCsvFilePath);
-    
-    spyOne = new NSpy(NSpy.STYLE_CHAR);
-    ITokyoNaut spyTwo = new NSpy();
-    fileInput.plug(spyOne).plug(fileOuput).plug(spyTwo);
-    
-    headTokyoNaut = fileInput;
-    tailTokyoNaut = spyTwo;
-    
-    meta = new int[]{1,0,200,0,0};
-    data = new byte[255];
-    
-    while( tailTokyoNaut.areWeThereYet()==false )
-    {
-      headTokyoNaut.translate(meta,data);
-    }
-    headTokyoNaut.unplug();
-        
-    // ***
-    
-    // Read Csv... //
-    System.out.println("Read CSV: In=>ParseCSV=>Spy=>Out=>Spy");
-    fileInput = new NReadFile(inCsvFilePath);
-    outCsvFilePath = outDirPath + "/04_result_parseCSV.csv";
-    fileOuput = new NWriteFile(outCsvFilePath);
-    
-    spyOne = new NSpy(NSpy.STYLE_CHAR);
-    spyTwo = new NSpy();
-    ITokyoNaut csvReader = new NParseCsv();
-    fileInput.plug(csvReader).plug(spyOne).plug(fileOuput).plug(spyTwo);
-    
-    headTokyoNaut = fileInput;
-    tailTokyoNaut = fileOuput;
-    
-    meta = new int[]{1,0,200,0,0};
-    data = new byte[255];
-    
-    while( tailTokyoNaut.areWeThereYet()==false )
-    {
-      headTokyoNaut.translate(meta,data);
-    }
-    headTokyoNaut.unplug();
-    
-    // ***
-    
-    // Write Csv... //
-    System.out.println("Read CSV: In=>ParseCSV=>WriteCSV=>Spy=>Out");
-    fileInput = new NReadFile(inCsvFilePath);
-    outCsvFilePath = outDirPath + "/05_result_writeCSV.csv";
-    fileOuput = new NWriteFile(outCsvFilePath);
-    
-    spyOne = new NSpy(NSpy.STYLE_CHAR);
-    csvReader = new NParseCsv();
-    ITokyoNaut csvWriter = new NWriteCsv();
-    fileInput.plug(csvReader).plug(csvWriter).plug(fileOuput).plug(spyOne);
-    
-    headTokyoNaut = fileInput;
-    tailTokyoNaut = spyOne;
-    
-    meta = new int[]{1,0,200,0,0};
-    data = new byte[255];
-    
-    while( tailTokyoNaut.areWeThereYet()==false )
-    {
-      headTokyoNaut.translate(meta,data);
-    }
-    headTokyoNaut.unplug();
-    
     // XML to XML using XSLT "Same But Different" Transform //
     System.setProperty
       (
@@ -265,22 +208,4 @@ public class ProtoOneMainLoop
         // Transform the source XML to System.out.
         transformer.transform(new StreamSource(sourceID),
                               new StreamResult(new File("exampleSimple2.out")));
-
-    
-    
-    
-    // Complete chain ... to XML //
-    
-    // Complete chain ... from XML //
-    
-    // Complete chain in two parts + XSLT processing //
-    
-    // Complete chain in one part 
-    // by encapsulating XSLT processing in the middle
-    fileInput.plug(csvReader).plug(spyOne).plug(xslTransform).plug(spyTwo).plug(csvWriter).plug(fileOuput);
-    //
-    
     */
-  }
-  
-}
