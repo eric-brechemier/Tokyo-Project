@@ -1,34 +1,53 @@
-/*
- * The Tokyo Project is hosted on Sourceforge:
- * http://sourceforge.net/projects/tokyo/
- * 
- * Copyright (c) 2005-2007 Eric Bréchemier
- * http://eric.brechemier.name
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- */
+/* ===============================================================
+ The Tokyo Project is hosted on Sourceforge:
+ http://sourceforge.net/projects/tokyo/
+ 
+ Copyright (c) 2005-2007 Eric Bréchemier
+ http://eric.brechemier.name
+ Licensed under BSD License and/or MIT License.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                         BSD License
+                             ~~~
+             http://creativecommons.org/licenses/BSD/
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                          MIT License
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  Copyright (c) 2005-2007 Eric Bréchemier <tokyo@eric.brechemier.name>
+  
+  Permission is hereby granted, free of charge, to any person
+  obtaining a copy of this software and associated documentation
+  files (the "Software"), to deal in the Software without
+  restriction, including without limitation the rights to use,
+  copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the
+  Software is furnished to do so, subject to the following
+  conditions:
+
+  The above copyright notice and this permission notice shall be
+  included in all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+  OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+  HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+  WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+  OTHER DEALINGS IN THE SOFTWARE.
+================================================================== */
 package net.sf.tokyo.prototype1;
 
 import net.sf.tokyo.ITokyoNaut;
-import net.sf.tokyo.prototype1.tokyonauts.NReadFile;
-import net.sf.tokyo.prototype1.tokyonauts.NParseCsv;
-import net.sf.tokyo.prototype1.tokyonauts.NXslTransform;
-import net.sf.tokyo.prototype1.tokyonauts.NWriteCsv;
-import net.sf.tokyo.prototype1.tokyonauts.NWriteFile;
-import net.sf.tokyo.prototype1.tokyonauts.NSpy;
+import net.sf.tokyo.prototype1.tokyonauts.FileToBinaryNaut;
+import net.sf.tokyo.prototype1.tokyonauts.BinaryToJavaCharsNaut;
+import net.sf.tokyo.prototype1.tokyonauts.JavaCharsToUnicodeNaut;
+import net.sf.tokyo.prototype1.tokyonauts.UnicodeToCsvNaut;
+import net.sf.tokyo.prototype1.tokyonauts.XSLNaut;
+import net.sf.tokyo.prototype1.tokyonauts.CsvToUnicodeNaut;
+import net.sf.tokyo.prototype1.tokyonauts.UnicodeToJavaCharsNaut;
+import net.sf.tokyo.prototype1.tokyonauts.JavaCharsToBinaryNaut;
+import net.sf.tokyo.prototype1.tokyonauts.BinaryToFileNaut;
 
 public class ProtoOneMainLoop
 {
@@ -36,28 +55,90 @@ public class ProtoOneMainLoop
   {
     if (args.length <3)
     {
-      System.out.println("Usage: [ProtoOneMain] inCsvFilePath stylesheetFilePath outDir");
+      System.out.println("Usage: [ProtoOneMain] inCsvFilePath xslFilePath outDir");
       return;
     }
     String inCsvFilePath = args[0];
-    String stylesheetFilePath = args[1];
+    String xslFilePath = args[1];
     String outDirPath = args[2];
+    String outCsvFilePath = outDirPath + "/result.csv";
     
     System.out.println("Starting ProtoOne:"
       + "\n  InCsv: " + inCsvFilePath
-      + "\n  Xsl: " + stylesheetFilePath
+      + "\n  Xsl: " + xslFilePath
       + "\n  outDir: " + outDirPath
     );
     
-    ITokyoNaut fileInput = new NReadFile(inCsvFilePath);
+    ITokyoNaut readFile = new FileToBinaryNaut(inCsvFilePath);
+    ITokyoNaut parseText = new BinaryToJavaCharsNaut("UTF-8");
+    ITokyoNaut parseUnicode = new JavaCharsToUnicodeNaut();
+    ITokyoNaut parseCSV = new UnicodeToCsvNaut();
+    ITokyoNaut xslTransform = new XSLNaut(xslFilePath);
+    ITokyoNaut writeCSV = new CsvToUnicodeNaut();
+    ITokyoNaut writeUnicode = new UnicodeToJavaCharsNaut();
+    ITokyoNaut writeText = new JavaCharsToBinaryNaut("UTF-8");
+    ITokyoNaut writeFile = new BinaryToFileNaut(outCsvFilePath);
     
-    String outCsvFilePath = outDirPath + "/01_result_basic.csv";
-    ITokyoNaut fileOuput = new NWriteFile(outCsvFilePath);
+    ITokyoNaut spyZero = new NSpy(NSpy.STYLE_CHAR);
+    ITokyoNaut spyOne = new NSpy(NSpy.STYLE_CHAR);
+    ITokyoNaut spyTwo = new NSpy(NSpy.STYLE_CHAR);
     
+    byte[] data = new byte[20];
+    int[] meta 
+      = new int[]
+      {
+        ITokyoNaut.VERSION_NANA,
+        ITokyoNaut.LANGUAGE_BINARY,
+        ITokyoNaut.TOKEN_BINARY,
+        ITokyoNaut.LEFT_START,
+        0, 
+        0,
+        ITokyoNaut.RIGHT_CONTINUED
+      };
+    
+    readFile
+      //.plug(spyZero)
+      .plug(parseText)
+        .plug(parseUnicode)
+          .plug(parseCSV)
+            //.plug(spyOne)
+            .plug(xslTransform)
+            //.plug(spyTwo)
+          .plug(writeCSV)
+        .plug(writeUnicode)
+      .plug(writeText)
+    .plug(writeFile);
+    
+    int step = 0;
+    final int STEP_LIMIT = 99;
+    while(  !writeFile.areWeThereYet(meta,data)  &&  (step++ < STEP_LIMIT)  )
+    {
+      System.out.println("Running... Step "+step+" - "+meta[ITokyoNaut.LENGTH]+" byte(s) written.");
+    }
+    
+    if (meta[ITokyoNaut.LANGUAGE]==ITokyoNaut.LANGUAGE_ERROR)
+      System.err.println("Processing Terminated with Error Code: "+Integer.toHexString(meta[ITokyoNaut.TOKEN]));
+    
+    readFile
+      //.plug(spyZero)
+      .unplug(parseText)
+        .unplug(parseUnicode)
+          .unplug(parseCSV)
+            //.plug(spyOne)
+            .unplug(xslTransform)
+            //.plug(spyTwo)
+          .unplug(writeCSV)
+        .unplug(writeUnicode)
+      .unplug(writeText)
+    .unplug(writeFile);
+    
+    // TODO REMOVE EVERYTHING BELOW, AFTER GETTING BACK USEFUL STUFF (IF ANY)
+    
+    /*
     ITokyoNaut headTokyoNaut = fileInput;
     ITokyoNaut tailTokyoNaut = fileOuput;
     
-    /* Basic Test: no spy */
+    // Basic Test: no spy
     System.out.println("Basic Test: In=>Out");
     fileInput.plug(fileOuput);
     
@@ -66,13 +147,13 @@ public class ProtoOneMainLoop
     
     while( tailTokyoNaut.areWeThereYet()==false )
     {
-      headTokyoNaut.filter(meta,data);
+      headTokyoNaut.translate(meta,data);
     }
     headTokyoNaut.unplug();
     
     // ***
     
-    /* Basic Test + wrapping spy */
+    // Basic Test + wrapping spy
     System.out.println("Basic Test + Spy: In=>Spy=>Out");
     fileInput = new NReadFile(inCsvFilePath);
     outCsvFilePath = outDirPath + "/02_result_with_spy.csv";
@@ -89,12 +170,12 @@ public class ProtoOneMainLoop
     
     while( tailTokyoNaut.areWeThereYet()==false )
     {
-      headTokyoNaut.filter(meta,data);
+      headTokyoNaut.translate(meta,data);
     }
     headTokyoNaut.unplug();
     
     
-    /* Basic Test + 2 Spy Filters */
+    // Basic Test + 2 Spy Filters //
     System.out.println("Basic Test + 2 Spies: In=>Spy=>Out=>Spy");
     fileInput = new NReadFile(inCsvFilePath);
     outCsvFilePath = outDirPath + "/03_result_with_two_spies.csv";
@@ -112,13 +193,13 @@ public class ProtoOneMainLoop
     
     while( tailTokyoNaut.areWeThereYet()==false )
     {
-      headTokyoNaut.filter(meta,data);
+      headTokyoNaut.translate(meta,data);
     }
     headTokyoNaut.unplug();
         
     // ***
     
-    /* Read Csv... */
+    // Read Csv... //
     System.out.println("Read CSV: In=>ParseCSV=>Spy=>Out=>Spy");
     fileInput = new NReadFile(inCsvFilePath);
     outCsvFilePath = outDirPath + "/04_result_parseCSV.csv";
@@ -137,13 +218,13 @@ public class ProtoOneMainLoop
     
     while( tailTokyoNaut.areWeThereYet()==false )
     {
-      headTokyoNaut.filter(meta,data);
+      headTokyoNaut.translate(meta,data);
     }
     headTokyoNaut.unplug();
     
     // ***
     
-    /* Write Csv... */
+    // Write Csv... //
     System.out.println("Read CSV: In=>ParseCSV=>WriteCSV=>Spy=>Out");
     fileInput = new NReadFile(inCsvFilePath);
     outCsvFilePath = outDirPath + "/05_result_writeCSV.csv";
@@ -162,30 +243,44 @@ public class ProtoOneMainLoop
     
     while( tailTokyoNaut.areWeThereYet()==false )
     {
-      headTokyoNaut.filter(meta,data);
+      headTokyoNaut.translate(meta,data);
     }
     headTokyoNaut.unplug();
     
+    // XML to XML using XSLT "Same But Different" Transform //
+    System.setProperty
+      (
+      "javax.xml.transform.TransformerFactory", 
+      "net.sf.saxon.TransformerFactoryImpl"
+      );
+    
+    // TODO: adapt code from SAXON TrAX samples
+    
+    TransformerFactory tfactory = TransformerFactory.newInstance();
+
+        // Create a transformer for the stylesheet.
+        Transformer transformer =
+            tfactory.newTransformer(new StreamSource(xslID));
+
+        // Transform the source XML to System.out.
+        transformer.transform(new StreamSource(sourceID),
+                              new StreamResult(new File("exampleSimple2.out")));
+
     
     
-    /* Complete chain ... to XML
     
-    */
+    // Complete chain ... to XML //
     
-    /* Complete chain ... from XML
+    // Complete chain ... from XML //
     
-    */
+    // Complete chain in two parts + XSLT processing //
     
-    /* Complete chain in two parts + XSLT processing
-    
-    */
-    
-    /* Complete chain in one part 
-     * by encapsulating XSLT processing in the middle
+    // Complete chain in one part 
+    // by encapsulating XSLT processing in the middle
     fileInput.plug(csvReader).plug(spyOne).plug(xslTransform).plug(spyTwo).plug(csvWriter).plug(fileOuput);
+    //
+    
     */
-    
-    
   }
   
 }
