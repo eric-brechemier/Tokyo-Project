@@ -219,7 +219,7 @@ with the remaining omitted constants from ITokyoNaut, nothing less than useful v
 //   None
 //  
 // Values:
-//   [0x0000-0xFFFFFFFF]   range of allowed offset values (in bytes)
+//   [0x0000-0x7FFFFFFF]   range of allowed offset values (in bytes)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -232,7 +232,7 @@ with the remaining omitted constants from ITokyoNaut, nothing less than useful v
 //   None
 //  
 // Values:
-//   [0x0000-0xFFFFFFFF]   range of allowed length values (in bytes)
+//   [0x0000-0x7FFFFFFF]   range of allowed length values (in bytes)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   
 
