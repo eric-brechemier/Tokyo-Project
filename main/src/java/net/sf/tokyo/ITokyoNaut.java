@@ -403,9 +403,11 @@ Step: 3
    *   </ul>
    * </p>
    *
-   * @param meta a result array carrying information about "data", with a set of integer fields 
-   *        defined by {@link net.sf.tokyo.ITokyoNaut} interface specification corresponding to leading version number 
-   *        in the first field, for current version:
+   * @param meta a result array carrying information about "data"
+   *       <p>
+   *        The set of integer fields in meta is defined here, in the specification of the 
+   *        {@link net.sf.tokyo.ITokyoNaut} interface corresponding to the leading version number 
+   *        in the first field. In current version:
    *        <ul>
    *          <li><code>meta[{@link #VERSION}] = {@link #VERSION_NANA}</code></li>
    *          <li><code>meta[{@link #LANGUAGE}] = ( {@link #LANGUAGE_BINARY} | {@link #LANGUAGE_UNICODE_TEXT} | {@link #LANGUAGE_ERROR} | * )</code></li>
@@ -415,9 +417,24 @@ Step: 3
    *          <li><code>meta[{@link #LENGTH}] in [0;data.length]</code></li>
    *          <li><code>meta[{@link #RIGHT}] = ( {@link #RIGHT_END} | {@link #RIGHT_CONTINUED} )</code></li>
    *        </ul>
-   * @param data a result buffer carrying binary data fragments corresponding to tokens described
-   *        in meta. Current fragment runs from <code>meta[{@link #OFFSET}]</code> to <code>meta[{@link #LENGTH}]</code>. 
-   *        When length is null, no data is available in current buffer.
+   *       </p>
+   *       <p>
+   *        If meta is null, {@link #areWeThereYet(int[],byte[]) areWeThereYet()} does nothing and 
+   *        returns true.
+   *       </p>
+   * @param data a result buffer carrying binary data fragments corresponding to tokens described in meta. 
+   *       <p>
+   *        Current fragment runs from <code>meta[{@link #OFFSET}]</code> to <code>meta[{@link #LENGTH}]</code>. 
+   *        When the length is null, no data is available in current buffer.
+   *       </p>
+   *       <p>
+   *        If the length is different from zero and data is null, or if the start offset (=offset)
+   *        or the end offset (=offset+length) is outside the bounds of data array
+   *        {@link #areWeThereYet(int[],byte[]) areWeThereYet()} signals optionally an error by setting
+   *        <code>meta[{@link #LANGUAGE}] = {@link #LANGUAGE_ERROR}</code> and an error code of its
+   *        choice to <code>meta[{@link #TOKEN}]</code> then returns true.
+   *       </p>
+   *        
    * @return false until this {@link net.sf.tokyo.ITokyoNaut TokyoNaut} has reached the end of its 
    *         own processing (e.g. following the end of input meta/data)
    */
@@ -426,6 +443,10 @@ Step: 3
   
   /**
    * Plug this {@link net.sf.tokyo.ITokyoNaut TokyoNaut} to a destination {@link net.sf.tokyo.ITokyoNaut TokyoNaut}.<br/>
+   *
+   * <p>
+   * If the given {@link net.sf.tokyo.ITokyoNaut TokyoNaut} is null nothing happens.
+   * </p>
    *
    * @param friend destination {@link net.sf.tokyo.ITokyoNaut TokyoNaut}
    * @return the {@link net.sf.tokyo.ITokyoNaut TokyoNaut} provided as parameter to allow 
@@ -439,13 +460,17 @@ Step: 3
    * {@link net.sf.tokyo.ITokyoNaut TokyoNaut}.<br/>
    *
    * <p>
-   * If no destination has been set by a previous call to {@link #plug(ITokyoNaut) plug()}, 
-   * nothing happens.
+   * If the given {@link net.sf.tokyo.ITokyoNaut TokyoNaut} is null or no destination has been set 
+   * by a previous call to {@link #plug(ITokyoNaut) plug()}, nothing happens.
    * </p>
    *
    * <p>
    * This method is the expected place for deallocation of resources by this {@link net.sf.tokyo.ITokyoNaut TokyoNaut}.
    * </p>
+   *
+   * @param foe previous destination {@link net.sf.tokyo.ITokyoNaut TokyoNaut}
+   * @return the {@link net.sf.tokyo.ITokyoNaut TokyoNaut} provided as parameter to allow 
+   *         chained {@link #unplug(ITokyoNaut) unplug()} calls.
    */
   public ITokyoNaut unplug(ITokyoNaut foe);
   
