@@ -56,14 +56,540 @@ Encoding: UTF-8
 Enough concepts! Let me introduce a simple sample process, or a sample simple process if you prefer,
 applied to the first prototype: How to sort CSV records using XSLT.
 
-We will grow a working prototype step by step, using an iterative process. You can refer to the files 
-of this example in the folder "prototype-1-csv2xml" of Tokyo Project download.
+We will grow a working prototype step by step, using an iterative process. We will start with a basic
+chain of two TokyoNauts performing a file copy by transferring buffers from a Source to a Destination,
+then insert more TokyoNauts in pairs to handle Text encoding, CSV, SAX, and one more playing the role
+of a Bridge for XSLT Transformation.
 
+You can refer to the files of this example in the folder "prototype-1-csv2xml" of Tokyo Project download.
+
+===================================================================================================
+                      =#= Stage 1: Skeleton for the main loop =#=
+===================================================================================================
+                      
 The first step will be to write the main loop, which we call ProtoOneMainLoop because it is the 
-Prototype One, and it is the main loop.
+Prototype One, and it is the main loop. This class has a single method main(), the entry point 
+for the complete application.
 
-[[WORK IN PROGRESS]]
+  package net.sf.tokyo.prototype1;
+  
+  public class ProtoOneMainLoop
+  {
+    public static void main(String[] args)
+    {
+      
+    } 
+  }
 
+We can run this prototype, and it does nothing. Stage 1: Clear.
+
+===================================================================================================
+                      =#= Stage 2: First main loop, Source to Destination =#=
+===================================================================================================
+
+For the first version of the main loop, we will start with two TokyoNauts:
+  - a Source reading bytes from a file
+  - a Destination writing bytes to a file
+
+We'll need:
+  - code to set up the chain of two TokyoNauts,
+  - main loop code to run the processing
+  - code to unchain the TokyoNauts and free ressources
+  - one class for the first TokyoNaut: FileToBinaryNaut (reading file into buffers of binary data)
+  - one class for the last TokyoNaut: BinaryToFileNaut (writing file from buffers of binary data)
+
+Let's go! As a starter, I copy and paste the code sample for the main loop featured in the 
+ITokyoNaut#areWeThereYet() javadoc:
+
+  public class ProtoOneMainLoop
+  {
+    public static void main(String[] args)
+    {
+      int[] meta = new int[] 
+        {
+          ITokyoNaut.VERSION_NANA, 
+          ITokyoNaut.LANGUAGE_BINARY, ITokyoNaut.TOKEN_SPARK,
+          ITokyoNaut.LEFT_START, 0, 0, ITokyoNaut.RIGHT_END
+        };
+      byte[] data = new byte[10];
+      
+      int step = 0;
+      final int STEP_LIMIT = 99;
+      
+      while(  !destination.areWeThereYet(meta,data)  &&  (step++ < STEP_LIMIT)  )
+      {
+        if ( meta[ITokyoNaut.VERSION] == ITokyoNaut.VERSION_NANA)
+        {
+          System.out.println
+            (  
+               "Step: "+step+"\n\t"
+              +"Language: "+meta[ITokyoNaut.LANGUAGE]+"\n\t"
+              +"Token: "+meta[ITokyoNaut.TOKEN]+"\n\t"
+              +"Left Relation: "+(meta[ITokyoNaut.LEFT]==1?"+":"")+meta[ITokyoNaut.LEFT]+"\n\t"
+              +"Fragment Offset: "+meta[ITokyoNaut.OFFSET]+"\n\t"
+              +"Fragment Length: "+meta[ITokyoNaut.LENGTH]+"\n\t"
+              +"Right Relation: "+meta[ITokyoNaut.RIGHT]+"\n"
+            );
+        }
+      }
+    } 
+  }
+  
+I now get an error at compiling because destination is not defined:
+  [javac] (...)/tokyo/trunk/prototype-1-csv2xml/src/java/net/sf/tokyo/prototype1/ProtoOneMainLoop.java:58: 
+          cannot find symbol
+  [javac] symbol  : variable destination
+  [javac] location: class net.sf.tokyo.prototype1.ProtoOneMainLoop
+  [javac]     while(  !destination.areWeThereYet(meta,data)  &&  (step++ < STEP_LIMIT)  )
+
+This is because we still have no TokyoNaut and destination has not been initialized.
+To pass this step, we will create two TokyoNaut classes with a null implementation, import them here,
+initialize them and recompile...
+
+I know of a Null TokyoNaut implementation, part of the main package (in the "test" section).
+It is not part of the Tokyo API, but I can copy and paste this file as a template for my two new TokyoNauts.
+So I copy main/test/java/net/sf/tokyo/test/NullTokyoNaut.java
+to prototype-1-csv2xml/src/java/net/sf/tokyo/prototype1/tokyonauts/FileToBinaryNaut.java 
+and prototype-1-csv2xml/src/java/net/sf/tokyo/prototype1/tokyonauts/BinaryToFileNaut.java
+then change the class name and package name to match the file and location.
+
+Here is what the FileToBinaryNaut looks like:
+
+  package net.sf.tokyo.prototype1.tokyonauts;
+  
+  import net.sf.tokyo.ITokyoNaut;
+  
+  /**
+   * Null implementation of ITokyoNaut interface.<br/>
+   *
+   * <p>
+   * Does nothing and if used without boundary will run in a main loop forever.
+   * This source code can be used as a base for TokyoNaut implementations.
+   * </p>
+   */
+  public class FileToBinaryNaut implements ITokyoNaut
+  {
+    public boolean areWeThereYet(int[] meta, byte[] data)
+    {
+      return false;
+    }
+    
+    public ITokyoNaut plug(ITokyoNaut friend)
+    {
+      return friend;
+    }
+    
+    public ITokyoNaut unplug(ITokyoNaut foe)
+    {
+      return foe;
+    }
+  }
+
+I now import the two TokyoNauts in ProtoOneMainLoop, initialize two instances, source and destination,
+plug them together before the main loop, and unplug them after. Here is the result:
+
+  package net.sf.tokyo.prototype1;
+
+  import net.sf.tokyo.ITokyoNaut;
+  
+  import net.sf.tokyo.prototype1.tokyonauts.FileToBinaryNaut;
+  import net.sf.tokyo.prototype1.tokyonauts.BinaryToFileNaut;
+  
+  public class ProtoOneMainLoop
+  {
+    public static void main(String[] args)
+    {
+      FileToBinaryNaut source = new FileToBinaryNaut();
+      BinaryToFileNaut destination = new BinaryToFileNaut();
+      
+      source.plug(destination);
+      
+      int[] meta = new int[] 
+        {
+          ITokyoNaut.VERSION_NANA, 
+          ITokyoNaut.LANGUAGE_BINARY, ITokyoNaut.TOKEN_SPARK,
+          ITokyoNaut.LEFT_START, 0, 0, ITokyoNaut.RIGHT_END
+        };
+      byte[] data = new byte[10];
+      
+      int step = 0;
+      final int STEP_LIMIT = 99;
+      
+      while(  !destination.areWeThereYet(meta,data)  &&  (step++ < STEP_LIMIT)  )
+      {
+        if ( meta[ITokyoNaut.VERSION] == ITokyoNaut.VERSION_NANA)
+        {
+          System.out.println
+            (  
+               "Step: "+step+"\n\t"
+              +"Language: "+meta[ITokyoNaut.LANGUAGE]+"\n\t"
+              +"Token: "+meta[ITokyoNaut.TOKEN]+"\n\t"
+              +"Left Relation: "+(meta[ITokyoNaut.LEFT]==1?"+":"")+meta[ITokyoNaut.LEFT]+"\n\t"
+              +"Fragment Offset: "+meta[ITokyoNaut.OFFSET]+"\n\t"
+              +"Fragment Length: "+meta[ITokyoNaut.LENGTH]+"\n\t"
+              +"Right Relation: "+meta[ITokyoNaut.RIGHT]+"\n"
+            );
+        }
+      }
+      
+      source.unplug(destination);
+    } 
+  }
+
+It not only compiles again, but also the loop runs correctly for 99 iterations then stops. 
+You can say, Stage 2: Complete.
+
+===================================================================================================
+                      =#= Stage 3: Two TokyoNauts perform File to File Copy =#=
+===================================================================================================
+
+Now it's time to actually perform something useful with our two TokyoNauts. To read one file and
+write another, we need the actual locations of the two files. We will add one parameter with the file
+location to the constructor of each TokyoNaut, and get these two values from the command line.
+To keep a little more freedom, we will actually request only the ouput folder location, and append the 
+file name, which will let us create several different files in this folder if needed, e.g. to compare
+the output of different tests:
+
+  public static void main(String[] args)
+  {
+    if (args.length <2)
+    {
+      System.out.println("Usage: [ProtoOneMain] inFilePath outDirPath");
+      return;
+    }
+    String inFilePath = args[0];
+    String outDirPath = args[1];
+    String outFilePath = outDirPath + "/result.csv";
+    
+    System.out.println("Starting ProtoOne:"
+      + "\n  In: " + inFilePath
+      + "\n  Out: " + outFilePath
+    );
+    
+    FileToBinaryNaut source = new FileToBinaryNaut(inFilePath);
+    BinaryToFileNaut destination = new BinaryToFileNaut(outFilePath);
+    (...)
+  }
+
+After adding the code in FileToBinaryNaut and BinaryToFileNaut with the new constructor (you can leave
+it empty for now) everything runs fine with no change.
+
+We now add the code to initialize a FileInputStream in FileToBinaryNaut constructor, and a 
+FileOutputStream in BinaryToFileNaut:
+
+  // in FileToBinaryNaut.java,
+  protected FileInputStream _in;
+  
+  public FileToBinaryNaut(String filePath)
+  {
+    try 
+    {
+      _in = new FileInputStream(filePath);
+    }
+    catch(Exception e)
+    {
+      System.err.println("Error in FileToBinaryNaut(): "+e);
+    }
+  }
+  
+  // in BinaryToFileNaut.java,
+  protected FileOutputStream _out;
+  
+  public BinaryToFileNaut(String filePath)
+  {
+    try 
+    {
+      _out = new FileOutputStream(filePath);
+    }
+    catch(Exception e)
+    {
+      System.err.println("Error in BinaryToFileNaut(): "+e);
+    }
+  }
+
+Don't forget to add the imports,
+  // in FileToBinaryNaut.java,
+  import java.io.FileInputStream;
+  
+  // in BinaryToFileNaut.java,
+  import java.io.FileOutputStream;
+
+As you see, the processing is very similar in FileToBinaryNaut and BinaryToFileNaut, and we expect
+even more so for the implementation of the methods in the ITokyoNaut interface. Therefore, I will
+create a common superclass for the two, called NCommonBase (the "N" should remind you of the "Naut")
+and make both classes inherit from it. Since NCommonBase is not a stand-alone class that I want to
+create instance from, I will declare it abstract and leave the implementation of missing bits to
+the derived classes:
+  
+  package net.sf.tokyo.prototype1.tokyonauts;
+
+  import net.sf.tokyo.ITokyoNaut;
+  
+  public abstract class NCommonBase implements ITokyoNaut
+  {
+  }
+
+I now declare the inheritance:
+  // in FileToBinaryNaut.java,
+  public class FileToBinaryNaut extends NCommonBase implements ITokyoNaut
+  
+  // in BinaryToFileNaut.java,
+  public class BinaryToFileNaut extends NCommonBase implements ITokyoNaut
+
+Now I add code in NCommonBase, to handle limit conditions in areWeThereYet(). I also declare a
+common field _src which will hold the source TokyoNaut set after a call to plug() and unset in 
+unplug(). The code in plug() looks like magic because it reflects a dialogue between the two
+TokyoNauts (the source and destination) discussing about chicken-and-egg to decide who is the chicken,
+er.. the source, and who is the destination. The outcome is eventually that by calling
+  
+  source.plug(destination)
+  
+you actually trigger
+  
+  destination._src = source
+  
+So here is the complete code of NCommonBase (after lots of errands) including checks 
+for limit conditions (quite straightforward based on ITokyoNaut javadoc):
+
+  package net.sf.tokyo.prototype1.tokyonauts;
+  
+  import net.sf.tokyo.ITokyoNaut;
+  
+  /**
+   * Base implementation of ITokyoNaut interface based on Version NANA.<br/>
+   *
+   * <p>
+   * Abstract class used as a base class for TokyoNaut implementations in Prototype One.
+   * </p>
+   */
+  public abstract class NCommonBase implements ITokyoNaut
+  {
+    protected ITokyoNaut _src;
+    
+    protected NCommonBase()
+    {
+      _src = null;
+    }
+    
+    public boolean areWeThereYet(int[] meta, byte[] data)
+    {
+      if (meta==null)
+        return true;
+        
+      if 
+        (    data==null 
+          || meta[OFFSET]<0 || meta[OFFSET]>data.length 
+          || meta[OFFSET]+meta[LENGTH]<0 || meta[OFFSET]+meta[LENGTH]>data.length 
+        )
+      {
+        meta[LANGUAGE] = LANGUAGE_ERROR;
+        meta[TOKEN] = 0xA00;
+        return true;
+      }
+      
+      return false;
+    }
+    
+    public ITokyoNaut plug(ITokyoNaut friend)
+    {
+      if (friend==null)
+        return friend;
+      
+      // Source or Destination?
+      // for now, we don't know whether this is a source or a destination
+      // which will be determined by the following ping/pong exchange.
+      // This is because, for usability, the call is actually src.plug(dest)
+      // while for ease of implementation, the inside wanted relationship is
+      // dest._src = src
+      
+      // Step 1: [@source] if null or same as current source, do nothing
+      // Step 4: [@destination] _src is null and the friend param is not, so we continue
+      // Step 7: [@source] this time, _src is set, so we stop and return _src
+      // 
+      if (friend==null || friend==_src )
+        return friend;
+      
+      // Step 2: [@source] set _src to stop the recursion at Step 7,
+      //                   original source is saved in "previous", to be restored at step 11.
+      // Step 5: [@destination] set _src, which is actually the final desired effect in destination
+      ITokyoNaut previous = _src;
+      _src = friend;
+      
+      // A different behavior in source and destination:
+      // Due to the sequence,
+      // User --> source --> destination
+      //                 <--
+      //                 ...> (result)
+      //        (result) <...
+      // destination gets the result before source does, which means
+      // that the destination can detect its role because it gets ******** as result.
+      
+      // Step 3: [@source] Check the reverse associate
+        // Step 6: [@destination] Check the reverse associate
+        // Step 8: [@destination] result is received, per Step 7, result will be "this"
+      // Step 10: [@source] Check the reverse associate, per Step 9, result will be destination "friend" (not "this")
+      ITokyoNaut result = friend.plug(this);
+      
+      if ( result!=this )
+      {
+        // Step 11: [@source] we received destination, different from self,
+        //                    _src is reset to previous to cancel the association process in this direction.
+        //                    (the final association is unidirectional destination-->source)
+        //                    The destination "friend" is returned to allow chained calls.
+        
+        _src = previous;
+        //System.out.println("Added: association "+this+" <-- "+friend);
+        return friend;
+      }
+      
+      // Step 9:  [@destination] we received self, we will return self to confirm it is the actual destination
+      return this;
+    }
+    
+    public ITokyoNaut unplug(ITokyoNaut foe)
+    {
+      if (foe!=null)
+        foe.unplug(null);
+      
+      if (foe==_src)
+        _src = null;
+      
+      return foe;
+    }
+  }
+  
+After completing NCommonBase, I can now remove the plug() method from FileToBinaryNaut and 
+BinaryToFileNaut altogether (I will stick with the default behavior...) and add finalization code
+in unplug() to close the files:
+
+  // in FileToBinaryNaut.java,
+  public ITokyoNaut unplug(ITokyoNaut foe)
+  {
+    if (foe==null || _src == null)
+      return foe;
+    
+    try
+    {
+      if (_in!=null)
+        _in.close();
+      _in = null;
+    }
+    catch(Exception e)
+    {
+      System.err.println("Error closing file in FileToBinaryNaut() "+e);
+    }
+    
+    return super.unplug(foe);
+  }
+  
+  // in BinaryToFileNaut.java,
+  public ITokyoNaut unplug(ITokyoNaut foe)
+  {
+    try
+    {
+      if (_out!=null)
+        _out.close();
+      _out = null;
+    }
+    catch(Exception e)
+    {
+      System.err.println("Error closing file in NWriteFile#unplug() "+e);
+    }
+    
+    return super.unplug(foe);
+  }
+  
+Finally, we've just completed the plumbing, and we arrive to the core of each TokyoNaut processing,
+within areWeThereYet() method. Here is the code for FileToBinaryNaut
+  
+  // in FileToBinaryNaut.java,
+  public boolean areWeThereYet(int[] meta, byte[] data)
+  {
+    if ( super.areWeThereYet(meta,data) || _in==null )
+      return true;
+      
+    meta[LANGUAGE] = LANGUAGE_BINARY;
+    meta[TOKEN] = TOKEN_BINARY;
+    meta[LEFT] = (_isStart? LEFT_START: LEFT_CONTINUED);
+    _isStart = false;
+    meta[OFFSET] = 0;
+    meta[LENGTH] = data.length;
+    
+    try
+    {
+      if ( _in.available()==0 )
+        return true;
+      
+      int bytesRead = _in.read(data,meta[OFFSET],meta[LENGTH]);
+      meta[LENGTH] = (bytesRead==-1? 0 : bytesRead);
+      meta[RIGHT] = (_in.available()==0? RIGHT_END : RIGHT_CONTINUED);
+    }
+    catch(Exception e)
+    {
+      System.err.println("Error in FileToBinaryNaut#areWeThereYet(): "+e);
+      meta[LANGUAGE]=LANGUAGE_ERROR;
+      meta[TOKEN]=0x101;
+      return true;
+    }
+    
+    return false;
+  }
+  
+You can notice that this code creates TOKEN_BINARY events, as many as required, the first having
+meta[LEFT] = LEFT_START, thanks to the protected member _isStart, which I added to the class, and 
+initialized to true in the constructor. The last token has meta[RIGHT] = RIGHT_END.
+
+The code for BinaryToFileNaut is quite similar; the main difference is that BinaryToFileNaut relies 
+on _source to provide input data, and terminates when no more data is available:
+  
+  // in BinaryToFileNaut.java,
+  public boolean areWeThereYet(int[] meta, byte[] data)
+  {
+    if ( super.areWeThereYet(meta,data) || _src==null || _out==null )
+      return true;
+    
+    if ( _src.areWeThereYet(meta,data) )
+      return true;
+    
+    // Skip unknown tokens
+    if ( meta[LANGUAGE]!=LANGUAGE_BINARY || meta[TOKEN]!=TOKEN_BINARY )
+      return false;
+    
+    try
+    {
+      _out.write(data,meta[OFFSET],meta[LENGTH]);
+    }
+    catch(Exception e)
+    {
+      System.err.println("Error in BinaryToFileNaut#areWeThereYet(): "+e);
+      meta[LANGUAGE]=LANGUAGE_ERROR;
+      meta[TOKEN]=0x201;
+    }
+    
+    return false;
+  }
+  
+Now if you followed me till this point, you can check the file "result.csv" created in "out/data",
+it is a carbon copy of the input file... Stage 3: Complete!
+
+===================================================================================================
+                                         ~ Break ~
+===================================================================================================
+
+Stage 3 was quite long, you can now relax and have a break, I certainly will myself :)
+
+
+
+===================================================================================================
+                      =#= Stage 4: Four TokyoNauts manage Character Encoding =#=
+===================================================================================================
+
+
+  
+  
+===================================================================================================
+                                        ~ The End ~
+===================================================================================================
 
 * FUTURE DIRECTION: AUTOMATION USING GRAMMAR DEFINITIONS
   Inspired by the example of compiler program generation based on grammar definition,
