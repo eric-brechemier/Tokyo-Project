@@ -43,6 +43,10 @@ import net.sf.tokyo.ITokyoNaut;
 import net.sf.tokyo.prototype1.tokyonauts.FileToBinaryNaut;
 import net.sf.tokyo.prototype1.tokyonauts.BinaryToFileNaut;
 
+import net.sf.tokyo.prototype1.tokyonauts.BinaryToJavaCharNaut;
+import net.sf.tokyo.prototype1.tokyonauts.JavaCharToUnicodeNaut;
+
+
 public class ProtoOneMainLoop
 {
   public static void main(String[] args)
@@ -55,16 +59,21 @@ public class ProtoOneMainLoop
     String inFilePath = args[0];
     String outDirPath = args[1];
     String outFilePath = outDirPath + "/result.csv";
+    final String encoding = "UTF-8";
     
     System.out.println("Starting ProtoOne:"
       + "\n  In: " + inFilePath
       + "\n  Out: " + outFilePath
+      + "\n  Encoding: "+encoding
     );
     
     FileToBinaryNaut source = new FileToBinaryNaut(inFilePath);
     BinaryToFileNaut destination = new BinaryToFileNaut(outFilePath);
     
-    source.plug(destination);
+    BinaryToJavaCharNaut textDecoder = new BinaryToJavaCharNaut(encoding);
+    //JavaCharToUnicodeNaut charDecoder = new JavaCharToUnicodeNaut();
+    
+    source.plug(textDecoder).plug(destination);
     
     int[] meta = new int[] 
       {
@@ -77,15 +86,15 @@ public class ProtoOneMainLoop
     int step = 0;
     final int STEP_LIMIT = 99;
     
-    while(  !destination.areWeThereYet(meta,data)  &&  (step++ < STEP_LIMIT)  )
+    while(  (step++ < STEP_LIMIT) && !destination.areWeThereYet(meta,data)  )
     {
       if ( meta[ITokyoNaut.VERSION] == ITokyoNaut.VERSION_NANA)
       {
         System.out.println
           (  
              "Step: "+step+"\n\t"
-            +"Language: "+meta[ITokyoNaut.LANGUAGE]+"\n\t"
-            +"Token: "+meta[ITokyoNaut.TOKEN]+"\n\t"
+            +"Language: 0x"+Integer.toHexString(meta[ITokyoNaut.LANGUAGE])+"\n\t"
+            +"Token: 0x"+Integer.toHexString(meta[ITokyoNaut.TOKEN])+"\n\t"
             +"Left Relation: "+(meta[ITokyoNaut.LEFT]==1?"+":"")+meta[ITokyoNaut.LEFT]+"\n\t"
             +"Fragment Offset: "+meta[ITokyoNaut.OFFSET]+"\n\t"
             +"Fragment Length: "+meta[ITokyoNaut.LENGTH]+"\n\t"
@@ -94,18 +103,22 @@ public class ProtoOneMainLoop
       }
     }
     
-    source.unplug(destination);
+    source.unplug(textDecoder).unplug(destination);
   } 
 }
 
 /*
 import net.sf.tokyo.prototype1.tokyonauts.BinaryToJavaCharsNaut;
-import net.sf.tokyo.prototype1.tokyonauts.JavaCharsToUnicodeNaut;
-import net.sf.tokyo.prototype1.tokyonauts.UnicodeToCsvNaut;
-import net.sf.tokyo.prototype1.tokyonauts.XSLNaut;
-import net.sf.tokyo.prototype1.tokyonauts.CsvToUnicodeNaut;
-import net.sf.tokyo.prototype1.tokyonauts.UnicodeToJavaCharsNaut;
 import net.sf.tokyo.prototype1.tokyonauts.JavaCharsToBinaryNaut;
+
+
+import net.sf.tokyo.prototype1.tokyonauts.JavaCharsToUnicodeNaut;
+import net.sf.tokyo.prototype1.tokyonauts.UnicodeToJavaCharsNaut;
+
+import net.sf.tokyo.prototype1.tokyonauts.UnicodeToCsvNaut;
+import net.sf.tokyo.prototype1.tokyonauts.CsvToUnicodeNaut;
+
+import net.sf.tokyo.prototype1.tokyonauts.XSLNaut;
 
 
     if (args.length <3)
@@ -125,13 +138,13 @@ import net.sf.tokyo.prototype1.tokyonauts.JavaCharsToBinaryNaut;
     );
     
     ITokyoNaut readFile = new FileToBinaryNaut(inCsvFilePath);
-    ITokyoNaut parseText = new BinaryToJavaCharsNaut("UTF-8");
-    ITokyoNaut parseUnicode = new JavaCharsToUnicodeNaut();
+    ITokyoNaut parseText = new BinaryToJavaCharNaut("UTF-8");
+    ITokyoNaut parseUnicode = new JavaCharToUnicodeNaut();
     ITokyoNaut parseCSV = new UnicodeToCsvNaut();
     ITokyoNaut xslTransform = new XSLNaut(xslFilePath);
     ITokyoNaut writeCSV = new CsvToUnicodeNaut();
-    ITokyoNaut writeUnicode = new UnicodeToJavaCharsNaut();
-    ITokyoNaut writeText = new JavaCharsToBinaryNaut("UTF-8");
+    ITokyoNaut writeUnicode = new UnicodeToJavaCharNaut();
+    ITokyoNaut writeText = new JavaCharToBinaryNaut("UTF-8");
     ITokyoNaut writeFile = new BinaryToFileNaut(outCsvFilePath);
     
     ITokyoNaut spyZero = new NSpy(NSpy.STYLE_CHAR);
