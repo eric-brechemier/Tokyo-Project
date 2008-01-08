@@ -2,7 +2,7 @@
  The Tokyo Project is hosted on Sourceforge:
  http://sourceforge.net/projects/tokyo/
  
- Copyright (c) 2005-2007 Eric Bréchemier
+ Copyright (c) 2005-2008 Eric Bréchemier
  http://eric.brechemier.name
  Licensed under BSD License and/or MIT License.
  See: http://creativecommons.org/licenses/BSD/
@@ -10,7 +10,7 @@
   
 =========================================
 Title: Tokyo Project - Data Handling API 
-Last modified: 2007-12-19
+Last modified: 2008-01-05
 By: Eric Bréchemier
 Encoding: UTF-8
 =========================================
@@ -62,7 +62,7 @@ for completion:
 
   int step = 0;
   final int STEP_LIMIT = 3;
-  while( !destination.areWeThereYet(meta,data) && (step++ < STEP_LIMIT)  )
+  while( (step++ < STEP_LIMIT) && !destination.areWeThereYet(meta,data)   )
   {
     // run main loop
   }
@@ -152,6 +152,11 @@ with the remaining omitted constants from ITokyoNaut, nothing less than useful v
     public static final int TOKEN_SPARK           = 0;
     /** a value for meta[TOKEN] - in LANGUAGE_BINARY, a fragment of binary data carried in "data" buffer */
     public static final int TOKEN_BINARY          = 1;
+    /** a value for meta[{@link #TOKEN}] - in {@link #LANGUAGE_BINARY}, a remaining fragment of binary data carried back in "data" buffer.
+        The next binary fragment shall incorporate this remain, starting at meta[{@link #OFFSET}], and 
+        extend it with additional data incrementing meta[{@link #LENGTH}] to report the total length.
+    */
+    public static final int TOKEN_REMAIN          = 2;
     
 // Values:
 //   in meta[LANGUAGE] = LANGUAGE_BINARY
