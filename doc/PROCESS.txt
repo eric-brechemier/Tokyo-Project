@@ -2,7 +2,7 @@
  The Tokyo Project is hosted on Sourceforge:
  http://sourceforge.net/projects/tokyo/
  
- Copyright (c) 2005-2007 Eric Bréchemier
+ Copyright (c) 2005-2008 Eric Bréchemier
  http://eric.brechemier.name
  Licensed under BSD License and/or MIT License.
  See: http://creativecommons.org/licenses/BSD/
@@ -10,7 +10,7 @@
 
 ==========================================
 Title: Tokyo Project - Process Definition
-Last modified: 2007-12-19
+Last modified: 2008-01-08
 By: Eric Bréchemier
 Encoding: UTF-8
 ==========================================
@@ -116,7 +116,7 @@ ITokyoNaut#areWeThereYet() javadoc:
       int step = 0;
       final int STEP_LIMIT = 99;
       
-      while(  !destination.areWeThereYet(meta,data)  &&  (step++ < STEP_LIMIT)  )
+      while(  (step++ < STEP_LIMIT) && !destination.areWeThereYet(meta,data)  )
       {
         if ( meta[ITokyoNaut.VERSION] == ITokyoNaut.VERSION_NANA)
         {
@@ -140,7 +140,7 @@ I now get an error at compiling because destination is not defined:
           cannot find symbol
   [javac] symbol  : variable destination
   [javac] location: class net.sf.tokyo.prototype1.ProtoOneMainLoop
-  [javac]     while(  !destination.areWeThereYet(meta,data)  &&  (step++ < STEP_LIMIT)  )
+  [javac]     while(  (step++ < STEP_LIMIT) && !destination.areWeThereYet(meta,data)  )
 
 This is because we still have no TokyoNaut and destination has not been initialized.
 To pass this step, we will create two TokyoNaut classes with a null implementation, import them here,
@@ -215,7 +215,7 @@ plug them together before the main loop, and unplug them after. Here is the resu
       int step = 0;
       final int STEP_LIMIT = 99;
       
-      while(  !destination.areWeThereYet(meta,data)  &&  (step++ < STEP_LIMIT)  )
+      while(  (step++ < STEP_LIMIT) && !destination.areWeThereYet(meta,data)  )
       {
         if ( meta[ITokyoNaut.VERSION] == ITokyoNaut.VERSION_NANA)
         {
@@ -584,9 +584,248 @@ Stage 3 was quite long, you can now relax and have a break, I certainly will mys
                       =#= Stage 4: Four TokyoNauts manage Character Encoding =#=
 ===================================================================================================
 
+Let's go back to work. I personnaly took a few weeks break ;) What about you?
+Everything we are dealing with until this point is a bunch of bytes, you can say plain old binary data.
+We now want to make sense and distinguish the characters out of the data. Back in ye ol' days, the
+problem was a no-brainer: 1 byte = 1 character, that's ASCII. But now in 2008, computer makers, as
+you as a software programmer, are more aware of internationalization issues, and have fully understood
+that thousands of chinese or japanese characters definitely cannot fit in the 256 values of one byte.
 
+So here comes Unicode, a worlwide standard that defines a numeric value (or code point) to each
+and every known character in current and past languages of the world (with more in mind). Of course
+Unicode values do not fit into a single byte. So we will use here an int value, worth 4 bytes of data,
+which is enough for all Unicode values with a comfortable margin (at least for now, one byte in ASCII 
+used to look comfortable as well at one time...).
+
+Now as a matter of fact, this Unicode value is not written as if in files at the byte level, because
+software engineer are clever people who took into account backward-compatibility with ASCII, and tried
+to optimize the size of files based on the fact that the most frequent characters should have the smaller
+representation. And since your mileage may vary based on the language you are speaking and writing the
+most, different encodings have been defined for character values, with some being more popular in Western
+countries as US-ASCII or ISO-8859-1, while Shift_JIS or BIG5 would be more popular in Japan and China
+because they can actually represent Japanese and Chinese while US-ASCII and ISO-8859-1 cannot. If you have 
+a look at your web browser, there is a menu that allows you to select the encoding of the current page.
+If you change this value from the auto-detect mode, the text will change, and may end up looking like
+garbage if you choose an encoding very foreign with respect to the text of the web page. My browser
+groups some of these encodings in a "Unicode" category, which includes:
+ * Unicode (UTF-8)
+ * Unicode (UTF-16 Little Endian)
+ * Unicode (UTF-16 Big Endian)
+ * Unicode (UTF-32 Little Endian)
+ * Unicode (UTF-32 Big Endian)
+ * Unicode (UTF-7)
+
+These encodings do not define different versions of Unicode, they have in common that they can store
+most if not all unicode values, using variable length encoding algorithms, that you can say are quite 
+clever compared to the fixed length encoding of ASCII on a single byte. The difference between these 
+different algorithms, or encodings, is the minimum number of bits required for a single character.
+In ASCII both the minimum and maximum size is 1 byte or 8 bits, so this would be ASCII-8 in a way :)
+For ASCII characters, which have a low codepoint, UTF-8 will use 8 bits, UTF-16 16 bits, UTF-32 
+32 bits while UTF-7 would use only 7. The distinction between Little Endian and Big Endian is about 
+a simple matter of taste: which byte comes first, is it the most significant as in the way we write 
+decimal numbers, where the 3 on the left of 3745 weights much more than the 5 on the right, or the 
+other way round. This is made configurable in UTF-* files with the use of the special BOM character 
+or Byte-Order-Mark, used as the first byte sequence, which is read differently in LE and BE, and so 
+you can decide which encoding was applied.
+
+You may now know a little more about character encoding, and why it actually matters (well, it 
+certainly does).
+
+Since Java evolved in this world in transformation, it took into account from the beginning this
+difference between byte and character, and used a variant of UTF-16 encoding to store unicode values
+as characters. As time shows, the move was not bold enough however, since Java only allocated 2 bytes 
+to a char value, which used to be enough for Unicode values defined at that time, but no longer is 
+as some require more than 2 bytes or 16 bits (version 3.2 of Unicode already defined "30,000 more 
+characters than can be squeezed into two bytes" [1]). These characters have nothing special except that 
+they were late to the party, but they have now a special status in Java by design, since they cannot 
+be represented in a single char value. So they are called "surrogate" characters, and they are represented 
+with a pair of char values, which is, exactly, worth 4 bytes or an int value.
+
+[1] 10 Reasons We Need Java 3.0
+2002-07-31, by Elliotte Rusty Harold
+http://www.onjava.com/pub/a/onjava/2002/07/31/java3.html
+
+If we take the example of the "surrogate character" 2F81A mentionned in the documentation of the Java
+Character class, it will be represented in Java as a pair of 16-bit char values, while in the Tokyo
+Project it is really a single character Token, with value 0x2F81A.
+
+These so-called "surrogate pairs" require some specific handling in programs, some special tests in 
+every code managing characters, like a text editor, or they will get it wrong and consider each part
+as a single character (which they aren't). And sadly, most text editors in Java do get it wrong, and
+display surrogate pairs as two characters, or like the one I am currently using, a character that takes
+two moves of the right arrow to get the cursor moving...
+
+All this to tell you why I decided not to rely on Java characters, but use integer values instead, 
+corresponding to the Unicode code point. This is the reason why if you have a look at the ITokyoNaut
+interface documentation, and you check the common constant values defined for LANGUAGE, you will find
+LANGUAGE_BINARY, LANGUAGE_UNICODE_TEXT and LANGUAGE_ERROR, no mention of these Java characters. This
+way the basic way to manipulate character tokens in the Tokyo Project is to manipulate tokens in the
+language LANGUAGE_UNICODE_TEXT, which does not include a complete list of allowed values, because
+it's been already done by Unicode: each token code in this language is an integer Unicode code point.
+
+But Java of course features a whole lot of utility classes that help you perform the conversion
+from binary to characters and the contrary. For this prototype, I would like to keep the best of
+both worlds, i.e. reuse this code made available to me (I don't want to rewrite one of the converters,
+because I once wrote that kind of code, and it is a real pain) while throwing away the flawness of
+Java characters.
+
+In order to do that, I will chain two new TokyoNauts, the first one performing the conversion from
+binary to Java characters, let's call it BinaryToJavaCharNaut based on chosen character encoding,
+while the second, let's call it JavaCharToUnicodeNaut will output the useful character tokens with
+plain Unicode code points.
+
+As you notice, the combination of BinaryToJavaCharNaut and JavaCharToUnicodeNaut is equivalent to
+a single BinaryToUnicodeNaut (and we could do it that way, but it's just simpler in two steps).
+
+Remember these "surrogate pairs" we mentionned before? One big responsibility of the 
+JavaCharToUnicodeNaut is to combine them into a single Unicode token, while for other characters,
+it simply translates the char value to Unicode int code point.
+
+The processing in the two TokyoNauts is illustrated below:
+
+  // In BinaryToJavaCharNaut:
+  public boolean areWeThereYet(int[] meta, byte[] data)
+  {
+    if ( super.areWeThereYet(meta,data) || _decoder==null || _outChars==null )
+      return true;
+    
+    do
+    {
+      if (  _isUnderflow  &&  ( !_outChars.hasRemaining() )  )
+      {
+        if ( _inBytes!=null && _inBytes.hasRemaining() )
+        {
+          meta[LANGUAGE]=LANGUAGE_BINARY;
+          meta[TOKEN]=TOKEN_REMAIN;
+          meta[OFFSET]=0;
+          meta[LENGTH]=_inBytes.remaining();
+          _inBytes.compact();
+        }
+        
+        if ( _src.areWeThereYet(meta,data) )
+        {
+          // Finalize
+          if (_inBytes!=null)
+          {
+            CoderResult lastResult = _decoder.decode(_inBytes,_outChars,true);
+            if ( lastResult.isError() )
+            {
+              meta[LANGUAGE]=LANGUAGE_ERROR;
+              meta[TOKEN]=0x30F;
+            }
+          }
+          return true;
+        }
+        // Skip unknown tokens
+        if ( meta[LANGUAGE]!=LANGUAGE_BINARY || meta[TOKEN]!=TOKEN_BINARY )
+          return false;
+      
+        // Load input data
+        if ( _inBytes==null || _inBytes.array()!=data )
+        {
+          _inBytes = ByteBuffer.wrap(data,meta[OFFSET],meta[LENGTH]);
+        }
+        else
+        {
+          _inBytes.position(meta[OFFSET]);
+          _inBytes.limit(meta[OFFSET]+meta[LENGTH]);
+        }
+        
+        _isUnderflow = false;
+      }
+      
+      if ( !_outChars.hasRemaining() )
+      {
+        _charStartOffset = _inBytes.position();
+        _outChars.clear(); // set full buffer as storage space, before writing
+        CoderResult decodingResult = _decoder.decode(_inBytes,_outChars,false);
+        _outChars.flip(); // flip is required before reading or checking remaining()
+        
+        if ( decodingResult.isError() )
+        {
+          meta[LANGUAGE]=LANGUAGE_ERROR;
+          meta[TOKEN]=(decodingResult.isMalformed()? 0x311 : 0x312);
+          meta[OFFSET]=_inBytes.position();
+          meta[LENGTH]=decodingResult.length();
+          _inBytes.position( _inBytes.position()+decodingResult.length() );
+          return false;
+        }
+        
+        if ( decodingResult.isUnderflow() )
+          _isUnderflow = true;
+      }
+      
+      if ( _outChars.hasRemaining() )
+      {
+        meta[LANGUAGE] = LANGUAGE_JAVA_CHAR;
+        meta[TOKEN] = _outChars.get();;
+        meta[LEFT] = LEFT_START;
+        meta[RIGHT] = RIGHT_END;
+        meta[OFFSET] = _charStartOffset;
+        meta[LENGTH] = _inBytes.position()-_charStartOffset;
+        return false;
+      }
+    }
+    while(true);
+  }
   
-  
+
+  // In JavaCharToUnicodeNaut.java
+  (PASTE CODE HERE)
+
+You can notice the introduction of a new token, TOKEN_REMAIN, used to report some data part of an
+incomplete token to the source, to be patched with more data with next delivery. The updated code
+including management of TOKEN_REMAIN in FileToBinaryNaut now looks like:
+
+  // In FileToBinaryNaut.java:
+  public boolean areWeThereYet(int[] meta, byte[] data)
+  {
+    if ( super.areWeThereYet(meta,data) || _in==null )
+      return true;
+    
+    int writeOffset;
+    int writeLength;
+    
+    if (meta[TOKEN]==TOKEN_REMAIN)
+    {
+      writeOffset = meta[LENGTH];
+      writeLength = data.length-writeOffset;
+    }
+    else
+    {
+      writeOffset = 0;
+      writeLength = data.length;
+    }
+    
+    try
+    {
+      if ( _in.available()==0 )
+        return true;
+      
+      int bytesRead = _in.read(data,writeOffset,writeLength);
+      
+      meta[OFFSET] = 0;
+      meta[LENGTH] = (bytesRead==-1? writeOffset : writeOffset+bytesRead);
+      
+      meta[LEFT] = (meta[TOKEN]==TOKEN_SPARK? LEFT_START: LEFT_CONTINUED);
+      meta[RIGHT] = (_in.available()==0? RIGHT_END : RIGHT_CONTINUED);
+      
+      meta[LANGUAGE] = LANGUAGE_BINARY;
+      meta[TOKEN] = TOKEN_BINARY;
+    }
+    catch(Exception e)
+    {
+      System.err.println("Error in FileToBinaryNaut#areWeThereYet(): "+e);
+      meta[LANGUAGE]=LANGUAGE_ERROR;
+      meta[TOKEN]=0x101;
+      return true;
+    }
+    
+    return false;
+  }
+
+
+
 ===================================================================================================
                                         ~ The End ~
 ===================================================================================================
