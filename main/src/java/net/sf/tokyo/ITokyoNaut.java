@@ -2,7 +2,7 @@
  The Tokyo Project is hosted on Sourceforge:
  http://sourceforge.net/projects/tokyo/
  
- Copyright (c) 2005-2007 Eric Bréchemier
+ Copyright (c) 2005-2008 Eric Bréchemier
  http://eric.brechemier.name
  Licensed under BSD License and/or MIT License.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -180,6 +180,11 @@ public interface ITokyoNaut
       public static final int TOKEN_SPARK           = 0;
       /** a value for meta[{@link #TOKEN}] - in {@link #LANGUAGE_BINARY}, a fragment of binary data carried in "data" buffer */
       public static final int TOKEN_BINARY          = 1;
+      /** a value for meta[{@link #TOKEN}] - in {@link #LANGUAGE_BINARY}, a remaining fragment of binary data carried back in "data" buffer.
+          The next binary fragment shall incorporate this remain, starting at meta[{@link #OFFSET}], and 
+          extend it with additional data incrementing meta[{@link #LENGTH}] to report the total length.
+      */
+      public static final int TOKEN_REMAIN          = 2;
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   
@@ -298,7 +303,7 @@ byte[] data = new byte[10];
 int step = 0;
 final int STEP_LIMIT = 99;
 
-while(  !destination.areWeThereYet(meta,data)  &&  (step++ < STEP_LIMIT)  )
+while(  (step++ < STEP_LIMIT)  &&  !destination.areWeThereYet(meta,data)  )
 {
   if ( meta[ITokyoNaut.VERSION] == ITokyoNaut.VERSION_NANA)
   {
@@ -367,7 +372,8 @@ Step: 3
    *     <li>
    *       <strong>Filter</strong> - a regular {@link net.sf.tokyo.ITokyoNaut TokyoNaut} in the middle 
    *       of the chain, filtering received events and inserting new events in meta based on patterns
-   *       identified, without any modification to the data buffer.
+   *       identified, without any modification to the data buffer but compacting of remaining bytes
+   *       at the start of the buffer, signalled with {@link #TOKEN_REMAIN}.
    *     </li>
    *     <li>
    *       <strong>Destination</strong> - the last {@link net.sf.tokyo.ITokyoNaut TokyoNaut} in the chain, 
@@ -411,7 +417,7 @@ Step: 3
    *        <ul>
    *          <li><code>meta[{@link #VERSION}] = {@link #VERSION_NANA}</code></li>
    *          <li><code>meta[{@link #LANGUAGE}] = ( {@link #LANGUAGE_BINARY} | {@link #LANGUAGE_UNICODE_TEXT} | {@link #LANGUAGE_ERROR} | * )</code></li>
-   *          <li><code>meta[{@link #TOKEN}] = ( {@link #TOKEN_SPARK} | {@link #TOKEN_BINARY} | *)</code></li>
+   *          <li><code>meta[{@link #TOKEN}] = ( {@link #TOKEN_SPARK} | {@link #TOKEN_BINARY} | {@link #TOKEN_REMAIN} | *)</code></li>
    *          <li><code>meta[{@link #LEFT}] = ( {@link #LEFT_START} | {@link #LEFT_CONTINUED} )</code></li>
    *          <li><code>meta[{@link #OFFSET}] in [0;data.length[</code></li>
    *          <li><code>meta[{@link #LENGTH}] in [0;data.length]</code></li>
@@ -424,11 +430,20 @@ Step: 3
    *       </p>
    * @param data a result buffer carrying binary data fragments corresponding to tokens described in meta. 
    *       <p>
+   *       This buffer must be at least 4 bytes long, in order to simplify handling of character streams 
+   *       where the length of a single Unicode character is typically up to 4 bytes long. By compacting
+   *       an incomplete character at the start of the data buffer and signalling it with {@link #TOKEN_REMAIN},
+   *       more bytes can be read from the source to complete this character. This mechanism allows to
+   *       implement character alignment without the need to allocate a secondary buffer.
+   *       </p>
+   *       <p>
    *        Current fragment runs from <code>meta[{@link #OFFSET}]</code> to <code>meta[{@link #LENGTH}]</code>. 
    *        When the length is null, no data is available in current buffer.
    *       </p>
    *       <p>
-   *        If data is null, or if the start offset (=offset) or the end offset (=offset+length) is 
+   *        If data is null, less than 4 bytes long, 
+   *        or if the start offset (<code>=meta[{@link #OFFSET}]</code>)
+   *        or the end offset (<code>=meta[{@link #OFFSET}]+meta[{@link #LENGTH}]</code>) is 
    *        outside the bounds of data array, {@link #areWeThereYet(int[],byte[]) areWeThereYet()}  
    *        optionally signals an error by setting <code>meta[{@link #LANGUAGE}] = {@link #LANGUAGE_ERROR}</code> 
    *        and an error code of its choice to <code>meta[{@link #TOKEN}]</code> then returns true.
