@@ -45,24 +45,18 @@ import net.sf.tokyo.prototype1.tokyonauts.NCommonBase;
 
 
 /**
- * Null implementation of ITokyoNaut interface.<br/>
+ * TokyoNaut creating tokens of binary buffer from data read in a file.<br/>
  *
- * <p>
- * Does nothing and if used without boundary will run in a main loop forever.
- * This source code can be used as a base for TokyoNaut implementations.
- * </p>
  */
 public class FileToBinaryNaut extends NCommonBase implements ITokyoNaut
 {
   protected FileInputStream _in;
-  protected boolean _isStart;
   
   public FileToBinaryNaut(String filePath)
   {
     try 
     {
       _in = new FileInputStream(filePath);
-      _isStart = true;
     }
     catch(Exception e)
     {
@@ -74,22 +68,36 @@ public class FileToBinaryNaut extends NCommonBase implements ITokyoNaut
   {
     if ( super.areWeThereYet(meta,data) || _in==null )
       return true;
-      
-    meta[LANGUAGE] = LANGUAGE_BINARY;
-    meta[TOKEN] = TOKEN_BINARY;
-    meta[LEFT] = (_isStart? LEFT_START: LEFT_CONTINUED);
-    _isStart = false;
-    meta[OFFSET] = 0;
-    meta[LENGTH] = data.length;
+    
+    int writeOffset;
+    int writeLength;
+    
+    if (meta[TOKEN]==TOKEN_REMAIN)
+    {
+      writeOffset = meta[LENGTH];
+      writeLength = data.length-writeOffset;
+    }
+    else
+    {
+      writeOffset = 0;
+      writeLength = data.length;
+    }
     
     try
     {
       if ( _in.available()==0 )
         return true;
       
-      int bytesRead = _in.read(data,meta[OFFSET],meta[LENGTH]);
-      meta[LENGTH] = (bytesRead==-1? 0 : bytesRead);
+      int bytesRead = _in.read(data,writeOffset,writeLength);
+      
+      meta[OFFSET] = 0;
+      meta[LENGTH] = (bytesRead==-1? writeOffset : writeOffset+bytesRead);
+      
+      meta[LEFT] = (meta[TOKEN]==TOKEN_SPARK? LEFT_START: LEFT_CONTINUED);
       meta[RIGHT] = (_in.available()==0? RIGHT_END : RIGHT_CONTINUED);
+      
+      meta[LANGUAGE] = LANGUAGE_BINARY;
+      meta[TOKEN] = TOKEN_BINARY;
     }
     catch(Exception e)
     {
@@ -112,7 +120,7 @@ public class FileToBinaryNaut extends NCommonBase implements ITokyoNaut
     }
     catch(Exception e)
     {
-      System.err.println("Error closing file in FileToBinaryNaut() "+e);
+      System.err.println("Error closing file in FileToBinaryNaut#unplug() "+e);
     }
     
     return super.unplug(foe);
