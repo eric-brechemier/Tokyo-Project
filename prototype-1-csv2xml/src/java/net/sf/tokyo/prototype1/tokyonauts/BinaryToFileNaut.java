@@ -45,12 +45,8 @@ import net.sf.tokyo.prototype1.tokyonauts.NCommonBase;
 
 
 /**
- * Null implementation of ITokyoNaut interface.<br/>
+ * TokyoNaut writing a file from tokens carrying binary buffers.<br/>
  *
- * <p>
- * Does nothing and if used without boundary will run in a main loop forever.
- * This source code can be used as a base for TokyoNaut implementations.
- * </p>
  */
 public class BinaryToFileNaut extends NCommonBase implements ITokyoNaut
 {
@@ -104,7 +100,7 @@ public class BinaryToFileNaut extends NCommonBase implements ITokyoNaut
     }
     catch(Exception e)
     {
-      System.err.println("Error closing file in NWriteFile#unplug() "+e);
+      System.err.println("Error closing file in BinaryToFileNaut#unplug() "+e);
     }
     
     return super.unplug(foe);
