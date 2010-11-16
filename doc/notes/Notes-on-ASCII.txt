@@ -1,0 +1,83 @@
+Could use ASCII control 
+- FS, GS, RS, US for CSV-like handling
+- SO, SI for XML Pop (based on stacks)
+
+See 
+Understanding ASCII Codes
+http://www.nadcomm.com/ascii_code.htm
+
+SO - Shift Out for Pop - 
+SI - Shift In for Push - 
+
+DOCUMENT ::= SI '/' (COMMENT|PI)* ELEMENT (COMMENT|PI)* SO
+COMMENT ::= SI '!' UXCHARS SO
+PI ::= SI '?' /* Name */ UXCHARS TEXT SO
+TEXT ::= SI '.' UXCHARS SO
+ELEMENT ::= PREFIXELEMENT | NOPREFIXELEMENT
+PREFIXELEMENT ::= SI ':' NCNAME NOPREFIXELEMENT SO
+NOPREFIXELEMENT ::= SI '<' NCNAME NAMESPACE* ATTRIBUTE* (COMMENT|PI|ELEMENT|TEXT)* SO
+NAMESPACE ::= PREFIXNAMESPACE | NOPREFIXNAMESPACE
+PREFIXNAMESPACE ::= SI ':' NCNAME NOPREFIXNAMESPACE SO 
+NOPREFIXNAMESPACE ::= SI '#' UXCHARS SO
+ATTRIBUTE ::= PREFIXATTRIBUTE | NOPREFIXATTRIBUTE
+PREFIXATTRIBUTE ::= SI ':' NCNAME NOPREFIXATTRIBUTE SO
+NOPREFIXATTRIBUTE ::= SI '@' NCNAME TEXT SO   
+NCNAME ::= UXCHARS excepted ':'
+UXCHARS ::= UTF-8 Characters allowed in XML (SI/SO are not included)
+
+Typical CSV Document as XML Pop :
+
+00 SI '/'
+02  SI '<' 'file'
+    SI '#' 'http://tokyo.sf.net/prototype1/csv' SO
+    SI '<' 'line'
+      SI '<' 'country'
+        SI '.' 'Japan' SO
+      SO
+      SI '<' 'capital'
+        SI '.' 'Tokyo' SO
+      SO
+      SI '<' 'continent'
+        SI '.' 'Asia' SO
+      SO
+    SO
+    SI '<' 'line'
+      SI '<' 'country'
+        SI '.' 'France' SO
+      SO
+      SI '<' 'capital'
+        SI '.' 'Paris' SO
+      SO
+      SI '<' 'continent'
+        SI '.' 'Europe' SO
+      SO
+    SO
+    SI '<' 'line'
+      SI '<' 'country'
+        SI '.' 'New Zealand' SO
+      SO
+      SI '<' 'capital'
+        SI '.' 'Wellington' SO
+      SO
+      SI '<' 'continent'
+        SI '.' 'Oceania' SO
+      SO
+    SO
+  SO
+SO
+
+SI '<' Element
+SI '@' Attribute
+SI '.' Text Node or Text content of Attribute, Processing Instruction, Comment...
+SI ':' Namespace node
+SI '?' Processing Instruction node
+
+http://en.wikipedia.org/wiki/ASCII
+http://en.wikipedia.org/wiki/UTF-8
+http://www.w3.org/TR/2006/REC-xml-20060816/#NT-Char
+
+Required Escaping for Serialization:
+- for comments: 
+  '--' is not allowed to appear within comment
+  comment cannot end with '--->'
+Comment	   ::=   	'<!--' ((Char - '-') | ('-' (Char - '-')))* '-->'
