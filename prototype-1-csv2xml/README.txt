@@ -1,8 +1,8 @@
 ==================================================================================
- The Tokyo Project is hosted on Sourceforge:
- http://sourceforge.net/projects/tokyo/
+ The Tokyo Project is hosted on GitHub:
+ https://github.com/eric-brechemier/Tokyo-Project
  
- Copyright (c) 2005-2007 Eric BrÃ©chemier
+ Copyright (c) 2005-2007 Eric Bréchemier
  http://eric.brechemier.name
  Licensed under BSD License and/or MIT License.
  See: http://creativecommons.org/licenses/BSD/
@@ -11,7 +11,7 @@
 =========================================================
 Title: Tokyo Project's Prototype 1 (csv2xml) README file
 Last modified: 2007-12-19
-By: Eric BrÃ©chemier
+By: Eric Bréchemier
 Encoding: UTF-8
 =========================================================
 

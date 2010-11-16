@@ -17,8 +17,8 @@ A simple business case is the transformation of non-XML documents to XML and bac
 (anything-to-xml-to-anything). Therefore, this project may also prove useful to manage 
 binary documents created by commercial applications, as long as their file format is available.
 
-The Tokyo Project is hosted on Sourceforge:
-http://sourceforge.net/projects/tokyo/
+The Tokyo Project is hosted on GitHub:
+https://github.com/eric-brechemier/Tokyo-Project
 
 Copyright (c) 2005-2007 Eric Bréchemier
 http://eric.brechemier.name
