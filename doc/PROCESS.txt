@@ -1,6 +1,6 @@
 ==================================================================================
- The Tokyo Project is hosted on Sourceforge:
- http://sourceforge.net/projects/tokyo/
+ The Tokyo Project is hosted on GitHub:
+ https://github.com/eric-brechemier/Tokyo-Project
  
  Copyright (c) 2005-2008 Eric Bréchemier
  http://eric.brechemier.name
@@ -10,7 +10,7 @@
 
 ==========================================
 Title: Tokyo Project - Process Definition
-Last modified: 2008-01-08
+Last modified: 2008-02-17
 By: Eric Bréchemier
 Encoding: UTF-8
 ==========================================
@@ -44,7 +44,8 @@ Encoding: UTF-8
   
 - an XML serializer implements some XML Serializer API (DOM,XML Pull,StAX...).
   Applications often do not create XML data directly, but through the provided API.
-  Some applications create XML data directly - this data will have to be converted in a second step.
+  Some applications create XML data directly at the text level, with a high risk of producing non-xml
+  i.e. not well-formed xml.
     
 - the structure of an XML document is explicit, it uses the same syntax for all XML documents,
   no matter which grammar/vocabulary they use. Parsers can process this data without any knowledge
@@ -58,10 +59,11 @@ applied to the first prototype: How to sort CSV records using XSLT.
 
 We will grow a working prototype step by step, using an iterative process. We will start with a basic
 chain of two TokyoNauts performing a file copy by transferring buffers from a Source to a Destination,
-then insert more TokyoNauts in pairs to handle Text encoding, CSV, SAX, and one more playing the role
-of a Bridge for XSLT Transformation.
+then insert more TokyoNauts in pairs to handle UTF-8 Text encoding, CSV, SAX, and a final one playing 
+the role of a Bridge for XSLT Transformation.
 
-You can refer to the files of this example in the folder "prototype-1-csv2xml" of Tokyo Project download.
+You can refer to the files of this example in the folder "prototype-1-csv2xml" of the Tokyo Project 
+download archive, or in the trunk of the source code on Subversion repository.
 
 ===================================================================================================
                       =#= Stage 1: Skeleton for the main loop =#=
@@ -94,37 +96,30 @@ For the first version of the main loop, we will start with two TokyoNauts:
 We'll need:
   - code to set up the chain of two TokyoNauts,
   - main loop code to run the processing
-  - code to unchain the TokyoNauts and free ressources
   - one class for the first TokyoNaut: FileToBinaryNaut (reading file into buffers of binary data)
   - one class for the last TokyoNaut: BinaryToFileNaut (writing file from buffers of binary data)
 
-Let's go! As a starter, I copy and paste the code sample for the main loop featured in the 
+Let's go! As a starter, let's copy and paste the code sample for the main loop featured in the 
 ITokyoNaut#areWeThereYet() javadoc:
 
   public class ProtoOneMainLoop
   {
     public static void main(String[] args)
     {
-      int[] meta = new int[] 
-        {
-          ITokyoNaut.VERSION_NANA, 
-          ITokyoNaut.LANGUAGE_BINARY, ITokyoNaut.TOKEN_SPARK,
-          ITokyoNaut.LEFT_START, 0, 0, ITokyoNaut.RIGHT_END
-        };
-      byte[] data = new byte[10];
+      int[] meta = new int[7];
       
       int step = 0;
       final int STEP_LIMIT = 99;
       
-      while(  (step++ < STEP_LIMIT) && !destination.areWeThereYet(meta,data)  )
+      while(  (step++ < STEP_LIMIT)  &&  !destination.areWeThereYet(chain,chain.length-1,meta)  )
       {
         if ( meta[ITokyoNaut.VERSION] == ITokyoNaut.VERSION_NANA)
         {
           System.out.println
             (  
                "Step: "+step+"\n\t"
-              +"Language: "+meta[ITokyoNaut.LANGUAGE]+"\n\t"
-              +"Token: "+meta[ITokyoNaut.TOKEN]+"\n\t"
+              +"Language: 0x"+Integer.toHexString(meta[ITokyoNaut.LANGUAGE])+"\n\t"
+              +"Token: 0x"+Integer.toHexString(meta[ITokyoNaut.TOKEN])+"\n\t"
               +"Left Relation: "+(meta[ITokyoNaut.LEFT]==1?"+":"")+meta[ITokyoNaut.LEFT]+"\n\t"
               +"Fragment Offset: "+meta[ITokyoNaut.OFFSET]+"\n\t"
               +"Fragment Length: "+meta[ITokyoNaut.LENGTH]+"\n\t"
@@ -135,20 +130,34 @@ ITokyoNaut#areWeThereYet() javadoc:
     } 
   }
   
-I now get an error at compiling because destination is not defined:
-  [javac] (...)/tokyo/trunk/prototype-1-csv2xml/src/java/net/sf/tokyo/prototype1/ProtoOneMainLoop.java:58: 
-          cannot find symbol
+I now get 3 errors at compiling because chain and destination are not defined:
+  [javac] Compiling 1 source file to /home/enz/projects/tokyo/trunk/prototype-1-csv2xml/out/class
+  [javac] /home/enz/projects/tokyo/trunk/prototype-1-csv2xml/src/java/net/sf/tokyo/prototype1/ProtoOneMainLoop.java:61: cannot find symbol
+  [javac] symbol  : variable chain
+  [javac] location: class net.sf.tokyo.prototype1.ProtoOneMainLoop
+  [javac]     while(  (step++ < STEP_LIMIT)  &&  !destination.areWeThereYet(chain,chain.length-1,meta)  )
+  [javac]                                                                   ^
+  [javac] /home/enz/projects/tokyo/trunk/prototype-1-csv2xml/src/java/net/sf/tokyo/prototype1/ProtoOneMainLoop.java:61: cannot find symbol
+  [javac] symbol  : variable chain
+  [javac] location: class net.sf.tokyo.prototype1.ProtoOneMainLoop
+  [javac]     while(  (step++ < STEP_LIMIT)  &&  !destination.areWeThereYet(chain,chain.length-1,meta)  )
+  [javac]                                                                         ^
+  [javac] /home/enz/projects/tokyo/trunk/prototype-1-csv2xml/src/java/net/sf/tokyo/prototype1/ProtoOneMainLoop.java:61: cannot find symbol
   [javac] symbol  : variable destination
   [javac] location: class net.sf.tokyo.prototype1.ProtoOneMainLoop
-  [javac]     while(  (step++ < STEP_LIMIT) && !destination.areWeThereYet(meta,data)  )
-
-This is because we still have no TokyoNaut and destination has not been initialized.
+  [javac]     while(  (step++ < STEP_LIMIT)  &&  !destination.areWeThereYet(chain,chain.length-1,meta)  )
+  [javac]                                         ^
+  [javac] 3 errors
+  
+This is because we still have no TokyoNaut and chain and destination have not been initialized.
 To pass this step, we will create two TokyoNaut classes with a null implementation, import them here,
 initialize them and recompile...
 
-I know of a Null TokyoNaut implementation, part of the main package (in the "test" section).
-It is not part of the Tokyo API, but I can copy and paste this file as a template for my two new TokyoNauts.
-So I copy main/test/java/net/sf/tokyo/test/NullTokyoNaut.java
+It happens that I already have a Null TokyoNaut implementation at hand, part of the "test" section
+of the main package: main/test/java/net/sf/tokyo/test/NullTokyoNaut.java
+
+It is not part of the Tokyo API library, but I can copy and paste this file as a template for my two 
+new TokyoNauts. So I copy main/test/java/net/sf/tokyo/test/NullTokyoNaut.java
 to prototype-1-csv2xml/src/java/net/sf/tokyo/prototype1/tokyonauts/FileToBinaryNaut.java 
 and prototype-1-csv2xml/src/java/net/sf/tokyo/prototype1/tokyonauts/BinaryToFileNaut.java
 then change the class name and package name to match the file and location.
@@ -163,77 +172,47 @@ Here is what the FileToBinaryNaut looks like:
    * Null implementation of ITokyoNaut interface.<br/>
    *
    * <p>
-   * Does nothing and if used without boundary will run in a main loop forever.
-   * This source code can be used as a base for TokyoNaut implementations.
+   * Does nothing and never terminates which means that if used without boundary, 
+   * it will run in a main loop forever.
+   * This source code can be used as a starting point for TokyoNaut implementations.
    * </p>
    */
   public class FileToBinaryNaut implements ITokyoNaut
   {
-    public boolean areWeThereYet(int[] meta, byte[] data)
+    protected byte[] _nullData = new byte[0];
+    
+    public boolean areWeThereYet(ITokyoNaut[] chain, int position, int[] meta)
     {
+      meta[VERSION] = VERSION_NANA;
+      meta[LANGUAGE] = LANGUAGE_BINARY;
+      meta[TOKEN] = TOKEN_BINARY;
+      meta[LEFT] = LEFT_START;
+      meta[OFFSET] = 0;
+      meta[LENGTH] = 0;
+      meta[RIGHT] = RIGHT_END;
+      
+      int destination = position+1;
+      if (destination<chain.length)
+        chain[destination].notYet(this,_nullData);
       return false;
     }
     
-    public ITokyoNaut plug(ITokyoNaut friend)
+    public void notYet(ITokyoNaut source, byte[] data)
     {
-      return friend;
     }
     
-    public ITokyoNaut unplug(ITokyoNaut foe)
-    {
-      return foe;
-    }
   }
 
-I now import the two TokyoNauts in ProtoOneMainLoop, initialize two instances, source and destination,
-plug them together before the main loop, and unplug them after. Here is the result:
-
-  package net.sf.tokyo.prototype1;
-
-  import net.sf.tokyo.ITokyoNaut;
+I now import the two TokyoNauts in ProtoOneMainLoop, and add the code below at the start of the main()
+method to initialize the two instances, source and destination, and plug them together in the chain array:
   
-  import net.sf.tokyo.prototype1.tokyonauts.FileToBinaryNaut;
-  import net.sf.tokyo.prototype1.tokyonauts.BinaryToFileNaut;
-  
-  public class ProtoOneMainLoop
+  public static void main(String[] args)
   {
-    public static void main(String[] args)
-    {
-      FileToBinaryNaut source = new FileToBinaryNaut();
-      BinaryToFileNaut destination = new BinaryToFileNaut();
-      
-      source.plug(destination);
-      
-      int[] meta = new int[] 
-        {
-          ITokyoNaut.VERSION_NANA, 
-          ITokyoNaut.LANGUAGE_BINARY, ITokyoNaut.TOKEN_SPARK,
-          ITokyoNaut.LEFT_START, 0, 0, ITokyoNaut.RIGHT_END
-        };
-      byte[] data = new byte[10];
-      
-      int step = 0;
-      final int STEP_LIMIT = 99;
-      
-      while(  (step++ < STEP_LIMIT) && !destination.areWeThereYet(meta,data)  )
-      {
-        if ( meta[ITokyoNaut.VERSION] == ITokyoNaut.VERSION_NANA)
-        {
-          System.out.println
-            (  
-               "Step: "+step+"\n\t"
-              +"Language: "+meta[ITokyoNaut.LANGUAGE]+"\n\t"
-              +"Token: "+meta[ITokyoNaut.TOKEN]+"\n\t"
-              +"Left Relation: "+(meta[ITokyoNaut.LEFT]==1?"+":"")+meta[ITokyoNaut.LEFT]+"\n\t"
-              +"Fragment Offset: "+meta[ITokyoNaut.OFFSET]+"\n\t"
-              +"Fragment Length: "+meta[ITokyoNaut.LENGTH]+"\n\t"
-              +"Right Relation: "+meta[ITokyoNaut.RIGHT]+"\n"
-            );
-        }
-      }
-      
-      source.unplug(destination);
-    } 
+    FileToBinaryNaut source = new FileToBinaryNaut();
+    BinaryToFileNaut destination = new BinaryToFileNaut();
+    ITokyoNaut[] chain = {source, destination};
+    
+    (...) // following code unchanged
   }
 
 It not only compiles again, but also the loop runs correctly for 99 iterations then stops. 
@@ -268,7 +247,31 @@ the output of different tests:
     
     FileToBinaryNaut source = new FileToBinaryNaut(inFilePath);
     BinaryToFileNaut destination = new BinaryToFileNaut(outFilePath);
-    (...)
+    ITokyoNaut[] chain = {source, destination};
+    
+    int[] meta = new int[7];
+    
+    int step = 0;
+    final int STEP_LIMIT = 99;
+    
+    while(  (step++ < STEP_LIMIT)  &&  !destination.areWeThereYet(chain,chain.length-1,meta)  )
+    {
+      if ( meta[ITokyoNaut.VERSION] == ITokyoNaut.VERSION_NANA)
+      {
+        System.out.println
+          (  
+             "Step: "+step+"\n\t"
+            +"Language: 0x"+Integer.toHexString(meta[ITokyoNaut.LANGUAGE])+"\n\t"
+            +"Token: 0x"+Integer.toHexString(meta[ITokyoNaut.TOKEN])+"\n\t"
+            +"Left Relation: "+(meta[ITokyoNaut.LEFT]==1?"+":"")+meta[ITokyoNaut.LEFT]+"\n\t"
+            +"Fragment Offset: "+meta[ITokyoNaut.OFFSET]+"\n\t"
+            +"Fragment Length: "+meta[ITokyoNaut.LENGTH]+"\n\t"
+            +"Right Relation: "+meta[ITokyoNaut.RIGHT]+"\n"
+          );
+      }
+    }
+    
+    System.out.println("Tokyo ProtoOne completed.");
   }
 
 After adding the code in FileToBinaryNaut and BinaryToFileNaut with the new constructor (you can leave
@@ -288,7 +291,7 @@ FileOutputStream in BinaryToFileNaut:
     }
     catch(Exception e)
     {
-      System.err.println("Error in FileToBinaryNaut(): "+e);
+      System.err.println("Error opening file for input in FileToBinaryNaut(): "+e);
     }
   }
   
@@ -303,7 +306,7 @@ FileOutputStream in BinaryToFileNaut:
     }
     catch(Exception e)
     {
-      System.err.println("Error in BinaryToFileNaut(): "+e);
+      System.err.println("Error opening file for output in BinaryToFileNaut(): "+e);
     }
   }
 
@@ -314,263 +317,240 @@ Don't forget to add the imports,
   // in BinaryToFileNaut.java,
   import java.io.FileOutputStream;
 
-As you see, the processing is very similar in FileToBinaryNaut and BinaryToFileNaut, and we expect
-even more so for the implementation of the methods in the ITokyoNaut interface. Therefore, I will
-create a common superclass for the two, called NCommonBase (the "N" should remind you of the "Naut")
-and make both classes inherit from it. Since NCommonBase is not a stand-alone class that I want to
-create instance from, I will declare it abstract and leave the implementation of missing bits to
-the derived classes:
+Finally, we've just completed the plumbing, and we arrive to the core of each TokyoNaut processing,
+within areWeThereYet() method. Here is the resulting code for FileToBinaryNaut:
   
-  package net.sf.tokyo.prototype1.tokyonauts;
-
-  import net.sf.tokyo.ITokyoNaut;
-  
-  public abstract class NCommonBase implements ITokyoNaut
-  {
-  }
-
-I now declare the inheritance:
   // in FileToBinaryNaut.java,
-  public class FileToBinaryNaut extends NCommonBase implements ITokyoNaut
-  
-  // in BinaryToFileNaut.java,
-  public class BinaryToFileNaut extends NCommonBase implements ITokyoNaut
-
-Now I add code in NCommonBase, to handle limit conditions in areWeThereYet(). I also declare a
-common field _src which will hold the source TokyoNaut set after a call to plug() and unset in 
-unplug(). The code in plug() looks like magic because it reflects a dialogue between the two
-TokyoNauts (the source and destination) discussing about chicken-and-egg to decide who is the chicken,
-er.. the source, and who is the destination. The outcome is eventually that by calling
-  
-  source.plug(destination)
-  
-you actually trigger
-  
-  destination._src = source
-  
-So here is the complete code of NCommonBase (after lots of errands) including checks 
-for limit conditions (quite straightforward based on ITokyoNaut javadoc):
-
   package net.sf.tokyo.prototype1.tokyonauts;
+  
+  import java.io.FileInputStream;
   
   import net.sf.tokyo.ITokyoNaut;
   
   /**
-   * Base implementation of ITokyoNaut interface based on Version NANA.<br/>
+   * TokyoNaut reading binary tokens from a file.<br/>
    *
    * <p>
-   * Abstract class used as a base class for TokyoNaut implementations in Prototype One.
+   *   <ul>
+   *     <li><em>Role:</em> Source</li>
+   *     <li><em>Input Consumed:</em> None</li>
+   *     <li><em>Output Produced:</em>
+   *       {@link net.sf.tokyo.ITokyoNaut#TOKEN_BINARY TOKEN_BINARY} tokens 
+   *       in {@link net.sf.tokyo.ITokyoNaut#LANGUAGE_BINARY LANGUAGE_BINARY}
+   *     </li>
+   *     <li><em>Errors Produced: (* fatal errors)</em>
+   *       <ul>
+   *         <li><code>0x101*</code> - I/O error reading or checking bytes available in file</li>
+   *       </ul>
+   *     </li>
+   *   </ul>
    * </p>
    */
-  public abstract class NCommonBase implements ITokyoNaut
+  public class FileToBinaryNaut implements ITokyoNaut
   {
-    protected ITokyoNaut _src;
+    protected FileInputStream _in;
+    protected byte[] _data;
+    protected boolean _isStart;
     
-    protected NCommonBase()
+    public FileToBinaryNaut(String filePath)
     {
-      _src = null;
+      try 
+      {
+        _in = new FileInputStream(filePath);
+      }
+      catch(Exception e)
+      {
+        System.err.println("Error opening file for input in FileToBinaryNaut(): "+e);
+      }
+      
+      _isStart = true;
+      _data = new byte[10];
     }
     
-    public boolean areWeThereYet(int[] meta, byte[] data)
+    public boolean areWeThereYet(ITokyoNaut[] chain, int position, int[] meta)
     {
-      if (meta==null)
-        return true;
-        
-      if 
-        (    data==null 
-          || meta[OFFSET]<0 || meta[OFFSET]>data.length 
-          || meta[OFFSET]+meta[LENGTH]<0 || meta[OFFSET]+meta[LENGTH]>data.length 
-        )
+      meta[VERSION] = VERSION_NANA;
+      meta[LANGUAGE] = LANGUAGE_BINARY;
+      meta[TOKEN] = TOKEN_BINARY;
+      meta[LEFT] = (_isStart? LEFT_START: LEFT_CONTINUED);
+      _isStart = false;
+      meta[OFFSET] = 0;
+      meta[LENGTH] = _data.length;
+      
+      try
       {
-        meta[LANGUAGE] = LANGUAGE_ERROR;
-        meta[TOKEN] = 0xA00;
+        if ( _in.available()==0 )
+        {
+          _terminate();
+          return true;
+        }
+        
+        int bytesRead = _in.read(_data,meta[OFFSET],meta[LENGTH]);
+        meta[LENGTH] = (bytesRead==-1? 0 : bytesRead);
+        meta[RIGHT] = (_in.available()==0? RIGHT_END : RIGHT_CONTINUED);
+      }
+      catch(Exception e)
+      {
+        System.err.println("Error in FileToBinaryNaut#areWeThereYet(): "+e);
+        meta[LANGUAGE]=LANGUAGE_ERROR;
+        meta[TOKEN]=0x101;
+        _terminate();
         return true;
       }
       
+      int destination = position+1;
+      if (destination<chain.length)
+        chain[destination].notYet(this,_data);
       return false;
     }
     
-    public ITokyoNaut plug(ITokyoNaut friend)
+    protected void _terminate()
     {
-      if (friend==null)
-        return friend;
-      
-      // Source or Destination?
-      // for now, we don't know whether this is a source or a destination
-      // which will be determined by the following ping/pong exchange.
-      // This is because, for usability, the call is actually src.plug(dest)
-      // while for ease of implementation, the inside wanted relationship is
-      // dest._src = src
-      
-      // Step 1: [@source] if null or same as current source, do nothing
-      // Step 4: [@destination] _src is null and the friend param is not, so we continue
-      // Step 7: [@source] this time, _src is set, so we stop and return _src
-      // 
-      if (friend==null || friend==_src )
-        return friend;
-      
-      // Step 2: [@source] set _src to stop the recursion at Step 7,
-      //                   original source is saved in "previous", to be restored at step 11.
-      // Step 5: [@destination] set _src, which is actually the final desired effect in destination
-      ITokyoNaut previous = _src;
-      _src = friend;
-      
-      // A different behavior in source and destination:
-      // Due to the sequence,
-      // User --> source --> destination
-      //                 <--
-      //                 ...> (result)
-      //        (result) <...
-      // destination gets the result before source does, which means
-      // that the destination can detect its role because it gets ******** as result.
-      
-      // Step 3: [@source] Check the reverse associate
-        // Step 6: [@destination] Check the reverse associate
-        // Step 8: [@destination] result is received, per Step 7, result will be "this"
-      // Step 10: [@source] Check the reverse associate, per Step 9, result will be destination "friend" (not "this")
-      ITokyoNaut result = friend.plug(this);
-      
-      if ( result!=this )
+      try
       {
-        // Step 11: [@source] we received destination, different from self,
-        //                    _src is reset to previous to cancel the association process in this direction.
-        //                    (the final association is unidirectional destination-->source)
-        //                    The destination "friend" is returned to allow chained calls.
-        
-        _src = previous;
-        //System.out.println("Added: association "+this+" <-- "+friend);
-        return friend;
+        if (_in!=null)
+            _in.close();
+        _in = null;
+      }
+      catch(Exception e)
+      {
+        System.err.println("Error closing file in FileToBinaryNaut#_terminate(): "+e);
+      }
+    }
+    
+    public void notYet(ITokyoNaut source, byte[] data)
+    {
+    }
+    
+  }
+  
+You can notice that this code creates TOKEN_BINARY events, as many as required, one at a time.
+Thanks to the protected member _isStart, which I added to the class, and initialized to true in 
+the constructor, the first token has meta[LEFT] = LEFT_START and following tokens have 
+meta[LEFT] = LEFT_CONTINUED. The last token is created when no more data is available for next run;
+it has meta[RIGHT] = RIGHT_END, while preceding tokens have meta[RIGHT] = RIGHT_CONTINUED.
+This mechanism allows consuming TokyoNauts to detect the start and end of each Token produced.
+
+I also introduced a new field _data, initialized in the constructor with an array of 10 bytes; this is 
+an arbitrary length chosen quite low to make behaviors at the boundary more explicit in the context
+of this prototype. I also removed the field _nullData and created a _terminate method used to properly
+close the input file at the end of processing.
+
+In case of error while reading input, meta is filled with an error token using LANGUAGE_ERROR
+and an arbitrary error code, 0x101, unique in the context of my own prototype application.
+
+The code for BinaryToFileNaut is quite similar; the main difference lies in the fact that BinaryToFileNaut 
+relies on "source" TokyoNaut to provide input data using the notYet() callback, and terminates when no 
+more data is available:
+  
+  // in BinaryToFileNaut.java,
+  package net.sf.tokyo.prototype1.tokyonauts;
+  
+  import java.io.FileOutputStream;
+  
+  import net.sf.tokyo.ITokyoNaut;
+  
+  /**
+   * TokyoNaut writing tokens to a file.<br/>
+   *
+   * <p>
+   *   <ul>
+   *     <li><em>Role:</em> Destination</li>
+   *     <li><em>Input Consumed:</em> Any non-error token</li>
+   *     <li><em>Output Produced:</em> None</li>
+   *     <li><em>Side effect:</em> Writes all incoming data fragments to a file</li>
+   *     <li><em>Errors Produced: (* fatal errors)</em>
+   *       <ul>
+   *         <li><code>0x200*</code> - no preceding TokyoNaut available as Source</li>
+   *         <li><code>0x201</code> - data expected from source TokyoNaut was not received</li>
+   *         <li><code>0x202</code> - I/O error writing bytes in file</li>
+   *       </ul>
+   *     </li>
+   *   </ul>
+   * </p>
+   */
+  public class BinaryToFileNaut implements ITokyoNaut
+  {
+    protected byte[] _data;
+    protected FileOutputStream _out;
+    
+    public BinaryToFileNaut(String filePath)
+    {
+      try
+      {
+        _out = new FileOutputStream(filePath);
+      }
+      catch(Exception e)
+      {
+        System.err.println("Error opening file for output in BinaryToFileNaut(): "+e);
+      }
+    }
+    
+    public boolean areWeThereYet(ITokyoNaut[] chain, int position, int[] meta)
+    {
+      int source = position-1;
+      if (source<0)
+      {
+        meta[LANGUAGE]=LANGUAGE_ERROR;
+        meta[TOKEN]=0x200;
+        _terminate();
+        return true;
       }
       
-      // Step 9:  [@destination] we received self, we will return self to confirm it is the actual destination
-      return this;
-    }
-    
-    public ITokyoNaut unplug(ITokyoNaut foe)
-    {
-      if (foe!=null)
-        foe.unplug(null);
-      
-      if (foe==_src)
-        _src = null;
-      
-      return foe;
-    }
-  }
-  
-After completing NCommonBase, I can now remove the plug() method from FileToBinaryNaut and 
-BinaryToFileNaut altogether (I will stick with the default behavior...) and add finalization code
-in unplug() to close the files:
-
-  // in FileToBinaryNaut.java,
-  public ITokyoNaut unplug(ITokyoNaut foe)
-  {
-    if (foe==null || _src == null)
-      return foe;
-    
-    try
-    {
-      if (_in!=null)
-        _in.close();
-      _in = null;
-    }
-    catch(Exception e)
-    {
-      System.err.println("Error closing file in FileToBinaryNaut() "+e);
-    }
-    
-    return super.unplug(foe);
-  }
-  
-  // in BinaryToFileNaut.java,
-  public ITokyoNaut unplug(ITokyoNaut foe)
-  {
-    try
-    {
-      if (_out!=null)
-        _out.close();
-      _out = null;
-    }
-    catch(Exception e)
-    {
-      System.err.println("Error closing file in NWriteFile#unplug() "+e);
-    }
-    
-    return super.unplug(foe);
-  }
-  
-Finally, we've just completed the plumbing, and we arrive to the core of each TokyoNaut processing,
-within areWeThereYet() method. Here is the code for FileToBinaryNaut
-  
-  // in FileToBinaryNaut.java,
-  public boolean areWeThereYet(int[] meta, byte[] data)
-  {
-    if ( super.areWeThereYet(meta,data) || _in==null )
-      return true;
-      
-    meta[LANGUAGE] = LANGUAGE_BINARY;
-    meta[TOKEN] = TOKEN_BINARY;
-    meta[LEFT] = (_isStart? LEFT_START: LEFT_CONTINUED);
-    _isStart = false;
-    meta[OFFSET] = 0;
-    meta[LENGTH] = data.length;
-    
-    try
-    {
-      if ( _in.available()==0 )
+      if ( chain[source].areWeThereYet(chain,source,meta) )
+      {
+        _terminate();
         return true;
+      }
       
-      int bytesRead = _in.read(data,meta[OFFSET],meta[LENGTH]);
-      meta[LENGTH] = (bytesRead==-1? 0 : bytesRead);
-      meta[RIGHT] = (_in.available()==0? RIGHT_END : RIGHT_CONTINUED);
-    }
-    catch(Exception e)
-    {
-      System.err.println("Error in FileToBinaryNaut#areWeThereYet(): "+e);
-      meta[LANGUAGE]=LANGUAGE_ERROR;
-      meta[TOKEN]=0x101;
-      return true;
-    }
-    
-    return false;
-  }
-  
-You can notice that this code creates TOKEN_BINARY events, as many as required, the first having
-meta[LEFT] = LEFT_START, thanks to the protected member _isStart, which I added to the class, and 
-initialized to true in the constructor. The last token has meta[RIGHT] = RIGHT_END.
-
-The code for BinaryToFileNaut is quite similar; the main difference is that BinaryToFileNaut relies 
-on _source to provide input data, and terminates when no more data is available:
-  
-  // in BinaryToFileNaut.java,
-  public boolean areWeThereYet(int[] meta, byte[] data)
-  {
-    if ( super.areWeThereYet(meta,data) || _src==null || _out==null )
-      return true;
-    
-    if ( _src.areWeThereYet(meta,data) )
-      return true;
-    
-    // Skip unknown tokens
-    if ( meta[LANGUAGE]!=LANGUAGE_BINARY || meta[TOKEN]!=TOKEN_BINARY )
+      if (_data==null)
+      {
+        meta[LANGUAGE]=LANGUAGE_ERROR;
+        meta[TOKEN]=0x201;
+        return false;
+      }
+      
+      try
+      {
+        _out.write(_data,meta[OFFSET],meta[LENGTH]);
+      }
+      catch(Exception e)
+      {
+        System.err.println("Error in BinaryToFileNaut#areWeThereYet(): "+e);
+        meta[LANGUAGE]=LANGUAGE_ERROR;
+        meta[TOKEN]=0x201;
+        return false;
+      }
+      
+      int destination = position+1;
+      if (destination<chain.length)
+        chain[destination].notYet(this,_data);
       return false;
-    
-    try
-    {
-      _out.write(data,meta[OFFSET],meta[LENGTH]);
-    }
-    catch(Exception e)
-    {
-      System.err.println("Error in BinaryToFileNaut#areWeThereYet(): "+e);
-      meta[LANGUAGE]=LANGUAGE_ERROR;
-      meta[TOKEN]=0x201;
     }
     
-    return false;
+    public void notYet(ITokyoNaut source, byte[] data)
+    {
+      _data = data;
+    }
+    
+    protected void _terminate()
+    {
+      try
+      {
+        if (_out!=null)
+          _out.close();
+        _out = null;
+      }
+      catch(Exception e)
+      {
+        System.err.println("Error closing file in BinaryToFileNaut#_terminate() "+e);
+      }
+    }
+    
   }
-  
-Now if you followed me till this point, you can check the file "result.csv" created in "out/data",
-it is a carbon copy of the input file... Stage 3: Complete!
+
+Now if you followed me till this point, you can run this code and check the file "result.csv" created in 
+"out/data"; it is a carbon copy of the input file... Stage 3: Complete!
 
 ===================================================================================================
                                          ~ Break ~
@@ -586,28 +566,29 @@ Stage 3 was quite long, you can now relax and have a break, I certainly will mys
 
 Let's go back to work. I personnaly took a few weeks break ;) What about you?
 Everything we are dealing with until this point is a bunch of bytes, you can say plain old binary data.
-We now want to make sense and distinguish the characters out of the data. Back in ye ol' days, the
-problem was a no-brainer: 1 byte = 1 character, that's ASCII. But now in 2008, computer makers, as
-you as a software programmer, are more aware of internationalization issues, and have fully understood
-that thousands of chinese or japanese characters definitely cannot fit in the 256 values of one byte.
+We now want to make sense of it and extract the characters out of the binary data. Back in ye ol' days, 
+the problem was a no-brainer: in ASCII, all character values fit in 7 bits within a single byte, so you 
+could easily assume that 1 byte = 1 character. But now in 2008, computer makers, as you as a software 
+programmer, are more aware of internationalization issues, and have fully understood that thousands of 
+chinese or japanese characters definitely cannot fit in the 256 values of one byte.
 
 So here comes Unicode, a worlwide standard that defines a numeric value (or code point) to each
 and every known character in current and past languages of the world (with more in mind). Of course
 Unicode values do not fit into a single byte. So we will use here an int value, worth 4 bytes of data,
-which is enough for all Unicode values with a comfortable margin (at least for now, one byte in ASCII 
-used to look comfortable as well at one time...).
+which is enough for all Unicode values with a comfortable margin (at least in a foreseeable future, but
+who knows... one byte in ASCII used to look comfortable as well at one time...).
 
-Now as a matter of fact, this Unicode value is not written as if in files at the byte level, because
-software engineer are clever people who took into account backward-compatibility with ASCII, and tried
-to optimize the size of files based on the fact that the most frequent characters should have the smaller
-representation. And since your mileage may vary based on the language you are speaking and writing the
-most, different encodings have been defined for character values, with some being more popular in Western
-countries as US-ASCII or ISO-8859-1, while Shift_JIS or BIG5 would be more popular in Japan and China
-because they can actually represent Japanese and Chinese while US-ASCII and ISO-8859-1 cannot. If you have 
-a look at your web browser, there is a menu that allows you to select the encoding of the current page.
-If you change this value from the auto-detect mode, the text will change, and may end up looking like
-garbage if you choose an encoding very foreign with respect to the text of the web page. My browser
-groups some of these encodings in a "Unicode" category, which includes:
+Now as a matter of fact, this Unicode value is usually not written as if in files at the byte level, 
+because software engineers are clever people who took into account backward-compatibility with ASCII, 
+and tried to optimize the size of files based on the fact that the most frequent characters should have 
+the smaller representation. And since your mileage may vary based on the language you are speaking and 
+writing the most, different encodings have been defined for character values, with some being more popular 
+in Western countries as US-ASCII or ISO-8859-1, while Shift_JIS or BIG5 would be more popular in Japan and 
+China because they can actually represent Japanese and Chinese while US-ASCII and ISO-8859-1 cannot. 
+If you have a look at your web browser, there is a menu that allows you to select the encoding of the 
+current page. If you change this value from the auto-detect mode, the text will change, and may end up 
+looking like garbage if you choose an encoding very foreign with respect to the text of the web page. 
+My browser groups some of these encodings in a "Unicode" category, which includes:
  * Unicode (UTF-8)
  * Unicode (UTF-16 Little Endian)
  * Unicode (UTF-16 Big Endian)
@@ -615,31 +596,32 @@ groups some of these encodings in a "Unicode" category, which includes:
  * Unicode (UTF-32 Big Endian)
  * Unicode (UTF-7)
 
-These encodings do not define different versions of Unicode, they have in common that they can store
-most if not all unicode values, using variable length encoding algorithms, that you can say are quite 
-clever compared to the fixed length encoding of ASCII on a single byte. The difference between these 
-different algorithms, or encodings, is the minimum number of bits required for a single character.
-In ASCII both the minimum and maximum size is 1 byte or 8 bits, so this would be ASCII-8 in a way :)
-For ASCII characters, which have a low codepoint, UTF-8 will use 8 bits, UTF-16 16 bits, UTF-32 
-32 bits while UTF-7 would use only 7. The distinction between Little Endian and Big Endian is about 
-a simple matter of taste: which byte comes first, is it the most significant as in the way we write 
-decimal numbers, where the 3 on the left of 3745 weights much more than the 5 on the right, or the 
-other way round. This is made configurable in UTF-* files with the use of the special BOM character 
-or Byte-Order-Mark, used as the first byte sequence, which is read differently in LE and BE, and so 
-you can decide which encoding was applied.
+These encodings do not define different versions of Unicode, they just offer different representations 
+for the same unicode integer values. They have in common that they can represent most if not all unicode 
+values, using different variable length encoding algorithms, that you can say are quite clever compared 
+to the fixed length encoding of ASCII on a single byte. The difference between these different algorithms, 
+or encodings, is the minimum number of bits required for a single character. In ASCII both the minimum and 
+maximum size is 7 bits. On the other hand, for ASCII characters, which have a low codepoint, UTF-8 will 
+use 8 bits, UTF-16 16 bits, UTF-32 32 bits while UTF-7 would use only 7. The distinction between Little 
+Endian and Big Endian is about a simple matter of taste: which byte comes first, is it the most significant 
+as in the way we write decimal numbers, where the 3 on the left of 3745 weights much more than the 5 on the 
+right, or the other way round. The so-called endianness can be detected in UTF-* files with the use of the 
+special BOM character or Byte-Order-Mark, used as the first byte sequence, which is read differently in LE 
+and BE, and so you can decide which encoding was applied.
 
-You may now know a little more about character encoding, and why it actually matters (well, it 
-certainly does).
+You may now know a little more about character encoding, and why it actually matters (well, it certainly 
+does).
 
-Since Java evolved in this world in transformation, it took into account from the beginning this
-difference between byte and character, and used a variant of UTF-16 encoding to store unicode values
-as characters. As time shows, the move was not bold enough however, since Java only allocated 2 bytes 
-to a char value, which used to be enough for Unicode values defined at that time, but no longer is 
+Since Java evolved in this world in transformation, its specification took into account from the beginning 
+this difference between byte and character, and Java uses a variant of UTF-16 encoding to store unicode 
+values as characters. As time shows, the move was not bold enough however, since Java only allocated 
+2 bytes to a char value, which used to be enough for Unicode values defined at that time, but no longer is 
 as some require more than 2 bytes or 16 bits (version 3.2 of Unicode already defined "30,000 more 
 characters than can be squeezed into two bytes" [1]). These characters have nothing special except that 
 they were late to the party, but they have now a special status in Java by design, since they cannot 
 be represented in a single char value. So they are called "surrogate" characters, and they are represented 
-with a pair of char values, which is, exactly, worth 4 bytes or an int value.
+with a pair of char values, which is, exactly, worth 4 bytes or an int value. The concept of "surrogate
+characters" actually comes from UTF-16, being as we have seen the model for Java design in that space.
 
 [1] 10 Reasons We Need Java 3.0
 2002-07-31, by Elliotte Rusty Harold
@@ -655,7 +637,7 @@ as a single character (which they aren't). And sadly, most text editors in Java 
 display surrogate pairs as two characters, or like the one I am currently using, a character that takes
 two moves of the right arrow to get the cursor moving...
 
-All this to tell you why I decided not to rely on Java characters, but use integer values instead, 
+All this to tell you why I decided not to rely on Java characters, but to use instead integer values 
 corresponding to the Unicode code point. This is the reason why if you have a look at the ITokyoNaut
 interface documentation, and you check the common constant values defined for LANGUAGE, you will find
 LANGUAGE_BINARY, LANGUAGE_UNICODE_TEXT and LANGUAGE_ERROR, no mention of these Java characters. This
@@ -663,116 +645,258 @@ way the basic way to manipulate character tokens in the Tokyo Project is to mani
 language LANGUAGE_UNICODE_TEXT, which does not include a complete list of allowed values, because
 it's been already done by Unicode: each token code in this language is an integer Unicode code point.
 
-But Java of course features a whole lot of utility classes that help you perform the conversion
-from binary to characters and the contrary. For this prototype, I would like to keep the best of
-both worlds, i.e. reuse this code made available to me (I don't want to rewrite one of the converters,
-because I once wrote that kind of code, and it is a real pain) while throwing away the flawness of
-Java characters.
+I will now introduce two new TokyoNauts, UTF8ToUnicodeNaut and UnicodeToUTF8Naut, handling UTF-8 parsing
+to Unicode integer and UTF-8 serialization from Unicode integer.
 
-In order to do that, I will chain two new TokyoNauts, the first one performing the conversion from
-binary to Java characters, let's call it BinaryToJavaCharNaut based on chosen character encoding,
-while the second, let's call it JavaCharToUnicodeNaut will output the useful character tokens with
-plain Unicode code points.
+But first, let's refine a little bit more the main loop, to report in more details what happens
+inside and at the end of the main loop:
 
-As you notice, the combination of BinaryToJavaCharNaut and JavaCharToUnicodeNaut is equivalent to
-a single BinaryToUnicodeNaut (and we could do it that way, but it's just simpler in two steps).
-
-Remember these "surrogate pairs" we mentionned before? One big responsibility of the 
-JavaCharToUnicodeNaut is to combine them into a single Unicode token, while for other characters,
-it simply translates the char value to Unicode int code point.
-
-The processing in the two TokyoNauts is illustrated below:
-
-  // In BinaryToJavaCharNaut:
-  public boolean areWeThereYet(int[] meta, byte[] data)
-  {
-    if ( super.areWeThereYet(meta,data) || _decoder==null || _outChars==null )
-      return true;
+  // in ProtoOneMainLoop.java
+  
+  (...)
+  
+  // main loop code
+  int step = 0;
+    final int STEP_LIMIT = 99;
     
-    do
+    while(  (step++ < STEP_LIMIT)  &&  !destination.areWeThereYet(chain,chain.length-1,meta)  )
     {
-      if (  _isUnderflow  &&  ( !_outChars.hasRemaining() )  )
+      if ( meta[ITokyoNaut.VERSION] == ITokyoNaut.VERSION_NANA)
       {
-        if ( _inBytes!=null && _inBytes.hasRemaining() )
-        {
-          meta[LANGUAGE]=LANGUAGE_BINARY;
-          meta[TOKEN]=TOKEN_REMAIN;
-          meta[OFFSET]=0;
-          meta[LENGTH]=_inBytes.remaining();
-          _inBytes.compact();
-        }
-        
-        if ( _src.areWeThereYet(meta,data) )
-        {
-          // Finalize
-          if (_inBytes!=null)
-          {
-            CoderResult lastResult = _decoder.decode(_inBytes,_outChars,true);
-            if ( lastResult.isError() )
-            {
-              meta[LANGUAGE]=LANGUAGE_ERROR;
-              meta[TOKEN]=0x30F;
-            }
-          }
-          return true;
-        }
-        // Skip unknown tokens
-        if ( meta[LANGUAGE]!=LANGUAGE_BINARY || meta[TOKEN]!=TOKEN_BINARY )
-          return false;
-      
-        // Load input data
-        if ( _inBytes==null || _inBytes.array()!=data )
-        {
-          _inBytes = ByteBuffer.wrap(data,meta[OFFSET],meta[LENGTH]);
-        }
-        else
-        {
-          _inBytes.position(meta[OFFSET]);
-          _inBytes.limit(meta[OFFSET]+meta[LENGTH]);
-        }
-        
-        _isUnderflow = false;
+        System.out.println
+          (  
+             "Step: "+step+"\n\t"
+            +"Language: 0x"+Integer.toHexString(meta[ITokyoNaut.LANGUAGE])+"\n\t"
+            +"Token: 0x"+Integer.toHexString(meta[ITokyoNaut.TOKEN])+"\n\t"
+            +"Left Relation: "+(meta[ITokyoNaut.LEFT]==1?"+":"")+meta[ITokyoNaut.LEFT]+"\n\t"
+            +"Fragment Offset: "+meta[ITokyoNaut.OFFSET]+"\n\t"
+            +"Fragment Length: "+meta[ITokyoNaut.LENGTH]+"\n\t"
+            +"Right Relation: "+meta[ITokyoNaut.RIGHT]+"\n"
+          );
       }
-      
-      if ( !_outChars.hasRemaining() )
+      else
       {
-        _charStartOffset = _inBytes.position();
-        _outChars.clear(); // set full buffer as storage space, before writing
-        CoderResult decodingResult = _decoder.decode(_inBytes,_outChars,false);
-        _outChars.flip(); // flip is required before reading or checking remaining()
-        
-        if ( decodingResult.isError() )
-        {
-          meta[LANGUAGE]=LANGUAGE_ERROR;
-          meta[TOKEN]=(decodingResult.isMalformed()? 0x311 : 0x312);
-          meta[OFFSET]=_inBytes.position();
-          meta[LENGTH]=decodingResult.length();
-          _inBytes.position( _inBytes.position()+decodingResult.length() );
-          return false;
-        }
-        
-        if ( decodingResult.isUnderflow() )
-          _isUnderflow = true;
-      }
-      
-      if ( _outChars.hasRemaining() )
-      {
-        meta[LANGUAGE] = LANGUAGE_JAVA_CHAR;
-        meta[TOKEN] = _outChars.get();;
-        meta[LEFT] = LEFT_START;
-        meta[RIGHT] = RIGHT_END;
-        meta[OFFSET] = _charStartOffset;
-        meta[LENGTH] = _inBytes.position()-_charStartOffset;
-        return false;
+        System.out.println
+          (  
+             "Step: "+step+"\n\t"
+            +"Language: 0x"+Integer.toHexString(meta[ITokyoNaut.LANGUAGE])+"\n\t"
+          );
       }
     }
-    while(true);
-  }
+    
+    System.out.println("Tokyo ProtoOne completed at step: "+(step-1) );
+    
+    if ( (step-1)==STEP_LIMIT)
+      System.out.println("Step limit reached: "+STEP_LIMIT);
+    
+    if (meta[ITokyoNaut.LANGUAGE] == ITokyoNaut.LANGUAGE_ERROR)
+    {
+      System.out.println
+          (  
+             "Final Error: \n\t"
+            +"Code: 0x"+Integer.toHexString(meta[ITokyoNaut.TOKEN])+"\n\t"
+            +"at Offset: "+meta[ITokyoNaut.OFFSET]+"\n\t"
+            +"and Length: "+meta[ITokyoNaut.LENGTH]+"\n\t"
+          );
+    }
   
 
-  // In JavaCharToUnicodeNaut.java
+Both UTF8ToUnicodeNaut and UnicodeToUTF8Naut can be derived from a common filter structure, illustrated 
+below:
+  public class UTF8ToUnicodeNaut implements ITokyoNaut
+  {
+    protected int[]  _meta;
+    protected byte[] _data;
+    
+    protected int _offsetRead;
+    protected int _lengthRead;
+    
+    public UTF8ToUnicodeNaut()
+    {
+      _init();
+    }
+    
+    protected void _init()
+    {
+      _meta = new int[7];
+      _data = null;
+      
+      _offsetRead = -1;
+      _lengthRead = 0;
+    }
+    
+    protected void _terminate()
+    {
+      _meta = null;
+      _data = null;
+    }
+    
+    protected boolean _isError(int[] meta)
+    {
+      return meta[LANGUAGE]==LANGUAGE_ERROR;
+    }
+    
+    protected boolean _isInputEmpty()
+    {
+      return 
+      (
+            _data == null
+        ||  _meta[OFFSET]+_meta[LENGTH] == _offsetRead+_lengthRead
+      );
+    }
+    
+    protected void _loadInputData(ITokyoNaut[] chain, int position, int[] meta)
+    {
+      _data = null;
+      _offsetRead = 0;
+      _lengthRead = -1;
+      
+      if (position<0)
+      {
+        meta[LANGUAGE]=LANGUAGE_ERROR;
+        meta[TOKEN]=0x300;  
+      } 
+      
+      boolean isCompleted = chain[position].areWeThereYet(chain,position,_meta);
+      
+      if ( isCompleted )
+      {
+        if (_data!=null)
+        {
+          meta[LANGUAGE]=LANGUAGE_ERROR;
+          meta[TOKEN]=0x301;  
+        }
+      }
+      else
+      {
+        if (_data==null)
+        {
+          meta[LANGUAGE]=LANGUAGE_ERROR;
+          meta[TOKEN]=0x302;  
+        }
+      }
+    }
+    
+    protected void _processNext(int[] meta)
+    {
+      // specific processing here
+      _offsetRead = _meta[OFFSET];
+      _lengthRead = _meta[LENGTH];
+      System.arraycopy(_meta,0,meta,0,meta.length);
+    }
+    
+    protected void _sendOutputData(ITokyoNaut[] chain, int position)
+    {
+      if (position<chain.length)
+        chain[position].notYet(this,_data);
+    }
+    
+    public boolean areWeThereYet(ITokyoNaut[] chain, int position, int[] meta)
+    {
+      if ( _isInputEmpty() )
+      {
+        _loadInputData(chain,position-1,meta);
+        
+        if ( _isError(meta) || _isInputEmpty() )
+        {
+          _terminate();
+          return true;
+        }
+      }
+      
+      _processNext(meta);
+      
+      if ( _isError(meta) )
+      {
+        _terminate();
+        return true;
+      }
+      
+      _sendOutputData(chain,position+1);
+      return false;
+    }
+    
+    public void notYet(ITokyoNaut source, byte[] data)
+    {
+      _data = data;
+    }
+    
+  }
+  
+After initializing both classes with the above filtering code, changing the class name where appropriate
+and making the error codes unique by changing the first digit, you can introduce these two TokyoNauts 
+in the chain without side-effect since they behave as identity filters. You just have to add the 
+corresponding import declarations and change the initialization code before the main loop: 
+
+  // In ProtoOneMainLoop.java
+  import net.sf.tokyo.prototype1.tokyonauts.UTF8ToUnicodeNaut;
+  import net.sf.tokyo.prototype1.tokyonauts.UnicodeToUTF8Naut;
+  
+  (...)
+  
+  public static void main(String[] args)
+  {
+    (...)
+    
+    FileToBinaryNaut source = new FileToBinaryNaut(inFilePath);
+    BinaryToFileNaut destination = new BinaryToFileNaut(outFilePath);
+    
+    UTF8ToUnicodeNaut utf8decoder = new UTF8ToUnicodeNaut();
+    UnicodeToUTF8Naut utf8encoder = new UnicodeToUTF8Naut();
+    
+    ITokyoNaut[] chain = {source, utf8decoder, utf8encoder, destination};
+    
+    int[] meta = new int[7];
+    
+    (...) // main loop code quoted above
+  }
+  
+After running the modified chain and checking that no changes occured, I then modified the identity
+filter code above to introduce one at a time UTF-8 character conversion in the first filter:
+
+  // In UTF8ToUnicodeNaut:
+  (PASTE CODE HERE)
+  
+And I introduced the code below in the second filter to convert individual Unicode characters to UTF-8 bytes:
+  
+  // In UnicodeToUTF8Naut.java
   (PASTE CODE HERE)
 
+You can check each class for the details of added imports, constructors and termination methods, as well
+as detail of changes to the identity filter skeleton code.
+  
+Since data fragments are cut into pieces corresponding to one Java character or one Unicode character, but 
+the overall data sequence is unchanged, the exact same file is produced in the output of BinaryToFileNaut, 
+which you can check by looking at the CSV file produced in out/data/result.csv. The result is the same,
+but we can already see that the analysis, reaching the character level, is more fine-grained.
+
+Stage 4: Complete.
+
+
+===================================================================================================
+                      =#= Stage 5: CSV appears with the Fifth and Sixth TokyoNaut =#=
+===================================================================================================
+
+
+
+
+
+
+===================================================================================================
+                      =#= Stage 6: XML appears with the Seventh and Eighth TokyoNaut =#=
+===================================================================================================
+
+
+
+
+
+
+===================================================================================================
+                   =#= Stage 7: Nineth TokyoNaut briges XML-to-XML through XSLT =#=
+===================================================================================================
+
+
+  
 You can notice the introduction of a new token, TOKEN_REMAIN, used to report some data part of an
 incomplete token to the source, to be patched with more data with next delivery. The updated code
 including management of TOKEN_REMAIN in FileToBinaryNaut now looks like:
