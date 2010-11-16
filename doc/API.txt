@@ -1,6 +1,6 @@
 ==================================================================================
- The Tokyo Project is hosted on Sourceforge:
- http://sourceforge.net/projects/tokyo/
+ The Tokyo Project is hosted on GitHub:
+ https://github.com/eric-brechemier/Tokyo-Project
  
  Copyright (c) 2005-2008 Eric Bréchemier
  http://eric.brechemier.name
@@ -10,7 +10,7 @@
   
 =========================================
 Title: Tokyo Project - Data Handling API 
-Last modified: 2008-01-05
+Last modified: 2008-01-15
 By: Eric Bréchemier
 Encoding: UTF-8
 =========================================
@@ -31,9 +31,8 @@ it is made of one interface, ITokyoNaut, as defined below:
   {
     /* (...) definition of constant values omitted */
     
-    public boolean areWeThereYet(int[] meta, byte[] data);
-    public ITokyoNaut plug(ITokyoNaut friend);
-    public ITokyoNaut unplug(ITokyoNaut foe);
+    public boolean areWeThereYet(ITokyoNaut[] chain, int position, int[] meta);
+    public void notYet(ITokyoNaut source, byte[] data);
   }
 
 The name "TokyoNaut" is composed of "Tokyo", a mind-changing city where this project started, 
@@ -49,36 +48,53 @@ and binary data.
 TokyoNauts are just intended to perform a single, simple operation, like recognizing lines, fields
 and separators in text formatted using Comma-Separated-Values (CSV). 
 
-So for non-trivial purpose you have to gather a few and associate them in a chain using the plug() 
-method, connecting them left-to-right in the order of source to destination:
+So for non-trivial purpose you have to gather a few and associate them in a chain, by putting them
+in an array of ITokyoNaut, connecting them left-to-right in the order of source to destination:
 
-  source.plug(filterOne).plug(filterTwo).plug(destination);
-
+  ITokyoNaut[] chain = {source,filterOne,filterTwo,destination};
+  
 You will then write a main loop pulling events out of the stream one by one. This is done by calling
-repeatedly the areWeThereYet() method, until it (finally) returns true. Unlike well-behaved children,
-you would be well advised not to assume that the trip will actually end before reaching Alpha Centauri, 
-and set an upper-bound to the number of steps, or the amount of time elapsed, you are willing to wait 
-for completion:
+repeatedly the areWeThereYet() method, until it (finally) returns true. Something like:
+
+  while( (step++ < STEP_LIMIT) && !destination.areWeThereYet(chain,chain.length-1,meta)   )
+  {
+    // main loop
+  }
+
+Along with the chain, the areWeThereYet method requires as a second argument the position of the 
+current TokyoNaut in the chain: in the above example, "chain.length-1" refers to the position of
+the destination object in the chain array, which is the current instance on which the areWeThereYet
+method is called. When this destination object will call areWeThereYet method on the preceding
+filterTwo object, it will associate the chain.length-2 position, and so on...
+
+Unlike well-behaved children, you would be well advised not to assume that the trip will actually end 
+before reaching Alpha Centauri, and you'd better set an upper-bound to the number of steps, or the amount 
+of time elapsed, you are willing to wait for completion:
 
   int step = 0;
   final int STEP_LIMIT = 3;
-  while( (step++ < STEP_LIMIT) && !destination.areWeThereYet(meta,data)   )
+  while( (step++ < STEP_LIMIT) && !destination.areWeThereYet(chain,chain.length-1,meta)   )
   {
-    // run main loop
+    // main loop
   }
 
 Note that the areWeThereYet() method is called on the destination TokyoNaut, last at the right of the 
 chain, something like a Far East destination... It is because of this pulling of events that the actual 
-annotation process goes on, each TokyoNaut asking for events in the same manner from the plugged pal 
-one step behind in the chain.
+annotation process goes on, each TokyoNaut asking for events in the same manner from the preceding 
+TokyoNaut one step behind in the chain.
 
   // inside destination
-  public boolean areWeThereYet(int[] meta, byte[] data)
+  public boolean areWeThereYet(ITokyoNaut[] chain, int position, int[] meta)
   {
-    // (...) (something hopefully useful omitted here)
+    if ( _completed() )
+    {
+      _terminate();
+      return true;
+    }
     
-    if (!_imInTheMood)
-      return _palTokyoNaut.areWeThereYet(meta,data);
+    int source = position -1;
+    if (source>0)
+      _completed = chain[source].areWeThereYet(chain,position-1,meta);
     
     meta[VERSION]  = VERSION_NANA;
     meta[LANGUAGE] = LANGUAGE_BINARY;
@@ -87,6 +103,10 @@ one step behind in the chain.
     meta[OFFSET]   = 0;
     meta[LENGTH]   = 11;
     meta[RIGHT]    = RIGHT_END;
+    
+    int destination = position+1;
+    if (destination<chain.length)
+      chain[destination].notYet(this,_data);
     return false;
   }
 
@@ -101,8 +121,9 @@ metadata information about the current data token. Let's raise the veil of some 
   public static final int LENGTH   = 5;
   public static final int RIGHT    = 6;
   
-These are the seven fields of the "meta" array, and we will describe each one by one below, illustrated
-with the remaining omitted constants from ITokyoNaut, nothing less than useful values for the above fields.
+These are the seven fields of the "meta" array, each constant being assigned the expected position of the 
+field in the meta array. We will describe each one by one below, and list the remaining omitted constants 
+from ITokyoNaut, nothing less than the most useful values for each of the above fields.
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // VERSION  
@@ -148,15 +169,8 @@ with the remaining omitted constants from ITokyoNaut, nothing less than useful v
     public static final int TOKEN = 2;
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Constant Values:
-    /** a value for meta[TOKEN] - in LANGUAGE_BINARY, an empty token at start of processing */
-    public static final int TOKEN_SPARK           = 0;
     /** a value for meta[TOKEN] - in LANGUAGE_BINARY, a fragment of binary data carried in "data" buffer */
     public static final int TOKEN_BINARY          = 1;
-    /** a value for meta[{@link #TOKEN}] - in {@link #LANGUAGE_BINARY}, a remaining fragment of binary data carried back in "data" buffer.
-        The next binary fragment shall incorporate this remain, starting at meta[{@link #OFFSET}], and 
-        extend it with additional data incrementing meta[{@link #LENGTH}] to report the total length.
-    */
-    public static final int TOKEN_REMAIN          = 2;
     
 // Values:
 //   in meta[LANGUAGE] = LANGUAGE_BINARY
@@ -240,23 +254,9 @@ with the remaining omitted constants from ITokyoNaut, nothing less than useful v
 //   [0x0000-0x7FFFFFFF]   range of allowed length values (in bytes)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   
-
-After the processing, you'd rather unchain the TokyoNauts to let them free any allocated ressources,
-calling the unplug() method in the exact same order you called the plug() method:
   
-  source.unplug(filterOne).unplug(filterTwo).unplug(destination);
-
-With a sharp eye, you may notice that some algorithmic magic is involved because unplug is applied to
-the source with the destination as parameter, to actually associate the destination with the source:
-  
-  source.unplug(filterOne)        :    filterOne._plugged   -> source
-  (filterOne).unplug(filterTwo)   :    filterTwo._plugged   -> filterOne
-  (filterTwo).unplug(destination) :    destination._plugged -> filterTwo
-
-This is required because the data is "pulled" by calling areWeThereYet(), not "pushed" making use of
-event handlers like for example SAX ContentHandler.
-  
-From this point, you can have a look at the first prototype, working with CSV data, to check this kind
-of implementation details on a practical use case.
+From this point, you can have a look at the first prototype, working with CSV data, to check the 
+implementation details on a practical use case. The design steps for this prototype are described in
+the PROCESS.txt document.
 
 =============== END OF DOCUMENT: Tokyo Project - Data Handling API ===============
