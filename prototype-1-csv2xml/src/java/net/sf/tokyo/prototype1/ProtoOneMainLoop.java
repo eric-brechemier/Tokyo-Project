@@ -43,9 +43,8 @@ import net.sf.tokyo.ITokyoNaut;
 import net.sf.tokyo.prototype1.tokyonauts.FileToBinaryNaut;
 import net.sf.tokyo.prototype1.tokyonauts.BinaryToFileNaut;
 
-import net.sf.tokyo.prototype1.tokyonauts.BinaryToJavaCharNaut;
-import net.sf.tokyo.prototype1.tokyonauts.JavaCharToUnicodeNaut;
-
+import net.sf.tokyo.prototype1.tokyonauts.UTF8ToUnicodeNaut;
+import net.sf.tokyo.prototype1.tokyonauts.UnicodeToUTF8Naut;
 
 public class ProtoOneMainLoop
 {
@@ -59,34 +58,26 @@ public class ProtoOneMainLoop
     String inFilePath = args[0];
     String outDirPath = args[1];
     String outFilePath = outDirPath + "/result.csv";
-    final String encoding = "UTF-8";
     
     System.out.println("Starting ProtoOne:"
       + "\n  In: " + inFilePath
       + "\n  Out: " + outFilePath
-      + "\n  Encoding: "+encoding
     );
     
     FileToBinaryNaut source = new FileToBinaryNaut(inFilePath);
     BinaryToFileNaut destination = new BinaryToFileNaut(outFilePath);
     
-    BinaryToJavaCharNaut textDecoder = new BinaryToJavaCharNaut(encoding);
-    //JavaCharToUnicodeNaut charDecoder = new JavaCharToUnicodeNaut();
+    UTF8ToUnicodeNaut utf8decoder = new UTF8ToUnicodeNaut();
+    UnicodeToUTF8Naut utf8encoder = new UnicodeToUTF8Naut();
     
-    source.plug(textDecoder).plug(destination);
+    ITokyoNaut[] chain = {source, utf8decoder, utf8encoder, destination};
     
-    int[] meta = new int[] 
-      {
-        ITokyoNaut.VERSION_NANA, 
-        ITokyoNaut.LANGUAGE_BINARY, ITokyoNaut.TOKEN_SPARK,
-        ITokyoNaut.LEFT_START, 0, 0, ITokyoNaut.RIGHT_END
-      };
-    byte[] data = new byte[10];
+    int[] meta = new int[7];
     
     int step = 0;
     final int STEP_LIMIT = 99;
     
-    while(  (step++ < STEP_LIMIT) && !destination.areWeThereYet(meta,data)  )
+    while(  (step++ < STEP_LIMIT)  &&  !destination.areWeThereYet(chain,chain.length-1,meta)  )
     {
       if ( meta[ITokyoNaut.VERSION] == ITokyoNaut.VERSION_NANA)
       {
@@ -101,42 +92,95 @@ public class ProtoOneMainLoop
             +"Right Relation: "+meta[ITokyoNaut.RIGHT]+"\n"
           );
       }
+      else
+      {
+        System.out.println
+          (  
+             "Step: "+step+"\n\t"
+            +"Language: 0x"+Integer.toHexString(meta[ITokyoNaut.LANGUAGE])+"\n\t"
+          );
+      }
     }
     
-    source.unplug(textDecoder).unplug(destination);
-  } 
-}
-
-/*
-import net.sf.tokyo.prototype1.tokyonauts.BinaryToJavaCharsNaut;
-import net.sf.tokyo.prototype1.tokyonauts.JavaCharsToBinaryNaut;
-
-
-import net.sf.tokyo.prototype1.tokyonauts.JavaCharsToUnicodeNaut;
-import net.sf.tokyo.prototype1.tokyonauts.UnicodeToJavaCharsNaut;
-
-import net.sf.tokyo.prototype1.tokyonauts.UnicodeToCsvNaut;
-import net.sf.tokyo.prototype1.tokyonauts.CsvToUnicodeNaut;
-
-import net.sf.tokyo.prototype1.tokyonauts.XSLNaut;
-
-
-    if (args.length <3)
+    System.out.println("Tokyo ProtoOne completed at step: "+(step-1) );
+    
+    if ( (step-1)==STEP_LIMIT)
+      System.out.println("Step limit reached: "+STEP_LIMIT);
+    
+    if (meta[ITokyoNaut.LANGUAGE] == ITokyoNaut.LANGUAGE_ERROR)
     {
-      System.out.println("Usage: [ProtoOneMain] inCsvFilePath xslFilePath outDir");
+      System.out.println
+          (  
+             "Final Error: \n\t"
+            +"Code: 0x"+Integer.toHexString(meta[ITokyoNaut.TOKEN])+"\n\t"
+            +"at Offset: "+meta[ITokyoNaut.OFFSET]+"\n\t"
+            +"and Length: "+meta[ITokyoNaut.LENGTH]+"\n\t"
+          );
+    }
+/*    
+
+import net.sf.tokyo.prototype1.tokyonauts.BinaryToJavaCharNaut;
+import net.sf.tokyo.prototype1.tokyonauts.JavaCharToUnicodeNaut;
+
+    if (args.length <2)
+    {
+      System.out.println("Usage: [ProtoOneMain] inFilePath outDirPath");
       return;
     }
-    String inCsvFilePath = args[0];
-    String xslFilePath = args[1];
-    String outDirPath = args[2];
-    String outCsvFilePath = outDirPath + "/result.csv";
+    String inFilePath = args[0];
+    String outDirPath = args[1];
+    String outFilePath = outDirPath + "/result.csv";
+    final String ENCODING = "UTF-8";
+    final int STEP_LIMIT = 20;
     
     System.out.println("Starting ProtoOne:"
-      + "\n  InCsv: " + inCsvFilePath
-      + "\n  Xsl: " + xslFilePath
-      + "\n  outDir: " + outDirPath
+      + "\n  In: " + inFilePath
+      + "\n  Out: " + outFilePath
+      + "\n  Encoding: "+ENCODING
+      + "\n  Step Limit: "+STEP_LIMIT
     );
     
+    MainLoopNaut mainLoop = new MainLoopNaut();
+    
+    ITokyoNaut[] chain = new ITokyoNaut[]
+      {
+        new FileToBinaryNaut(inFilePath),
+        new BinaryToFileNaut(outFilePath),
+        mainLoop
+      };
+    
+    mainLoop.plug(chain,chain.length-1);
+    
+    int step = 0;
+    boolean hasCompleted = false;
+    while( (step++ < STEP_LIMIT) && !hasCompleted )
+    {
+      System.out.println("Are We There Yet?");
+      hasCompleted = mainLoop.areWeThereYet() )
+      
+      if ( _meta!=null && _meta[VERSION] == VERSION_NANA)
+      {
+        System.out.println
+          (  
+             "Step: "+step
+            +"\n\tData Item:"
+            +"\n\tLanguage: "+getLanguageName(_meta[LANGUAGE])+formatMetaHex(_meta[LANGUAGE])
+            +"\n\tToken: "+getTokenName(_meta[TOKEN])+formatMetaHex(_meta[TOKEN])
+            +"\n\tLeft Relation: "+getRelationName(_meta[LEFT])+formatLeftRight(_meta[LEFT])
+            +"\n\tFragment Offset: "+formatOffset(_meta[OFFSET])
+            +"\n\tFragment Length: "+formatLength(_meta[LENGTH])
+            +"\n\tRight Relation: "+getRelationName(_meta[RIGHT])+formatLeftRight(_meta[RIGHT])
+          );
+      }
+    }
+    
+    System.out.println("Tokyo ProtoOne completed: "+ );
+    
+    //BinaryToJavaCharNaut textDecoder = new BinaryToJavaCharNaut(ENCODING);
+    //JavaCharToUnicodeNaut charDecoder = new JavaCharToUnicodeNaut();
+*/
+    
+    /*
     ITokyoNaut readFile = new FileToBinaryNaut(inCsvFilePath);
     ITokyoNaut parseText = new BinaryToJavaCharNaut("UTF-8");
     ITokyoNaut parseUnicode = new JavaCharToUnicodeNaut();
@@ -150,43 +194,7 @@ import net.sf.tokyo.prototype1.tokyonauts.XSLNaut;
     ITokyoNaut spyZero = new NSpy(NSpy.STYLE_CHAR);
     ITokyoNaut spyOne = new NSpy(NSpy.STYLE_CHAR);
     ITokyoNaut spyTwo = new NSpy(NSpy.STYLE_CHAR);
-    
-    byte[] data = new byte[20];
-    int[] meta 
-      = new int[]
-      {
-        ITokyoNaut.VERSION_NANA,
-        ITokyoNaut.LANGUAGE_BINARY,
-        ITokyoNaut.TOKEN_BINARY,
-        ITokyoNaut.LEFT_START,
-        0, 
-        0,
-        ITokyoNaut.RIGHT_CONTINUED
-      };
-    
-    readFile
-      //.plug(spyZero)
-      .plug(parseText)
-        .plug(parseUnicode)
-          .plug(parseCSV)
-            //.plug(spyOne)
-            .plug(xslTransform)
-            //.plug(spyTwo)
-          .plug(writeCSV)
-        .plug(writeUnicode)
-      .plug(writeText)
-    .plug(writeFile);
-    
-    int step = 0;
-    final int STEP_LIMIT = 99;
-    while(  !writeFile.areWeThereYet(meta,data)  &&  (step++ < STEP_LIMIT)  )
-    {
-      System.out.println("Running... Step "+step+" - "+meta[ITokyoNaut.LENGTH]+" byte(s) written.");
-    }
-    
-    if (meta[ITokyoNaut.LANGUAGE]==ITokyoNaut.LANGUAGE_ERROR)
-      System.err.println("Processing Terminated with Error Code: "+Integer.toHexString(meta[ITokyoNaut.TOKEN]));
-    
+        
     readFile
       //.plug(spyZero)
       .unplug(parseText)
@@ -200,25 +208,5 @@ import net.sf.tokyo.prototype1.tokyonauts.XSLNaut;
       .unplug(writeText)
     .unplug(writeFile);
     */
-    
-    // TODO REMOVE EVERYTHING BELOW, AFTER GETTING BACK USEFUL STUFF (IF ANY)
-    /*
-    // XML to XML using XSLT "Same But Different" Transform //
-    System.setProperty
-      (
-      "javax.xml.transform.TransformerFactory", 
-      "net.sf.saxon.TransformerFactoryImpl"
-      );
-    
-    // TODO: adapt code from SAXON TrAX samples
-    
-    TransformerFactory tfactory = TransformerFactory.newInstance();
-
-        // Create a transformer for the stylesheet.
-        Transformer transformer =
-            tfactory.newTransformer(new StreamSource(xslID));
-
-        // Transform the source XML to System.out.
-        transformer.transform(new StreamSource(sourceID),
-                              new StreamResult(new File("exampleSimple2.out")));
-    */
+  } 
+}

@@ -2,7 +2,7 @@
  The Tokyo Project is hosted on Sourceforge:
  http://sourceforge.net/projects/tokyo/
  
- Copyright (c) 2005-2007 Eric Bréchemier
+ Copyright (c) 2005-2008 Eric Bréchemier
  http://eric.brechemier.name
  Licensed under BSD License and/or MIT License.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -13,7 +13,7 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                           MIT License
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  Copyright (c) 2005-2007 Eric Bréchemier <tokyo@eric.brechemier.name>
+  Copyright (c) 2005-2008 Eric Bréchemier <tokyo@eric.brechemier.name>
   
   Permission is hereby granted, free of charge, to any person
   obtaining a copy of this software and associated documentation
@@ -41,16 +41,31 @@ package net.sf.tokyo.prototype1.tokyonauts;
 import java.io.FileInputStream;
 
 import net.sf.tokyo.ITokyoNaut;
-import net.sf.tokyo.prototype1.tokyonauts.NCommonBase;
-
 
 /**
- * TokyoNaut creating tokens of binary buffer from data read in a file.<br/>
+ * TokyoNaut reading binary tokens from a file.<br/>
  *
+ * <p>
+ *   <ul>
+ *     <li><em>Role:</em> Source</li>
+ *     <li><em>Input Consumed:</em> None</li>
+ *     <li><em>Output Produced:</em>
+ *       {@link net.sf.tokyo.ITokyoNaut#TOKEN_BINARY TOKEN_BINARY} tokens 
+ *       in {@link net.sf.tokyo.ITokyoNaut#LANGUAGE_BINARY LANGUAGE_BINARY}
+ *     </li>
+ *     <li><em>Errors Produced: (* fatal errors)</em>
+ *       <ul>
+ *         <li><code>0x101*</code> - I/O error reading or checking bytes available in file</li>
+ *       </ul>
+ *     </li>
+ *   </ul>
+ * </p>
  */
-public class FileToBinaryNaut extends NCommonBase implements ITokyoNaut
+public class FileToBinaryNaut implements ITokyoNaut
 {
   protected FileInputStream _in;
+  protected byte[] _data;
+  protected boolean _isStart;
   
   public FileToBinaryNaut(String filePath)
   {
@@ -60,69 +75,66 @@ public class FileToBinaryNaut extends NCommonBase implements ITokyoNaut
     }
     catch(Exception e)
     {
-      System.err.println("Error in FileToBinaryNaut(): "+e);
+      System.err.println("Error opening file for input in FileToBinaryNaut(): "+e);
     }
+    
+    _isStart = true;
+    _data = new byte[10];
   }
   
-  public boolean areWeThereYet(int[] meta, byte[] data)
+  public boolean areWeThereYet(ITokyoNaut[] chain, int position, int[] meta)
   {
-    if ( super.areWeThereYet(meta,data) || _in==null )
-      return true;
-    
-    int writeOffset;
-    int writeLength;
-    
-    if (meta[TOKEN]==TOKEN_REMAIN)
-    {
-      writeOffset = meta[LENGTH];
-      writeLength = data.length-writeOffset;
-    }
-    else
-    {
-      writeOffset = 0;
-      writeLength = data.length;
-    }
+    meta[VERSION] = VERSION_NANA;
+    meta[LANGUAGE] = LANGUAGE_BINARY;
+    meta[TOKEN] = TOKEN_BINARY;
+    meta[LEFT] = (_isStart? LEFT_START: LEFT_CONTINUED);
+    _isStart = false;
+    meta[OFFSET] = 0;
+    meta[LENGTH] = _data.length;
     
     try
     {
       if ( _in.available()==0 )
+      {
+        _terminate();
         return true;
+      }
       
-      int bytesRead = _in.read(data,writeOffset,writeLength);
-      
-      meta[OFFSET] = 0;
-      meta[LENGTH] = (bytesRead==-1? writeOffset : writeOffset+bytesRead);
-      
-      meta[LEFT] = (meta[TOKEN]==TOKEN_SPARK? LEFT_START: LEFT_CONTINUED);
+      int bytesRead = _in.read(_data,meta[OFFSET],meta[LENGTH]);
+      meta[LENGTH] = (bytesRead==-1? 0 : bytesRead);
       meta[RIGHT] = (_in.available()==0? RIGHT_END : RIGHT_CONTINUED);
-      
-      meta[LANGUAGE] = LANGUAGE_BINARY;
-      meta[TOKEN] = TOKEN_BINARY;
     }
     catch(Exception e)
     {
       System.err.println("Error in FileToBinaryNaut#areWeThereYet(): "+e);
       meta[LANGUAGE]=LANGUAGE_ERROR;
       meta[TOKEN]=0x101;
+      _terminate();
       return true;
     }
     
+    int destination = position+1;
+    if (destination<chain.length)
+      chain[destination].notYet(this,_data);
     return false;
   }
   
-  public ITokyoNaut unplug(ITokyoNaut foe)
+  protected void _terminate()
   {
     try
     {
       if (_in!=null)
-        _in.close();
+          _in.close();
       _in = null;
     }
     catch(Exception e)
     {
-      System.err.println("Error closing file in FileToBinaryNaut#unplug() "+e);
+      System.err.println("Error closing file in FileToBinaryNaut#_terminate(): "+e);
     }
-    
-    return super.unplug(foe);
   }
+  
+  public void notYet(ITokyoNaut source, byte[] data)
+  {
+  }
+  
 }

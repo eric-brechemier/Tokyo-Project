@@ -2,7 +2,7 @@
  The Tokyo Project is hosted on Sourceforge:
  http://sourceforge.net/projects/tokyo/
  
- Copyright (c) 2005-2007 Eric Bréchemier
+ Copyright (c) 2005-2008 Eric Bréchemier
  http://eric.brechemier.name
  Licensed under BSD License and/or MIT License.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -13,7 +13,7 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                           MIT License
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  Copyright (c) 2005-2007 Eric Bréchemier <tokyo@eric.brechemier.name>
+  Copyright (c) 2005-2008 Eric Bréchemier <tokyo@eric.brechemier.name>
   
   Permission is hereby granted, free of charge, to any person
   obtaining a copy of this software and associated documentation
@@ -41,56 +41,91 @@ package net.sf.tokyo.prototype1.tokyonauts;
 import java.io.FileOutputStream;
 
 import net.sf.tokyo.ITokyoNaut;
-import net.sf.tokyo.prototype1.tokyonauts.NCommonBase;
-
 
 /**
- * TokyoNaut writing a file from tokens carrying binary buffers.<br/>
+ * TokyoNaut writing tokens to a file.<br/>
  *
+ * <p>
+ *   <ul>
+ *     <li><em>Role:</em> Destination</li>
+ *     <li><em>Input Consumed:</em> Any non-error token</li>
+ *     <li><em>Output Produced:</em> None</li>
+ *     <li><em>Side effect:</em> Writes all incoming data fragments to a file</li>
+ *     <li><em>Errors Produced: (* fatal errors)</em>
+ *       <ul>
+ *         <li><code>0x200*</code> - no preceding TokyoNaut available as Source</li>
+ *         <li><code>0x201</code> - data expected from source TokyoNaut was not received</li>
+ *         <li><code>0x202</code> - I/O error writing bytes in file</li>
+ *       </ul>
+ *     </li>
+ *   </ul>
+ * </p>
  */
-public class BinaryToFileNaut extends NCommonBase implements ITokyoNaut
+public class BinaryToFileNaut implements ITokyoNaut
 {
+  protected byte[] _data;
   protected FileOutputStream _out;
   
   public BinaryToFileNaut(String filePath)
   {
-    try 
+    try
     {
       _out = new FileOutputStream(filePath);
     }
     catch(Exception e)
     {
-      System.err.println("Error in BinaryToFileNaut(): "+e);
+      System.err.println("Error opening file for output in BinaryToFileNaut(): "+e);
     }
   }
   
-  public boolean areWeThereYet(int[] meta, byte[] data)
+  public boolean areWeThereYet(ITokyoNaut[] chain, int position, int[] meta)
   {
-    if ( super.areWeThereYet(meta,data) || _src==null || _out==null )
+    int source = position-1;
+    if (source<0)
+    {
+      meta[LANGUAGE]=LANGUAGE_ERROR;
+      meta[TOKEN]=0x200;
+      _terminate();
       return true;
+    }
     
-    if ( _src.areWeThereYet(meta,data) )
+    if ( chain[source].areWeThereYet(chain,source,meta) )
+    {
+      _terminate();
       return true;
+    }
     
-    // Skip unknown tokens
-    if ( meta[LANGUAGE]!=LANGUAGE_BINARY || meta[TOKEN]!=TOKEN_BINARY )
+    if (_data==null)
+    {
+      meta[LANGUAGE]=LANGUAGE_ERROR;
+      meta[TOKEN]=0x201;
       return false;
+    }
     
     try
     {
-      _out.write(data,meta[OFFSET],meta[LENGTH]);
+      _out.write(_data,meta[OFFSET],meta[LENGTH]);
     }
     catch(Exception e)
     {
       System.err.println("Error in BinaryToFileNaut#areWeThereYet(): "+e);
       meta[LANGUAGE]=LANGUAGE_ERROR;
       meta[TOKEN]=0x201;
+      return false;
     }
     
+    int destination = position+1;
+    if (destination<chain.length)
+      chain[destination].notYet(this,_data);
     return false;
   }
   
-  public ITokyoNaut unplug(ITokyoNaut foe)
+  public void notYet(ITokyoNaut source, byte[] data)
+  {
+    _data = data;
+  }
+  
+  protected void _terminate()
   {
     try
     {
@@ -100,9 +135,8 @@ public class BinaryToFileNaut extends NCommonBase implements ITokyoNaut
     }
     catch(Exception e)
     {
-      System.err.println("Error closing file in BinaryToFileNaut#unplug() "+e);
+      System.err.println("Error closing file in BinaryToFileNaut#_terminate() "+e);
     }
-    
-    return super.unplug(foe);
   }
+  
 }
