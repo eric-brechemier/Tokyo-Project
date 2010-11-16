@@ -3,7 +3,7 @@
  The Tokyo Project is hosted on Sourceforge:
  http://sourceforge.net/projects/tokyo/
  
- Copyright (c) 2005-2007 Eric Bréchemier
+ Copyright (c) 2005-2008 Eric Bréchemier
  http://eric.brechemier.name
  Licensed under BSD License and/or MIT License.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -14,7 +14,7 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                           MIT License
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  Copyright (c) 2005-2007 Eric Bréchemier <tokyo@eric.brechemier.name>
+  Copyright (c) 2005-2008 Eric Bréchemier <tokyo@eric.brechemier.name>
   
   Permission is hereby granted, free of charge, to any person
   obtaining a copy of this software and associated documentation
@@ -49,7 +49,8 @@
     1.2 - Updated for "Harajuku" version of Tokyo API
     1.3 - Fixed typo for third-party target
     1.4 - Changed copyright notice in javadoc from LGPL to BSD/MIT
-  
+    1.5 - Updated year to 2008 in copyright notice
+    
   See ../third-party for Third Party Dependencies.
   -->
   
@@ -70,7 +71,7 @@
     &lt;a href='http://sourceforge.net/projects/tokyo/' target='_top'>http://sourceforge.net/projects/tokyo/&lt;/a>
     &lt;/p>
     &lt;p>
-    Copyright (c) 2005-2007 Eric Br&amp;eacute;chemier     &lt;br/>
+    Copyright (c) 2005-2008 Eric Br&amp;eacute;chemier     &lt;br/>
     &lt;a href='http://eric.brechemier.name' target='_top'>http://eric.brechemier.name&lt;a/>&lt;br/>
     &lt;hr/>
     Licensed under BSD License and/or MIT License.  &lt;br/>

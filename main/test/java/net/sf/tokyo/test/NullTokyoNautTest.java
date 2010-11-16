@@ -47,46 +47,33 @@ public class NullTokyoNautTest
 {
   public static void main(String[] args)
   {
-    ITokyoNaut nullTokyoNautSrc = new NullTokyoNaut();
-    ITokyoNaut nullTokyoNautDst = new NullTokyoNaut();
-    byte[] data = new byte[500];
-    int[] meta 
-      = new int[]
-      {
-        ITokyoNaut.VERSION_NANA,
-        ITokyoNaut.LANGUAGE_BINARY,
-        ITokyoNaut.TOKEN_SPARK,
-        ITokyoNaut.LEFT_START,
-        0, 
-        0,
-        ITokyoNaut.RIGHT_END
-      };
+    ITokyoNaut nullTokyoNaut = new NullTokyoNaut();
+    ITokyoNaut[] chain = {nullTokyoNaut};
     
-    nullTokyoNautSrc.plug(nullTokyoNautDst);
+    int[] meta = new int[7];
     
     int step = 0;
     final int STEP_LIMIT = 3;
-    while( (step++ < STEP_LIMIT) && !nullTokyoNautDst.areWeThereYet(meta,data) )
+    
+    while( step++ < STEP_LIMIT && !nullTokyoNaut.areWeThereYet(chain,0,meta) )
     {
       if ( meta[ITokyoNaut.VERSION] == ITokyoNaut.VERSION_NANA)
       {
         System.out.println
           (  
-             "Step: "+step+"\n\t"
-            +"Data Item:\n\t"
-            +"Language: "+getLanguageName(meta[ITokyoNaut.LANGUAGE])+formatMetaHex(meta[ITokyoNaut.LANGUAGE])+"\n\t"
-            +"Token: "+getTokenName(meta[ITokyoNaut.TOKEN])+formatMetaHex(meta[ITokyoNaut.TOKEN])+"\n\t"
-            +"Left Relation: "+getRelationName(meta[ITokyoNaut.LEFT])+formatLeftRight(meta[ITokyoNaut.LEFT])+"\n\t"
-            +"Fragment Offset: "+formatOffset(meta[ITokyoNaut.OFFSET])+"\n\t"
-            +"Fragment Length: "+formatLength(meta[ITokyoNaut.LENGTH])+"\n\t"
-            +"Right Relation: "+getRelationName(meta[ITokyoNaut.RIGHT])+formatLeftRight(meta[ITokyoNaut.RIGHT])
+             "Step: "+step
+            +"\n\tData Item:"
+            +"\n\tLanguage: "+getLanguageName(meta[ITokyoNaut.LANGUAGE])+formatMetaHex(meta[ITokyoNaut.LANGUAGE])
+            +"\n\tToken: "+getTokenName(meta[ITokyoNaut.TOKEN])+formatMetaHex(meta[ITokyoNaut.TOKEN])
+            +"\n\tLeft Relation: "+getRelationName(meta[ITokyoNaut.LEFT])+formatLeftRight(meta[ITokyoNaut.LEFT])
+            +"\n\tFragment Offset: "+formatOffset(meta[ITokyoNaut.OFFSET])
+            +"\n\tFragment Length: "+formatLength(meta[ITokyoNaut.LENGTH])
+            +"\n\tRight Relation: "+getRelationName(meta[ITokyoNaut.RIGHT])+formatLeftRight(meta[ITokyoNaut.RIGHT])
           );
       }
     }
     
-    nullTokyoNautSrc.unplug(nullTokyoNautDst);
-    
-    System.out.println("Tokyo API coverage test complete.");
+    System.out.println("Tokyo API coverage test complete");
   }
   
   public static String getLanguageName(int language)

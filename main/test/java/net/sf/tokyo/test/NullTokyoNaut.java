@@ -2,7 +2,7 @@
  The Tokyo Project is hosted on Sourceforge:
  http://sourceforge.net/projects/tokyo/
  
- Copyright (c) 2005-2007 Eric Bréchemier
+ Copyright (c) 2005-2008 Eric Bréchemier
  http://eric.brechemier.name
  Licensed under BSD License and/or MIT License.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -13,7 +13,7 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                           MIT License
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  Copyright (c) 2005-2007 Eric Bréchemier <tokyo@eric.brechemier.name>
+  Copyright (c) 2005-2008 Eric Bréchemier <tokyo@eric.brechemier.name>
   
   Permission is hereby granted, free of charge, to any person
   obtaining a copy of this software and associated documentation
@@ -44,24 +44,33 @@ import net.sf.tokyo.ITokyoNaut;
  * Null implementation of ITokyoNaut interface.<br/>
  *
  * <p>
- * Does nothing and if used without boundary will run in a main loop forever.
- * This source code can be used as a base for TokyoNaut implementations.
+ * Does nothing and never terminates which means that if used without boundary, 
+ * it will run in a main loop forever.
+ * This source code can be used as a starting point for TokyoNaut implementations.
  * </p>
  */
 public class NullTokyoNaut implements ITokyoNaut
 {
-  public boolean areWeThereYet(int[] meta, byte[] data)
+  protected byte[] _nullData = new byte[0];
+  
+  public boolean areWeThereYet(ITokyoNaut[] chain, int position, int[] meta)
   {
+    meta[VERSION] = VERSION_NANA;
+    meta[LANGUAGE] = LANGUAGE_BINARY;
+    meta[TOKEN] = TOKEN_BINARY;
+    meta[LEFT] = LEFT_START;
+    meta[OFFSET] = 0;
+    meta[LENGTH] = 0;
+    meta[RIGHT] = RIGHT_END;
+    
+    int destination = position+1;
+    if (destination<chain.length)
+      chain[destination].notYet(this,_nullData);
     return false;
   }
   
-  public ITokyoNaut plug(ITokyoNaut friend)
+  public void notYet(ITokyoNaut source, byte[] data)
   {
-    return friend;
   }
   
-  public ITokyoNaut unplug(ITokyoNaut foe)
-  {
-    return foe;
-  }
 }

@@ -50,15 +50,17 @@ package net.sf.tokyo;
  * </p>
  *
  * <p>
- * {@link #plug(ITokyoNaut) plug()} lets you initialize a chain of collaborating TokyoNauts, while 
- * {@link #unplug(ITokyoNaut) unplug()} will unchain the TokyoNauts to let them free any allocated resources 
- * at the end of the processing.
+ * {@link #areWeThereYet(ITokyoNaut[],int,int[]) areWeThereYet()} is to be called repeatedly until 
+ * processing is complete (or time out), reporting metadata annotations (in ) in the result array 
+ * <code>meta</code> provided as parameter, and corresponding raw binary data buffers by providing
+ * the <code>data</code> buffer in the callback {@link #notYet(ITokyoNaut,byte[]) notYet()}.
  * </p>
  *
  * <p>
- * {@link #areWeThereYet(int[],byte[]) areWeThereYet()} is to be called repeatedly until processing is complete (or time out),
- * carrying metadata annotations (in "meta") on raw binary data buffers (in "data") transmitted along 
- * the chain of {@link net.sf.tokyo.ITokyoNaut TokyoNauts}.
+ * {@link net.sf.tokyo.ITokyoNaut TokyoNauts} are typically combined in chains of processing, described
+ * in the <code>chain</code> parameter of the {@link #areWeThereYet(ITokyoNaut[],int,int[]) areWeThereYet()}
+ * method, and meta/data is carried along this chain from source to destination until reaching the main loop.
+ * This kind of associations is demonstrated in the prototypes and samples part of the Tokyo Project.
  * </p>
  *
  * @author Eric Br&eacute;chemier
@@ -168,7 +170,6 @@ public interface ITokyoNaut
        * <p>
        *  <strong>Constant Values:</strong>
        *  <ul>
-       *    <li>{@link #TOKEN_SPARK}</li>
        *    <li>{@link #TOKEN_BINARY}</li>
        *  </ul>
        * </p>
@@ -176,15 +177,8 @@ public interface ITokyoNaut
       public static final int TOKEN = 2;
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // Constant Values:
-      /** a value for meta[{@link #TOKEN}] - in {@link #LANGUAGE_BINARY}, an empty token at start of processing */
-      public static final int TOKEN_SPARK           = 0;
       /** a value for meta[{@link #TOKEN}] - in {@link #LANGUAGE_BINARY}, a fragment of binary data carried in "data" buffer */
       public static final int TOKEN_BINARY          = 1;
-      /** a value for meta[{@link #TOKEN}] - in {@link #LANGUAGE_BINARY}, a remaining fragment of binary data carried back in "data" buffer.
-          The next binary fragment shall incorporate this remain, starting at meta[{@link #OFFSET}], and 
-          extend it with additional data incrementing meta[{@link #LENGTH}] to report the total length.
-      */
-      public static final int TOKEN_REMAIN          = 2;
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   
@@ -292,39 +286,33 @@ public interface ITokyoNaut
    * This method provides a simple means to control the reading process step by step.
    * The following loop will run until reading is complete or the step limit has been reached:
 <pre>
-int[] meta = new int[] 
-  {
-    ITokyoNaut.VERSION_NANA, 
-    ITokyoNaut.LANGUAGE_BINARY, ITokyoNaut.TOKEN_SPARK,
-    ITokyoNaut.LEFT_START, 0, 0, ITokyoNaut.RIGHT_END
-  };
-byte[] data = new byte[10];
+int[] meta = new int[7];
 
 int step = 0;
 final int STEP_LIMIT = 99;
 
-while(  (step++ < STEP_LIMIT)  &&  !destination.areWeThereYet(meta,data)  )
+while(  (step++ < STEP_LIMIT)  &&  !destination.areWeThereYet(chain,chain.length-1,meta)  )
 {
   if ( meta[ITokyoNaut.VERSION] == ITokyoNaut.VERSION_NANA)
   {
     System.out.println
       (  
          "Step: "+step+"\n\t"
-        +"Language: "+meta[ITokyoNaut.LANGUAGE]+"\n\t"
-        +"Token: "+meta[ITokyoNaut.TOKEN]+"\n\t"
+        +"Language: 0x"+Integer.toHexString(meta[ITokyoNaut.LANGUAGE])+"\n\t"
+        +"Token: 0x"+Integer.toHexString(meta[ITokyoNaut.TOKEN])+"\n\t"
         +"Left Relation: "+(meta[ITokyoNaut.LEFT]==1?"+":"")+meta[ITokyoNaut.LEFT]+"\n\t"
         +"Fragment Offset: "+meta[ITokyoNaut.OFFSET]+"\n\t"
         +"Fragment Length: "+meta[ITokyoNaut.LENGTH]+"\n\t"
         +"Right Relation: "+meta[ITokyoNaut.RIGHT]+"\n"
       );
   }
-} 
+}
 </pre>
    * </p>
    *
    * <p>
    * The code above, applied to a file containing 25 bytes of data with an appropriate destination
-   * {@link net.sf.tokyo.ITokyoNaut TokyoNaut}, would most probably produce the following output:
+   * {@link net.sf.tokyo.ITokyoNaut TokyoNaut}, could for example produce the following output:
 <pre>
 Step: 1
    Language: 7
@@ -348,22 +336,29 @@ Step: 3
    Fragment Length: 5
    Right Relation: -1
 </pre>
-   * I say "most probably" because nothing prevents the {@link net.sf.tokyo.ITokyoNaut TokyoNaut} 
-   * from using less than the full data buffer, e.g. writing data only one byte at a time, or 
-   * returning partial tokens with empty length, or even additional events in a foreign language 
-   * not relevant to the processing.
+   * Variants for the above output would include using less than the full data buffer, e.g. writing 
+   * data only one byte at a time, or returning partial tokens with empty length, or even additional 
+   * events in a foreign language not relevant to the processing.
    * </p>
    *
    * <p>
-   * This means that this specification provides the wire to get your data through, but you should
-   * definitely check the documentation of the {@link net.sf.tokyo.ITokyoNaut TokyoNauts} you are using 
-   * to see what kind of events they expect and produce.
+   * The above example illustrates that this specification provides the wire to get your data through, 
+   * but you should definitely check the documentation of the {@link net.sf.tokyo.ITokyoNaut TokyoNauts} 
+   * you are using to see what kind of events they expect and produce.
    * </p>
    *
    * <p>
-   * {@link net.sf.tokyo.ITokyoNaut TokyoNauts}  are associated in chains of processing by plugging one 
-   * to the following making use of the {@link #plug(ITokyoNaut) plug()} method. Based on their position 
-   * in the chain, {@link net.sf.tokyo.ITokyoNaut TokyoNauts} can actually play different roles:
+   * {@link net.sf.tokyo.ITokyoNaut TokyoNauts} are associated in chains of processing, by putting them
+   * into an array of ITokyoNauts, connecting them left-to-right in the order of source to destination,
+   * provided to this method as param <code>chain</code>:
+<pre>
+ITokyoNaut[] chain = {source,filterOne,filterTwo,destination};
+</pre>   
+   * </p>
+   *
+   * <p>
+   * Based on their position in the chain, {@link net.sf.tokyo.ITokyoNaut TokyoNauts} can actually 
+   * play different roles:
    *   <ul>
    *     <li>
    *       <strong>Source</strong> - at the start of the chain, filling data buffer and 
@@ -371,9 +366,9 @@ Step: 3
    *     </li>
    *     <li>
    *       <strong>Filter</strong> - a regular {@link net.sf.tokyo.ITokyoNaut TokyoNaut} in the middle 
-   *       of the chain, filtering received events and inserting new events in meta based on patterns
-   *       identified, without any modification to the data buffer but compacting of remaining bytes
-   *       at the start of the buffer, signalled with {@link #TOKEN_REMAIN}.
+   *       of the chain, filtering received events and inserting new events (reported in <code>meta</code>)
+   *       based on patterns identified, without any modification to the data buffer but cutting or merging
+   *       of fragment parts for easier reporting (through the method {@link #notYet(ITokyoNaut,byte[]) notYet()}.
    *     </li>
    *     <li>
    *       <strong>Destination</strong> - the last {@link net.sf.tokyo.ITokyoNaut TokyoNaut} in the chain, 
@@ -387,13 +382,15 @@ Step: 3
    * Some {@link net.sf.tokyo.ITokyoNaut TokyoNauts} can actually combine several roles, for example:
    *   <ul>
    *     <li>
-   *       <strong>Creative Filter</strong> - in the middle of the chain, but creating 
-   *       complete data events as a Source, based on previous events as a Filter.
+   *       <strong>Creative Filter</strong> - in the middle of the chain, but also creating 
+   *       new data as a Source, based on previous events as a Filter.
    *     </li>
    *     <li>
    *       <strong>Side Effect Filter</strong> - in the middle of the chain, but producing
-   *       side effects like a Destination while still filtering events. Any Destination can actually
-   *       be seen as a Side Effect Filter, with the main loop playing the role of next in chain.
+   *       side effects like a Destination while still reporting events as a Filter. Any Destination 
+   *       can actually be seen as a Side Effect Filter, with the main loop playing the role of next 
+   *       in chain. The main loop can actually be implemented as a TokyoNaut as well, inserted at the 
+   *       end of the chain.
    *     </li>
    *     <li>
    *       <strong>Bridge</strong> - another composite connecting 
@@ -409,7 +406,25 @@ Step: 3
    *   </ul>
    * </p>
    *
-   * @param meta a result array carrying information about "data"
+   * @param chain a sequence of {@link net.sf.tokyo.ITokyoNaut TokyoNauts}, listed from source to
+   *              destination based on position, combined to perform a chain of processings.
+   *      <p>
+   *        <strong>PRECONDITION:</strong> <code>chain</code> must not be null, its length must be 
+   *        at least 1 since chain contains at least the current {@link net.sf.tokyo.ITokyoNaut TokyoNaut} 
+   *        instance on which the {@link #areWeThereYet(ITokyoNaut[],int,int[]) areWeThereYet()} is called, and 
+   *        each of its elements must not be null.
+   *      </p>
+   *
+   * @param position the offset in the <code>chain</code> parameter, of the the current 
+   *                 {@link net.sf.tokyo.ITokyoNaut TokyoNaut} instance on which the 
+   *                 {@link #areWeThereYet(ITokyoNaut[],int,int[]) areWeThereYet()} method is called.
+   *      <p>
+   *        <strong>PRECONDITION:</strong> <code>position</code> must be inside the boundaries of the 
+   *        <code>chain</code> array, and <code>this.equals( chain[position] )</code> must be true.
+   *      </p>
+   *
+   * @param meta a result array carrying information about "data" sent separately by calling the callback
+   *             method {@link #notYet(ITokyoNaut,byte[]) notYet()}.
    *       <p>
    *        The set of integer fields in meta is defined here, in the specification of the 
    *        {@link net.sf.tokyo.ITokyoNaut} interface corresponding to the leading version number 
@@ -417,7 +432,7 @@ Step: 3
    *        <ul>
    *          <li><code>meta[{@link #VERSION}] = {@link #VERSION_NANA}</code></li>
    *          <li><code>meta[{@link #LANGUAGE}] = ( {@link #LANGUAGE_BINARY} | {@link #LANGUAGE_UNICODE_TEXT} | {@link #LANGUAGE_ERROR} | * )</code></li>
-   *          <li><code>meta[{@link #TOKEN}] = ( {@link #TOKEN_SPARK} | {@link #TOKEN_BINARY} | {@link #TOKEN_REMAIN} | *)</code></li>
+   *          <li><code>meta[{@link #TOKEN}] = ( {@link #TOKEN_BINARY} | *)</code></li>
    *          <li><code>meta[{@link #LEFT}] = ( {@link #LEFT_START} | {@link #LEFT_CONTINUED} )</code></li>
    *          <li><code>meta[{@link #OFFSET}] in [0;data.length[</code></li>
    *          <li><code>meta[{@link #LENGTH}] in [0;data.length]</code></li>
@@ -425,86 +440,74 @@ Step: 3
    *        </ul>
    *       </p>
    *       <p>
-   *        If meta is null, {@link #areWeThereYet(int[],byte[]) areWeThereYet()} does nothing and 
-   *        returns true.
+   *        <strong>PRECONDITION:</strong> <code>meta</code> must not be null, its length must be 7, 
+   *        and its content conform to the above specification.
    *       </p>
-   * @param data a result buffer carrying binary data fragments corresponding to tokens described in meta. 
+   *
+   * @return false until this {@link net.sf.tokyo.ITokyoNaut TokyoNaut} has reached the end of its 
+   *         own processing (e.g. following the end of preceding {@link net.sf.tokyo.ITokyoNaut TokyoNauts} 
+   *         providing input meta/data).
    *       <p>
-   *       This buffer must be at least 4 bytes long, in order to simplify handling of character streams 
-   *       where the length of a single Unicode character is typically up to 4 bytes long. By compacting
-   *       an incomplete character at the start of the data buffer and signalling it with {@link #TOKEN_REMAIN},
-   *       more bytes can be read from the source to complete this character. This mechanism allows to
-   *       implement character alignment without the need to allocate a secondary buffer.
+   *         Before returning false, the {@link #notYet(ITokyoNaut,byte[]) notYet()} callback must be called
+   *         to transmit the <code>data</code> buffer containing the fragment described in meta, unless
+   *         a recoverable error is reported using <code>meta[{@link #LANGUAGE}] = {@link #LANGUAGE_ERROR}</code>;
+   *         a reported error is considered recoverable when this method returns false, and fatal when it 
+   *         returns true.
    *       </p>
+   *       <p>
+   *         The reason behind this mixed combination of result parameter for <code>meta</code> and 
+   *         callback for <code>data</code> is based on their respective character and usage: while 
+   *         <code>meta</code> is fixed-size and inspected by both {@link net.sf.tokyo.ITokyoNaut TokyoNauts}
+   *         and non-TokyoNauts like the main loop, <code>data</code> varies in size and arrangement
+   *         based on the position of tokens discovered, and the values it carries are for use by
+   *         {@link net.sf.tokyo.ITokyoNaut TokyoNauts} only.
+   *       </p>
+   *       <p>
+   *         <strong>Important:</strong> on the last turn, when the {@link net.sf.tokyo.ITokyoNaut TokyoNaut}
+   *         completes a last token before the end of processing, {@link #areWeThereYet(ITokyoNaut[],int,int[]) areWeThereYet()}
+   *         still returns false, and only returns true at the following run, which garantees that the result
+   *         is always false when there is some relevant data. On the other hand, when the result is true,
+   *         meta can be considered irrelevant and be discarded; for example, meta can optionally be checked 
+   *         for error signalling based on <code>meta[{@link #LANGUAGE}] = {@link #LANGUAGE_ERROR}</code>
+   *         usage.
+   *       </p>
+   *       <p>
+   *         <strong>POSTCONDITION:</strong> If current {@link net.sf.tokyo.ITokyoNaut TokyoNaut} was
+   *         not last in <code>chain</code> and no recoverable error was reported with 
+   *         <code>meta[{@link #LANGUAGE}] = {@link #LANGUAGE_ERROR}</code>, it used <code>chain[position+1]</code> 
+   *         as a destination to report the <code>data</code> buffer using {@link #notYet(ITokyoNaut,byte[]) notYet()} 
+   *         callback; this callback must have been called once and only once before {@link #areWeThereYet(ITokyoNaut[],int,int[]) areWeThereYet()}
+   *         returned false, and must not have been called before it returned true.
+   *       </p>
+   */
+  public boolean areWeThereYet(ITokyoNaut[] chain, int position, int[] meta);
+  
+  /**
+   * Callback method called once and only once by a preceding {@link net.sf.tokyo.ITokyoNaut TokyoNaut}
+   * just before its {@link #areWeThereYet(ITokyoNaut[],int,int[]) areWeThereYet()} method returns false.<br/>
+   *
+   * <p>
+   *   This method must never be called directly, but only in response to a call of 
+   *   {@link #areWeThereYet(ITokyoNaut[],int,int[]) areWeThereYet()} ("Are We There Yet?"), 
+   *   before returning false, which corresponds to the answer "Not Yet!".
+   * </p>
+   *
+   * @param source preceding {@link net.sf.tokyo.ITokyoNaut TokyoNaut}, on which the 
+   *               {@link #areWeThereYet(ITokyoNaut[],int,int[]) areWeThereYet()} method was called.
+   *       <p>
+   *        <strong>PRECONDITION:</strong> <code>source</code> must not be null.
+   *       </p>
+   *
+   * @param data a binary buffer carrying data fragments corresponding to tokens (or parts of tokens) 
+   *        described in the <code>meta</code> result parameter of {@link #areWeThereYet(ITokyoNaut[],int,int[]) areWeThereYet()}. 
    *       <p>
    *        Current fragment runs from <code>meta[{@link #OFFSET}]</code> to <code>meta[{@link #LENGTH}]</code>. 
    *        When the length is null, no data is available in current buffer.
    *       </p>
    *       <p>
-   *        If data is null, less than 4 bytes long, 
-   *        or if the start offset (<code>=meta[{@link #OFFSET}]</code>)
-   *        or the end offset (<code>=meta[{@link #OFFSET}]+meta[{@link #LENGTH}]</code>) is 
-   *        outside the bounds of data array, {@link #areWeThereYet(int[],byte[]) areWeThereYet()}  
-   *        optionally signals an error by setting <code>meta[{@link #LANGUAGE}] = {@link #LANGUAGE_ERROR}</code> 
-   *        and an error code of its choice to <code>meta[{@link #TOKEN}]</code> then returns true.
-   *       </p>
-   *        
-   * @return false until this {@link net.sf.tokyo.ITokyoNaut TokyoNaut} has reached the end of its 
-   *         own processing (e.g. following the end of input meta/data).
-   *       <p>
-   *         <strong>Important:</strong> on the last turn, when the {@link net.sf.tokyo.ITokyoNaut TokyoNaut}
-   *         completes a last token before the end of processing, {@link #areWeThereYet(int[],byte[]) areWeThereYet()}
-   *         still returns false, and only returns true at the following run, which garantees that the result
-   *         is always false when there is some relevant data. On the other hand, when the result is true,
-   *         meta and data can be considered irrelevant and be discarded; for example, meta can optionally 
-   *         be checked for error signalling based on meta[{@link #LANGUAGE}] = {@link #LANGUAGE_ERROR} 
-   *         usage.
+   *        <strong>PRECONDITION:</strong> <code>data</code> may be empty but must not be null.
    *       </p>
    */
-  public boolean areWeThereYet(int[] meta, byte[] data);
-  
-  
-  /**
-   * Plug this {@link net.sf.tokyo.ITokyoNaut TokyoNaut} to a destination {@link net.sf.tokyo.ITokyoNaut TokyoNaut}.<br/>
-   *
-   * <p>
-   * If the given {@link net.sf.tokyo.ITokyoNaut TokyoNaut} is null nothing happens and 
-   * {@link #plug(ITokyoNaut) plug()} returns the given parameter.
-   * </p>
-   *
-   * @param friend destination {@link net.sf.tokyo.ITokyoNaut TokyoNaut}
-   * @return the {@link net.sf.tokyo.ITokyoNaut TokyoNaut} provided as parameter to allow 
-   *         chained {@link #plug(ITokyoNaut) plug()} calls.
-   */
-  public ITokyoNaut plug(ITokyoNaut friend);
-  
-  
-  /**
-   * Unplug this {@link net.sf.tokyo.ITokyoNaut TokyoNaut} from previously plugged destination 
-   * {@link net.sf.tokyo.ITokyoNaut TokyoNaut}.<br/>
-   *
-   * <p>
-   * This method is the expected place to free additional resources hold by this 
-   * {@link net.sf.tokyo.ITokyoNaut TokyoNaut} such as opened files or network streams.
-   * </p>
-   *
-   * <p>
-   * If the given {@link net.sf.tokyo.ITokyoNaut TokyoNaut} is null or if it has not been set as 
-   * destination by a previous call to {@link #plug(ITokyoNaut) plug()}, the deallocation alone is still
-   * performed and {@link #unplug(ITokyoNaut) unplug()} returns the given parameter.
-   * </p>
-   *
-   * <p>
-   * If the given {@link net.sf.tokyo.ITokyoNaut TokyoNaut} is not null, this method will invoke
-   * <code>foe.unplug(null)</code> to allow the last {@link net.sf.tokyo.ITokyoNaut TokyoNaut} to 
-   * free its resources too, without requiring an explicit call to unplug(null) made by you.
-   * </p>
-   *
-   * @param foe previous destination {@link net.sf.tokyo.ITokyoNaut TokyoNaut}
-   * @return the {@link net.sf.tokyo.ITokyoNaut TokyoNaut} provided as parameter to allow 
-   *         chained {@link #unplug(ITokyoNaut) unplug()} calls.
-   */
-  public ITokyoNaut unplug(ITokyoNaut foe);
-  
+  public void notYet(ITokyoNaut source, byte[] data);
   
 }
